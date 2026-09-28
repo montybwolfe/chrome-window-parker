@@ -1,0 +1,10 @@
+{
+  "name": "chrome-window-parker",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "description": "A local Chrome extension for parking inactive windows.",
+  "repository": "https://github.com/montybwolfe/chrome-window-parker.git",
+  "engines": {"node": ">=20"},
+  "scripts": {"test": "node --test tests/*.test.js", "preview": "node tests/browser/serve.mjs"}
+}
