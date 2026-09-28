@@ -31,7 +31,7 @@ test('every Chrome API retains its owning namespace through init, save, reset, p
   }
   await h.restart();
   const edits = [{delayMinutes: 30}, {dwellSeconds: 3}, {discardPinned: true}, {protectAudio: false},
-    {exclusions: ['mail.google.com', 'https://example.org/private/*']}, {debug: true}];
+    {exclusions: ['mail.google.com', 'https://example.org/private/*']}, {sleepingMode: 'immediate'}, {appearance: 'dark'}, {debug: true}];
   let expected = {...DEFAULTS};
   for (const edit of edits) {
     expected = {...expected, ...edit};
@@ -53,7 +53,7 @@ test('failed persistent settings write does not mutate the live settings', async
 });
 
 test('Chrome sleeping backgrounds never reload or receive redundant discard calls', async () => {
-  const h = harness(2,5); h.tab(201).discarded = true; h.tab(203).discarded = true;
+  const h = harness(2,5);h.local.settings={sleepingMode:'immediate'}; h.tab(201).discarded = true; h.tab(203).discarded = true;
   await h.restart(); await h.advance(16*60000); await h.p.sweep();
   assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]), [200]);
   assert(h.tab(201).discarded); assert(h.tab(203).discarded);
@@ -71,13 +71,13 @@ test('already sleeping selected tab is left entirely untouched', async () => {
 });
 
 test('Chrome discards previous tab during parking activation: no second discard', async () => {
-  const h = harness(); await h.restart(); h.hooks.update = () => { h.tab(200).discarded = true; };
+  const h = harness();h.local.settings={sleepingMode:'immediate'}; await h.restart(); h.hooks.update = () => { h.tab(200).discarded = true; };
   await h.advance(16*60000); await h.p.sweep();
   assert.equal(h.calls.filter(c=>c[0]==='discard').length,0); assert(h.tab(200).discarded);
 });
 
 test('Chrome wins final discard race: read authoritative state, no retries or errors', async () => {
-  const h = harness(); await h.restart();
+  const h = harness();h.local.settings={sleepingMode:'immediate'}; await h.restart();
   h.hooks.discard = tab => { tab.discarded = true; throw new Error('Cannot discard tab with id: '+tab.id); };
   await h.advance(16*60000); await assert.doesNotReject(()=>h.p.sweep());
   assert(h.tab(200).discarded); assert.equal(h.calls.filter(c=>c[0]==='discard').length,1);
@@ -85,7 +85,7 @@ test('Chrome wins final discard race: read authoritative state, no retries or er
 });
 
 test('unexpected discard exceptions remain visible, with their original error', async () => {
-  const h = harness(); await h.restart(); const error = new TypeError('Illegal invocation');
+  const h = harness();h.local.settings={sleepingMode:'immediate'}; await h.restart(); const error = new TypeError('Illegal invocation');
   h.hooks.discard = () => { throw error; }; await h.advance(16*60000);
   await assert.rejects(()=>h.p.sweep(), e=>e===error);
 });
@@ -109,7 +109,7 @@ test('rapid focus traversal does not reload/discard Chrome sleeping backgrounds'
 });
 
 test('sleeping metrics are live state, exclude parking tabs and make no provenance claims', async () => {
-  const h=harness(); await h.restart(); h.tab(101).discarded=true;
+  const h=harness();h.local.settings={sleepingMode:'immediate'}; await h.restart(); h.tab(101).discarded=true;
   let status=await h.p.message({type:'status'},sender);
   assert.equal(status.windows[0].sleeping,1); assert.equal(status.windows[0].parked,false);
   assert(!('tabs' in status));assert(!('discardedByParker' in status));

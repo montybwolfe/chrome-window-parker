@@ -42,7 +42,7 @@ test('open-page metric updates coalesce tab events, ignore unrelated windows and
 });
 
 test('real worker queue handles its own activation/removal events and a second parking cycle',async()=>{
-  const h=harness(2,1);
+  const h=harness(2,1);h.local.settings={sleepingMode:'immediate'};
   for(const [namespace,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))
     for(const name of names)h.api[namespace][name]=event();
   const original={chrome:globalThis.chrome,now:Date.now,setTimeout:globalThis.setTimeout,clearTimeout:globalThis.clearTimeout,error:console.error};
@@ -67,4 +67,33 @@ test('real worker queue handles its own activation/removal events and a second p
     assert.equal(status.parkingTabs,0);assert.equal(status.enabled,false);assert.equal(h.windows.length,2);
     assert(h.windows.every(w=>w.tabs.length===1));assert.equal(h.alarms.has('parking'),false);assert.deepEqual(errors,[]);
   }finally{globalThis.chrome=original.chrome;Date.now=original.now;globalThis.setTimeout=original.setTimeout;globalThis.clearTimeout=original.clearTimeout;console.error=original.error;}
+});
+
+test('queued mode changes cancel stale discards and removed-page requests never log lifecycle errors',async()=>{
+ const h=harness();h.local.settings={sleepingMode:'immediate'};
+ for(const [ns,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))for(const name of names)h.api[ns][name]=event();
+ const previous={chrome:globalThis.chrome,now:Date.now,setTimeout:globalThis.setTimeout,clearTimeout:globalThis.clearTimeout,error:console.error};const errors=[];
+ globalThis.chrome=h.api;Date.now=h.clock.now;globalThis.setTimeout=h.clock.setTimeout;globalThis.clearTimeout=h.clock.clearTimeout;console.error=(...a)=>errors.push(a);
+ const sender={id:'test',url:h.api.runtime.getURL('options.html')};
+ const send=(message,from=sender)=>new Promise(resolve=>h.api.runtime.onMessage.emit(message,from,resolve));
+ try{
+  await import(`../background.js?v15=${Math.random()}`);const settings=(await send({type:'settings'})).data;
+  let changed;h.hooks.update=()=>{if(!changed)changed=send({type:'configure',settings:{...settings,sleepingMode:'chrome'}});};
+  h.jump(16*60000);h.api.alarms.onAlarm.emit({name:'parking'});await send({type:'settings'});await changed;
+  assert(!h.calls.some(c=>c[0]==='discard'));assert.equal(h.local.settings.sleepingMode,'chrome');h.hooks.update=null;
+  const parking=h.windows[1].tabs.at(-1);const from={id:'test',url:parking.url,tab:parking};
+  const clearing=send({type:'close-parked'});const info=send({type:'parked-info'},from),restore=send({type:'restore'},from);
+  assert((await clearing).ok);assert.deepEqual(await info,{ok:true,data:{gone:true}});assert.deepEqual(await restore,{ok:true,data:{gone:true}});assert.deepEqual(errors,[]);
+  const fault=new Error('Unexpected storage fault');h.api.tabs.get=async()=>{throw fault;};
+  assert.equal((await send({type:'parked-info'},from)).ok,false);assert(errors.some(a=>a.includes(fault)));
+ }finally{globalThis.chrome=previous.chrome;Date.now=previous.now;globalThis.setTimeout=previous.setTimeout;globalThis.clearTimeout=previous.clearTimeout;console.error=previous.error;}
+});
+
+test('page teardown cancels pending refresh and removes all tab listeners',async()=>{
+ const previous={chrome:globalThis.chrome,window:globalThis.window,setTimeout:globalThis.setTimeout,clearTimeout:globalThis.clearTimeout};
+ const make=()=>{const listeners=new Set();return {addListener:f=>listeners.add(f),removeListener:f=>listeners.delete(f),emit:(...a)=>[...listeners].forEach(f=>f(...a)),listeners};};
+ const tabs=Object.fromEntries(['onUpdated','onCreated','onRemoved','onActivated','onAttached','onDetached'].map(n=>[n,make()]));const timers=new Map();const hide=make();let calls=0;
+ globalThis.chrome={tabs};globalThis.window={addEventListener:(_,f)=>hide.addListener(f),removeEventListener:(_,f)=>hide.removeListener(f)};globalThis.setTimeout=f=>{timers.set(1,f);return 1;};globalThis.clearTimeout=id=>timers.delete(id);
+ try{const {watchTabState}=await import('../ui.js');const stop=watchTabState(async()=>{calls++;});tabs.onActivated.emit({windowId:1});assert.equal(timers.size,1);hide.emit();assert.equal(timers.size,0);assert(Object.values(tabs).every(e=>!e.listeners.size));stop();assert.equal(calls,0);}
+ finally{Object.assign(globalThis,previous);}
 });

@@ -1,25 +1,29 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Window Parker · Settings</title><link rel="icon" href="icons/parker-timer-32.png"><link rel="stylesheet" href="ui.css"><script type="module" src="options.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Window Parker · Settings</title><link rel="icon" href="icons/parker-timer-32.png"><script src="theme.js"></script><link rel="stylesheet" href="ui.css"><script type="module" src="options.js"></script></head>
 <body><main class="settings-page">
 <header class="app-header"><img src="icons/parker-timer-128.png" width="36" height="36" alt=""><div><h1>Window Parker</h1><p class="muted">Settings</p></div></header>
 <form id="settings">
 <fieldset id="settingsFields" disabled>
-<label class="check-row enable-row"><input id="enabled" type="checkbox"><span>Enable automatic parking<span class="hint">Keep your windows in place. Restore when you settle on one.</span></span></label>
+<label class="check-row enable-row"><input id="enabled" type="checkbox"><span>Enable automatic parking<span class="hint">Park idle windows. Return to your previous tab.</span></span></label>
 <section class="settings-section" aria-labelledby="timing-heading">
-<h2 id="timing-heading">Timing</h2>
+<h2 id="timing-heading">Parking</h2>
+<div class="preference-row"><label for="sleepingMode">Tab sleeping</label><div class="select-wrap"><select id="sleepingMode" aria-describedby="sleepingHelp"><option value="chrome">Let Chrome decide</option><option value="immediate">Discard immediately</option></select></div></div>
+<p class="hint section-note" id="sleepingHelp">Chrome decides when background tabs are unloaded.</p>
 <div class="preference-row"><label for="delayPreset">Park windows after</label><div class="select-wrap"><select id="delayPreset"><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="custom">Custom…</option></select></div></div>
 <div class="preference-row" id="customLabel" hidden><label for="delayMinutes">Custom parking delay</label><div class="unit-control"><input id="delayMinutes" type="number" min="1" max="10080" step="0.5" required><span>minutes</span></div></div>
 <div class="preference-row"><label for="dwellSeconds">Restore after focused for</label><div class="unit-control"><input id="dwellSeconds" type="number" min="0.5" max="20" step="0.5" required><span>seconds</span></div></div>
 <p class="hint section-note">Passing through a desktop won’t wake its window.</p>
 </section>
+<section class="settings-section" aria-labelledby="appearance-heading"><h2 id="appearance-heading">Appearance</h2><div class="preference-row"><label for="appearance">Theme</label><div class="select-wrap"><select id="appearance"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></section>
 <section class="settings-section" aria-labelledby="protection-heading">
 <h2 id="protection-heading">Tab protection</h2>
-<label class="check-row"><input id="discardPinned" type="checkbox"><span>Allow pinned tabs to sleep</span></label>
-<label class="check-row"><input id="protectAudio" type="checkbox"><span>Keep audio-playing tabs awake</span></label>
+<label class="check-row"><input id="discardPinned" type="checkbox"><span>Allow parking when a pinned tab is selected</span></label>
+<label class="check-row"><input id="protectAudio" type="checkbox"><span>Skip windows whose selected tab is playing audio</span></label>
 <div class="field"><label for="exclusions">Sites to exclude</label><textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp" placeholder="mail.google.com&#10;calendar.google.com&#10;https://example.com/work/*"></textarea><p class="hint" id="exclusionHelp">One domain or URL pattern per line; * is a wildcard. Exclusions apply to Window Parker.</p></div>
 <details class="safety-note"><summary>Calls, video and unsaved work</summary><p>Exclude these sites or keep their tabs pinned. Chrome doesn’t reliably report screen sharing, Picture-in-Picture or unsaved edits to this extension. Parking pauses during active downloads.</p></details>
 </section>
+
 <section class="settings-section compact" aria-labelledby="diagnostics-heading"><h2 id="diagnostics-heading">Diagnostics</h2><label class="check-row"><input id="debug" type="checkbox"><span>Enable debug logging</span></label></section>
 <div class="form-footer"><div class="actions"><button class="primary" id="save" type="submit">Save settings</button><button id="reset" type="button">Reset settings</button></div><p id="status" role="status" aria-live="polite"></p></div>
 </fieldset>

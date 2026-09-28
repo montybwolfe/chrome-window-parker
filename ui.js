@@ -11,18 +11,28 @@ export function report(error, target = 'status') {
 // Refresh only while a visible extension page exists, and only on relevant tab
 // events. Burst coalescing is a page timer, not a persistent worker keepalive.
 export function watchTabState(refresh, windowId = () => undefined) {
-  let timer;
+  let timer, stopped = false;
+  const listeners = [];
   const changed = id => {
-    if (windowId() !== undefined && windowId() !== id) return;
-    if (timer !== undefined) return;
-    timer = setTimeout(() => { timer = undefined; refresh().catch(report); }, 100);
+    if (stopped || (windowId() !== undefined && windowId() !== id) || timer !== undefined) return;
+    timer = setTimeout(() => {
+      timer = undefined;
+      if (!stopped) refresh().catch(error => { if (!stopped) report(error); });
+    }, 100);
   };
-  chrome.tabs.onUpdated.addListener((id, change, tab) => {
-    if (change.discarded !== undefined || change.url) changed(tab.windowId);
-  });
-  chrome.tabs.onCreated.addListener(tab => changed(tab.windowId));
-  chrome.tabs.onRemoved.addListener((id, info) => changed(info.windowId));
-  chrome.tabs.onActivated.addListener(info => changed(info.windowId));
-  chrome.tabs.onAttached.addListener((id, info) => changed(info.newWindowId));
-  chrome.tabs.onDetached.addListener((id, info) => changed(info.oldWindowId));
+  const listen = (name, fn) => { chrome.tabs[name].addListener(fn); listeners.push([name, fn]); };
+  listen('onUpdated', (id, change, tab) => { if (change.discarded !== undefined || change.url) changed(tab.windowId); });
+  listen('onCreated', tab => changed(tab.windowId));
+  listen('onRemoved', (id, info) => changed(info.windowId));
+  listen('onActivated', info => changed(info.windowId));
+  listen('onAttached', (id, info) => changed(info.newWindowId));
+  listen('onDetached', (id, info) => changed(info.oldWindowId));
+  const stop = () => {
+    stopped = true;
+    if (timer !== undefined) clearTimeout(timer);
+    for (const [name, fn] of listeners) chrome.tabs[name].removeListener?.(fn);
+    globalThis.window?.removeEventListener?.('pagehide', stop);
+  };
+  globalThis.window?.addEventListener('pagehide', stop, {once: true});
+  return stop;
 }

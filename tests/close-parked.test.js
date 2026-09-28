@@ -4,7 +4,7 @@ import {harness, copy} from './helpers.js';
 const sender = h => ({id:'test',url:h.api.runtime.getURL('popup.html')});
 const status = h => h.p.message({type:'status'},sender(h));
 const close = h => h.p.message({type:'close-parked'},sender(h));
-const setup = async (count=3,tabs=3) => {const h=harness(count,tabs);await h.restart();await h.parkAll();return h;};
+const setup = async (count=3,tabs=3) => {const h=harness(count,tabs);h.local.settings={sleepingMode:'immediate'};await h.restart();await h.parkAll();return h;};
 
 test('global close restores all windows in place, removes only own pages and preserves sleeping neighbors',async()=>{
   const h=await setup(); const real=h.windows.flatMap(w=>w.tabs.filter(t=>h.p.real(t))).map(copy);

@@ -1,11 +1,27 @@
 # Privacy policy — Chrome Window Parker
 
-Chrome Window Parker runs entirely within your Chrome profile. It sends no data to its developer or any other server, and includes no analytics, advertising, telemetry or remote code.
+Chrome Window Parker runs locally in your Chrome profile. It sends no user data to the developer or other servers. It contains no accounts, analytics, advertising, tracking, telemetry or remote code.
 
-The extension reads tab URLs, titles and browser window/tab state to apply exclusions and restore the correct tab. It stores settings locally, per-session activity and individual tab exclusions in session storage, and the previous tab's URL/title/position with a random parking identifier in local storage for restart recovery. It does not read page contents, cookies, credentials, browsing-history databases, or files downloaded to your computer.
+## Information used on your device
 
-It queries Chrome's download metadata solely to determine whether downloads are in progress, conservatively pausing parking while any are active. It does not retain download metadata or initiate, modify, open or delete downloads. Routine debug logs stay in Chrome's extension console and contain tab/window identifiers and operational reasons rather than browsing details. Unexpected API errors are also logged for diagnosis; review logs before sharing them.
+The extension reads current tab URLs, titles, identifiers and state to apply exclusions, park idle windows and return to the right tab. Window focus, tab activation/navigation and timing determine inactivity and a deliberate return. It does not read website contents, keystrokes, mouse activity, cookies, credentials, Chrome's browsing-history database or downloaded files.
 
-Data is not synchronized to a cloud service. Closing windows/parking tabs, including automatic removal after restoration and the Clear parked tabs action, removes associated recovery records when observed; bounded abandoned records may remain after crashes. Reset settings resets settings, while individual session exclusions remain. Removing the extension removes its extension storage. Chrome and websites have their own privacy behavior, including normal network requests when a discarded website reloads.
+Local extension storage holds settings, including timing, tab sleeping mode, appearance, exclusions and debug preference. Recovery records contain a random parking token and the previous tab's URL, title, position, duplicate-URL occurrence and update time. Session storage holds temporary window/tab identifiers, activity times, parked state, pending restoration details and individual-tab protection.
 
-Maintained by the GitHub account [montybwolfe](https://github.com/montybwolfe). Effective date: 28 September 2026. For privacy questions, use the [project issue tracker](https://github.com/montybwolfe/chrome-window-parker/issues). Do not include private browsing data in a public issue.
+The downloads API is queried only to check whether a Chrome download is in progress. Download metadata is not retained. The extension does not start, open, modify or delete downloads.
+
+Debug logging is off by default. When enabled, operational logs stay in Chrome's extension console and use identifiers and reasons rather than page titles or full URLs. Unexpected API errors remain visible for diagnosis; review logs before sharing them.
+
+## Retention and control
+
+Settings and recovery records remain in the local Chrome profile; no Chrome sync storage or cloud database is used. Closing a window or parking page, including normal restoration and Clear parked tabs, removes its recovery record once no live page uses it. Up to 100 abandoned recovery records may remain after crashes, in addition to records for live parking pages.
+
+Reset settings restores defaults, including Let Chrome decide and Auto appearance. It does not erase session tab protection or recovery records needed by open parking pages. Individual protection ends with the browser session and may also clear on extension reload/update. Removing the extension removes its extension storage.
+
+## Chrome and websites
+
+In the default mode, Chrome decides whether and when background tabs unload. Optional immediate discard makes an explicit request to Chrome. Neither mode sends browsing information to the developer. Chrome and websites have their own data practices; restoring an unloaded website can cause its normal network requests.
+
+The extension does not sell or transfer user data, use it for advertising, or use it for creditworthiness or lending.
+
+Effective date: 28 September 2026. Maintained by [montybwolfe](https://github.com/montybwolfe). For questions, use the [project issue tracker](https://github.com/montybwolfe/chrome-window-parker/issues), keeping private browsing details out of public posts.

@@ -1,6 +1,6 @@
 {
   "title_from_package": "Chrome Window Parker",
-  "summary_from_package": "Let the selected tab in an idle window sleep. Works alongside Chrome Memory Saver; restores when you return.",
+  "summary_from_package": "Park idle windows, let Chrome manage tab sleeping, and return to your previous tab when you come back.",
   "description_file": "description.txt",
   "category": "Functionality & UI",
   "language": "English",
@@ -19,6 +19,6 @@
   "privacy_policy_url": "https://github.com/montybwolfe/chrome-window-parker/blob/main/PRIVACY.md",
   "mature_content": false,
   "in_app_purchases": false,
-  "version": "1.4.1",
+  "version": "1.5.0",
   "remote_code": false
 }

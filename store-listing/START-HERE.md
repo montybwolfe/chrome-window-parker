@@ -1,8 +1,8 @@
 # Chrome Web Store listing assets
 
-This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.4.1.
+This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.0.
 
-The extension package itself is separate. Upload **`chrome-window-parker-v1.4.1.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
+The extension package itself is separate. Upload **`chrome-window-parker-v1.5.0.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
 
 ## Product details
 
@@ -14,7 +14,7 @@ The extension package itself is separate. Upload **`chrome-window-parker-v1.4.1.
 | Category | Functionality & UI |
 | Language | English |
 
-The listing copy clearly states that the extension has currently only been tested on macOS. Windows, Linux and ChromeOS remain unverified.
+The copy explains the default Let Chrome decide mode and optional Discard immediately mode. Testing has been on macOS, with installed-extension acceptance still outstanding. Windows, Linux and ChromeOS remain unverified.
 
 ## Graphic assets
 
@@ -44,6 +44,10 @@ The screenshots show the current interface rendered in Chrome with synthetic tes
 Use `privacy-fields.txt` when completing the dashboard's privacy and permission questions. The extension handles tab URLs/titles and focus state locally, so those uses should still be disclosed even though no data is transmitted externally.
 
 Review the Chrome Web Store's current wording before submitting and personally confirm any required certifications.
+
+## v1.5.0 changes
+
+Replace the long description, all three screenshots and both promotional tiles. The blue timer store icon is unchanged. Update the single-purpose, tabs and storage wording in `privacy-fields.txt`; permission scope and local data handling are unchanged, with two new local preferences. Category, language, links, remote-code and purchase answers remain the same.
 
 ## Before submitting
 

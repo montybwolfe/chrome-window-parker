@@ -1,26 +1,23 @@
 # Compatibility and support
 
-Chrome Window Parker has currently only been tested on macOS and is designed primarily for multi-window workflows across macOS Spaces. It uses standard Chrome extension APIs and may work on Windows, Linux, and ChromeOS, but those platforms have not been formally tested; their compatibility is unverified.
+Chrome Window Parker is designed for people who keep several Chrome windows open, especially across macOS Spaces. It requires Chrome 120 or later and uses standard extension APIs without native software or macOS-specific code.
 
-## Implementation scope
+Testing has been on macOS. The v1.5.0 automated checks and Chrome UI previews do not complete the installed-extension acceptance checklist. Windows, Linux and ChromeOS remain unverified; other Chromium browsers and mobile browsers are also unvalidated. See [TESTING.md](TESTING.md) for evidence and outstanding checks.
 
-The runtime contains no OS checks, native messaging, AppleScript, macOS filesystem paths or calls to macOS APIs. Chrome handles tabs, windows, alarms, downloads and storage. The system font stack has a macOS font preference with ordinary fallbacks; that is presentation, not an OS dependency.
+## If a window does not park
 
-The central assumption is that briefly passing through windows should not wake their selected pages. This is especially useful across macOS Spaces. Other desktop platforms may support the same flow, but focus events, application switching, sleep/wake and session restoration must be tested on each platform before claiming support. No macOS Space assignments are read or modified.
+Check that automation is enabled, the window has been unfocused for the selected delay, and its selected tab is eligible. Pinned, audible, excluded, loading and internal tabs can prevent parking. An active Chrome download pauses parking across all windows. Chrome may deliver alarms late.
 
-| Platform | Status |
-| --- | --- |
-| macOS | Only platform tested so far; full release acceptance checklist still open |
-| Windows | Unverified; not formally tested |
-| Linux | Unverified; not formally tested |
-| ChromeOS | Unverified; not formally tested |
+In **Let Chrome decide**, seeing a parking page does not mean Chrome has unloaded the previous tab. Memory Saver makes that decision. **Discard immediately** requests unloading after the extension's checks, but Chrome can refuse.
 
-The manifest requires Chrome 120+. That API baseline is not a claim that every Chrome version since 120 has been tested. Other Chromium browsers and mobile browsers are not validated. Incognito and popup/app/devtools windows are intentionally excluded.
+## If a window does not return
 
-## Reporting an issue
+Remain focused for the configured return delay, or press **Restore tab**. Automatic return is paused when automation is off. You can always select a real tab yourself. **Clear parked tabs** returns affected windows to real tabs without changing your pause setting.
 
-Use [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues). Include extension, Chrome and OS versions, Memory Saver mode, relevant settings, reproduction steps, expected behavior and observed behavior. Remove private tab titles, URLs and other personal data from screenshots and logs.
+After an extension reload or update, refresh old extension pages if their context has become invalid. Chrome controls browser session restoration and Space placement; Window Parker cannot reconstruct windows that Chrome did not restore.
 
-Try reloading the extension and refreshing its pages after an update. Real tabs remain selectable if automatic restoration is paused or unavailable. Keep worker DevTools closed when testing worker suspension or sleep/wake, because an attached inspector changes worker lifetime.
+## Reporting a problem
 
-See [Testing](TESTING.md) for evidence and remaining checks. Do not equate passing simulated API tests with verified platform support.
+Open a [GitHub Issue](https://github.com/montybwolfe/chrome-window-parker/issues) with extension, Chrome and OS versions; sleeping mode and Memory Saver setting; reproduction steps; and expected versus observed behavior. Remove private URLs, titles and personal data from screenshots or logs.
+
+For diagnostics, enable debug logging in Settings, save, then inspect the service worker from `chrome://extensions`. Enable verbose console output. Close worker DevTools before testing suspension or sleep/wake, because an attached inspector changes worker lifetime. Unexpected errors remain visible even with debug logging off.
