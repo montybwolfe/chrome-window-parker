@@ -73,6 +73,8 @@ export class Parker {
     if (this.focus === null) this.signalFocus(windows.find(w => w.focused)?.id ?? -1);
     // Never trust a persisted partial dwell. A new worker observes a full new dwell.
     this.focusedState = this.focus;
+    // Recover an interrupted restoration or clean up an older reusable page.
+    for (const w of windows) await this.cleanupParking(w.id);
     await this.startDwell();
     await this.save(); await this.schedule();
   }
@@ -148,6 +150,7 @@ export class Parker {
     for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
     for (const w of windows) {
       const s = this.adopt(w);
+      if (s && !s.parked && s.parkingId) await this.cleanupParking(w.id);
       if (!s || s.parked || w.focused || w.id === this.focus) continue;
       if (this.clock.now() < Math.max(s.lastUse + this.settings.delayMinutes * 60000, s.retryAt || 0)) continue;
       s.retryAt = this.clock.now() + 60000;
@@ -213,6 +216,16 @@ export class Parker {
     }
   }
   async restore(id, epoch = this.epoch) {
+    // A target can close between the snapshot and activation. Re-read once and
+    // use the same fallback policy; never remove the parking page on failure.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (await this.restoreAttempt(id, epoch)) return true;
+      if (this.epoch !== epoch || this.focus !== id) break;
+    }
+    return false;
+  }
+  async restoreAttempt(id, epoch) {
+    const tabEpoch = this.tabEpoch.get(id) || 0;
     const w = await this.getWindow(id), s = this.adopt(w);
     if (!s?.parked || !w.focused || this.focus !== id || this.epoch !== epoch) return false;
     const real = w.tabs.filter(t => this.real(t));
@@ -222,10 +235,47 @@ export class Parker {
         !best || Math.abs(t.index - (record?.index || 0)) < Math.abs(best.index - (record?.index || 0)) ? t : best, null);
     if (!target) return false;
     // Recheck after async reads; restoring is only allowed in the focused window.
-    if (this.epoch !== epoch || this.focus !== id) return false;
-    await this.api.tabs.update(target.id, {active: true});
+    if (this.epoch !== epoch || this.focus !== id || (this.tabEpoch.get(id) || 0) !== tabEpoch) return false;
+    try { await this.api.tabs.update(target.id, {active: true}); }
+    catch (error) {
+      if (/No tab with id|Invalid tab ID|Tabs cannot be edited right now/i.test(error.message)) return false;
+      throw error;
+    }
+    const confirmed = await this.getWindow(id);
+    if (!confirmed?.tabs.some(t => t.id === target.id && t.active && this.real(t))) return false;
     s.parked = false; s.qualified = true; s.lastUse = this.clock.now(); s.retryAt = 0;
-    this.log('restored', id, target.id); await this.save(); return true;
+    this.log('restored', id, target.id); await this.save();
+    await this.cleanupParking(id);
+    return true;
+  }
+  async cleanupParking(id) {
+    const epoch = this.epoch, tabEpoch = this.tabEpoch.get(id) || 0;
+    const w = await this.getWindow(id);
+    if (!this.supported(w)) return false;
+    const active = w.tabs.find(t => t.active && this.real(t));
+    const parking = w.tabs.find(t => !t.active && this.token(t));
+    if (!active || !parking) return false;
+    const token = this.token(parking);
+    // Only close our still-inactive page while a real tab is still selected in
+    // the same window. Navigation, detach/removal and focus signals cancel this
+    // snapshot. Chrome provides no atomic conditional-remove operation.
+    const fresh = await this.getWindow(id);
+    if (this.epoch !== epoch || (this.tabEpoch.get(id) || 0) !== tabEpoch ||
+        !this.supported(fresh) || fresh.tabs.length < 2 ||
+        !fresh.tabs.some(t => t.id === active.id && t.active && this.real(t)) ||
+        !fresh.tabs.some(t => t.id === parking.id && !t.active && this.token(t) === token)) return false;
+    try { await this.api.tabs.remove(parking.id); }
+    catch (error) {
+      if (/No tab with id|Invalid tab ID|Tabs cannot be edited right now/i.test(error.message)) {
+        this.log('parking cleanup deferred', id, error.message); return false;
+      }
+      throw error;
+    }
+    delete this.records[token];
+    const s = this.states[id];
+    if (s?.parkingId === parking.id) { s.parkingId = null; s.token = null; s.parked = false; }
+    await this.saveRecords(); await this.save();
+    return true;
   }
   async activated(id, tabId) {
     const w = await this.getWindow(id), s = this.adopt(w);
@@ -240,6 +290,7 @@ export class Parker {
         if (this.dwell) this.clock.clearTimeout(this.dwell.timer);
         this.dwell = null; await this.api.alarms.clear('dwell-recovery');
       }
+      await this.cleanupParking(id);
     } else if (w.focused && !this.dwell) await this.startDwell();
     await this.save(); await this.schedule();
   }

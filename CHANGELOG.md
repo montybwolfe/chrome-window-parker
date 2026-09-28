@@ -1,3 +1,11 @@
+# 1.3.0
+
+- Remove the temporary parking page after confirming a real tab is active. Recreate it on the next parking cycle. Apply the same guarded cleanup to manual tab selection and interrupted-restoration recovery.
+- Retain a parking-only window, handle missing targets and defer unsafe or temporarily refused cleanup. Keep ordinary sleeping backgrounds untouched.
+- Give all timer assets distinct filenames, update every manifest/page/favicon/README reference, and use higher-resolution page images. Add 256px and 512px vector-derived artwork.
+- Build a runtime-only store ZIP at `dist/chrome-window-parker-v1.3.0.zip`; document the distinction from GitHub source archives.
+- Add lifecycle and asset audits. Live Chrome/Spaces acceptance checks remain a prerequisite for store submission.
+
 # 1.2.0
 
 - Replace the multicolor badge with a simple blue timer, using editable vector artwork and clean size-specific PNG exports.

@@ -34,15 +34,17 @@ test('parking page title refreshes on reuse, renders site text safely and keeps 
   } finally {Object.assign(globalThis, previous);}
 });
 
-test('saved title follows a reused parking tab and survives worker restart without changing target', async () => {
+test('saved title follows a recreated parking tab and survives worker restart without changing target', async () => {
   const h=harness(); await h.restart(); await h.parkAll();
   const parkingId=h.p.states[2].parkingId;
-  const sender={id:'test',url:h.api.runtime.getURL('parked.html'),tab:{id:parkingId}};
+  let sender={id:'test',url:h.api.runtime.getURL('parked.html'),tab:{id:parkingId}};
   assert.equal((await h.p.message({type:'parked-info'},sender)).title,h.tab(200).title);
   await h.focus(2); await h.advance(2000);
   await h.api.tabs.update(201,{active:true}); await h.p.activated(2,201);
   h.tab(201).title='Second document'; await h.focus(-1); await h.advance(16*60000); await h.p.sweep();
-  assert.equal(h.p.states[2].parkingId,parkingId);
+  assert.notEqual(h.p.states[2].parkingId,parkingId);
+  assert.equal(h.tab(parkingId),undefined);
+  sender={...sender,tab:{id:h.p.states[2].parkingId}};
   await h.restart();
   assert.equal((await h.p.message({type:'parked-info'},sender)).title,'Second document');
   await h.focus(2); await h.advance(2000); assert(h.tab(201).active);

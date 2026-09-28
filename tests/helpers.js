@@ -21,7 +21,11 @@ export function harness(count = 2, tabsPerWindow = 3) {
       update:async(id,props)=>{calls.push(['update',id,copy(props)]); const t=tab(id);if(!t)throw Error('No tab with id: '+id);
         if(props.active)for(const candidate of windows.find(w=>w.id===t.windowId).tabs)candidate.active=candidate.id===id;
         Object.assign(t,props);if(props.active)t.discarded=false;await hooks.update?.(t);return copy(t);},
-      discard:async id=>{calls.push(['discard',id]);const t=tab(id);if(!t||t.active)throw Error('not eligible');await hooks.discard?.(t);t.discarded=true;return copy(t);}},
+      discard:async id=>{calls.push(['discard',id]);const t=tab(id);if(!t||t.active)throw Error('not eligible');await hooks.discard?.(t);t.discarded=true;return copy(t);},
+      remove:async id=>{await hooks.remove?.(id);const t=tab(id);if(!t)throw Error('No tab with id: '+id);calls.push(['remove',id]);
+        const w=windows.find(w=>w.id===t.windowId);w.tabs=w.tabs.filter(t=>t.id!==id);w.tabs.forEach((t,i)=>{t.index=i;});
+        if(!w.tabs.length)windows.splice(windows.indexOf(w),1);
+        else if(t.active){w.tabs[0].active=true;w.tabs[0].discarded=false;}}},
     downloads:{search:async()=>{await hooks.downloads?.();return hooks.downloading?[{id:1}]:[];}},
     alarms:{get:async name=>{const alarm=alarms.get(name);return alarm?{name,scheduledTime:alarm.when}:undefined;},create:async(name,props)=>{alarms.set(name,copy(props));},clear:async name=>alarms.delete(name)}
   };

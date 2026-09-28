@@ -1,6 +1,6 @@
 # Chrome Web Store submission
 
-Prepared for version 1.2.0. This document is submission copy and a release checklist; it does not mean the extension has been submitted or approved.
+Prepared for version 1.3.0. This document is submission copy and a release checklist; it does not mean the extension has been submitted or approved.
 
 ## Name
 
@@ -20,7 +20,7 @@ Chrome Window Parker has currently only been tested on macOS and is designed pri
 
 **How it works**
 
-After an adjustable period of inactivity, Window Parker switches an eligible window to its parking page without asking Chrome to move or focus that window. Your real tabs stay in place. Return and remain in the window for a short, adjustable delay to restore the previous tab; brief visits do not wake it. You can also select a tab or use Restore tab at any time.
+After an adjustable period of inactivity, Window Parker switches an eligible window to its parking page without asking Chrome to move or focus that window. Your real tabs stay in place. Return and remain in the window for a short, adjustable delay to restore the previous tab; brief visits do not wake it. Once a real tab is successfully active, the temporary parking page closes. A later parking cycle creates a new one. You can also select a tab or use Restore tab at any time.
 
 Window Parker complements Chrome Memory Saver rather than replacing it. Only the formerly selected real tab is explicitly discarded; Chrome continues managing ordinary background tabs. Existing sleeping tabs are left alone. The extension does not change Chrome's Memory Saver settings or exclusions.
 
@@ -55,9 +55,9 @@ Support: https://github.com/montybwolfe/chrome-window-parker/issues
 
 ## Assets
 
-- `icons/icon.svg`: editable vector master with a 1024-pixel default size.
-- `icons/16.png`, `32.png`, `48.png`, `128.png`: transparent extension exports, wired into the manifest.
-- `docs/assets/icon-1024.png`: high-resolution transparent artwork.
+- `icons/parker-timer.svg`: editable vector master with a 1024-pixel default size.
+- `icons/parker-timer-16.png`, `icons/parker-timer-32.png`, `icons/parker-timer-48.png`, `icons/parker-timer-128.png`: transparent extension exports, wired into the manifest.
+- `docs/assets/parker-timer-256.png`, `docs/assets/parker-timer-512.png`, `docs/assets/parker-timer-1024.png`: high-resolution transparent artwork.
 - `docs/assets/promo-440x280.png`: small promotional image.
 - Capture at least one **actual installed-extension** screenshot before submission (1280×800 or 640×400). Development fixture previews are not evidence of installed behavior and should not be submitted as such.
 
@@ -66,7 +66,7 @@ Support: https://github.com/montybwolfe/chrome-window-parker/issues
 1. Complete and record the live macOS checks in [Testing](../TESTING.md), including exact OS and Chrome versions. Keep other platforms described as unverified.
 2. Capture genuine screenshots with synthetic, non-private tabs. Check the icon on light and dark toolbars at normal and Retina scale.
 3. Verify the public policy and support links, review the current dashboard privacy questions and [program policies](https://developer.chrome.com/docs/webstore/program-policies/), and choose a source-code license if you intend to grant reuse rights. Public repository visibility alone does not do that.
-4. Run tests and `python3 scripts/package.py`; upload the versioned ZIP with `manifest.json` at its root. Do not upload the entire repository.
+4. Run tests and `python3 scripts/package.py`; upload **`dist/chrome-window-parker-v1.3.0.zip`** with `manifest.json` at its root. The matching attached GitHub Release asset is the same package. Never upload GitHub's “Source code (zip)” archive. Do not upload the entire repository.
 5. Enter the copy above, attach assets and privacy disclosures, and submit through your developer account. Review approval is a separate step; nothing here guarantees approval. This task does not publish to the store.
 
 Asset sizes follow the [Chrome Web Store image guidance](https://developer.chrome.com/docs/webstore/images). See the [publishing guide](https://developer.chrome.com/docs/webstore/publish) for the current submission process.
