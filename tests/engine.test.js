@@ -18,7 +18,7 @@ test('domain boundaries and literal URL glob matching',()=>{
   assert(!matchesRule('https://exampleXcom/work/a','https://example.com/work/*'));
 });
 test('park same window, discard only formerly selected tab, preserving layout',async()=>{
-  const h=harness();await h.restart();await h.advance(16*60000);
+  const h=harness();h.local.settings={sleepingMode:'immediate'};await h.restart();await h.advance(16*60000);
   const before=copy(h.windows);await h.p.sweep();
   assert(!h.p.states[1].parked);assert(h.p.states[2].parked);
   const w=h.windows[1];assert(w.tabs[0].discarded);assert(w.tabs.slice(1,3).every(t=>!t.discarded));
@@ -42,32 +42,32 @@ test('brief focus does not reset inactivity; sustained focus loss does',async()=
   assert.equal(h.p.states[2].lastUse,h.clock.now());
 });
 test('one real tab and recreated parking tab',async()=>{
-  const h=harness(1,1);await h.restart();await h.parkAll();assert.equal(h.windows[0].tabs.length,2);
+  const h=harness(1,1);h.local.settings={sleepingMode:'immediate'};await h.restart();await h.parkAll();assert.equal(h.windows[0].tabs.length,2);
   await h.focus(1);await h.advance(2000);assert.equal(h.windows[0].tabs[0].active,true);
   await h.parkAll();assert.equal(h.windows[0].tabs.length,2);assert(h.tab(100).discarded);
 });
-for(const [name,patch] of Object.entries({audio:{audible:true},pinned:{pinned:true},internal:{url:'chrome://settings'},extension:{url:'chrome-extension://other/page.html'},nonDiscardable:{autoDiscardable:false},loading:{status:'loading'},splitView:{splitViewId:8}})){
-  test(`protected active ${name} leaves entire window alone`,async()=>{
-    const h=harness();Object.assign(h.tab(200),patch);await h.restart();await h.advance(16*60000);await h.p.sweep();
+for(const sleepingMode of ['chrome','immediate']) for(const [name,patch] of Object.entries({audio:{audible:true},pinned:{pinned:true},internal:{url:'chrome://settings'},extension:{url:'chrome-extension://other/page.html'},nonDiscardable:{autoDiscardable:false},loading:{status:'loading'},splitView:{splitViewId:8}})){
+  test(`${sleepingMode}: protected active ${name} leaves entire window alone`,async()=>{
+    const h=harness();h.local.settings={sleepingMode};Object.assign(h.tab(200),patch);await h.restart();await h.advance(16*60000);await h.p.sweep();
     assert(!h.p.states[2].parked);assert.equal(h.calls.length,0);
   });
-  test(`protected background ${name} remains loaded`,async()=>{
-    const h=harness();Object.assign(h.tab(201),patch);await h.restart();await h.advance(16*60000);await h.p.sweep();
+  test(`${sleepingMode}: protected background ${name} remains loaded`,async()=>{
+    const h=harness();h.local.settings={sleepingMode};Object.assign(h.tab(201),patch);await h.restart();await h.advance(16*60000);await h.p.sweep();
     assert(h.p.states[2].parked);assert(!h.tab(201).discarded);assert(!h.tab(202).discarded);
   });
 }
 test('explicit pinned opt-in retains pin',async()=>{
-  const h=harness();h.tab(200).pinned=true;await h.restart();await h.p.configure({...DEFAULTS,discardPinned:true});await h.advance(16*60000);await h.p.sweep();assert(h.tab(200).discarded);assert(h.tab(200).pinned);
+  const h=harness();h.local.settings={sleepingMode:'immediate'};h.tab(200).pinned=true;await h.restart();await h.p.configure({...DEFAULTS,sleepingMode:'immediate',discardPinned:true});await h.advance(16*60000);await h.p.sweep();assert(h.tab(200).discarded);assert(h.tab(200).pinned);
 });
 test('domain and individual exclusions',async()=>{
-  const h=harness();await h.restart();h.p.protectedIds=[201];h.p.settings.exclusions=['https://example.com/1/2'];await h.advance(16*60000);await h.p.sweep();assert(h.tab(200).discarded);assert(!h.tab(201).discarded);assert(!h.tab(202).discarded);
+  const h=harness();h.local.settings={sleepingMode:'immediate'};await h.restart();h.p.protectedIds=[201];h.p.settings.exclusions=['https://example.com/1/2'];await h.advance(16*60000);await h.p.sweep();assert(h.tab(200).discarded);assert(!h.tab(201).discarded);assert(!h.tab(202).discarded);
 });
 test('downloads pause globally; downloads API error fails closed',async()=>{
   const h=harness();await h.restart();await h.advance(16*60000);h.hooks.downloading=true;await h.p.sweep();assert.equal(h.calls.length,0);
   h.hooks.downloading=false;h.hooks.downloads=()=>{throw Error('unavailable');};await h.advance(60000);await h.p.sweep();assert.equal(h.calls.length,0);
 });
 test('download beginning mid-pass stops remaining discards',async()=>{
-  const h=harness();await h.restart();h.hooks.discard=()=>{h.hooks.downloading=true;};await h.advance(16*60000);await h.p.sweep();assert.equal(h.calls.filter(c=>c[0]==='discard').length,1);
+  const h=harness();h.local.settings={sleepingMode:'immediate'};await h.restart();h.hooks.discard=()=>{h.hooks.downloading=true;};await h.advance(16*60000);await h.p.sweep();assert.equal(h.calls.filter(c=>c[0]==='discard').length,1);
 });
 test('closing parking tab recovers and recreates later',async()=>{
   const h=harness();await h.restart();await h.parkAll();const id=h.p.states[2].parkingId;
@@ -125,7 +125,7 @@ test('permission, network and destructive API audit',()=>{
 });
 
 test('actual worker listeners: self-created page events do not cancel parking; navigation cancels dwell',async()=>{
-  const h=harness();
+  const h=harness();h.local.settings={sleepingMode:'immediate'};
   const event=()=>{const listeners=[];return {addListener:fn=>listeners.push(fn),emit:(...args)=>listeners.map(fn=>fn(...args))};};
   for(const [namespace,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))
     for(const name of names)h.api[namespace][name]=event();
@@ -152,7 +152,7 @@ test('safety-setting change during preparation cancels the pending park',async()
 });
 
 test('Chrome refusal leaves all real tabs intact',async()=>{
-  const h=harness();await h.restart();h.hooks.discard=tab=>{if(tab.id===200)throw Error('Cannot discard tab with id: 200');};await h.advance(16*60000);await h.p.sweep();assert(!h.tab(200).discarded);assert(!h.tab(201).discarded);assert(h.p.states[2].parked);
+  const h=harness();h.local.settings={sleepingMode:'immediate'};await h.restart();h.hooks.discard=tab=>{if(tab.id===200)throw Error('Cannot discard tab with id: 200');};await h.advance(16*60000);await h.p.sweep();assert(!h.tab(200).discarded);assert(!h.tab(201).discarded);assert(h.p.states[2].parked);
 });
 
 test('unauthorized messages and malformed settings cannot mutate state',async()=>{

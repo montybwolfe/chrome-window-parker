@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {harness, copy} from './helpers.js';
 
 const parked = async (tabs = 3) => {
-  const h=harness(1,tabs); await h.restart(); await h.parkAll();
+  const h=harness(1,tabs);h.local.settings={sleepingMode:'immediate'}; await h.restart(); await h.parkAll();
   return {h, id:h.p.states[1].parkingId, token:h.p.states[1].token};
 };
 

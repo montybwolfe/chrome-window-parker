@@ -2,12 +2,18 @@ import {request, report} from './ui.js';
 const $ = id => document.getElementById(id);
 const flags = ['enabled', 'discardPinned', 'protectAudio', 'debug'];
 let saving = false;
+function sleepingHelp() {
+  $('sleepingHelp').textContent = $('sleepingMode').value === 'immediate' ?
+    'Unload the previous tab as soon as the window is parked.' : 'Chrome decides when background tabs are unloaded.';
+}
+$('sleepingMode').addEventListener('change', sleepingHelp);
 function fill(s) {
   for (const key of flags) $(key).checked = s[key];
   $('delayMinutes').value = s.delayMinutes; $('dwellSeconds').value = s.dwellSeconds;
   $('delayPreset').value = [5,10,15,30,60].includes(s.delayMinutes) ? String(s.delayMinutes) : 'custom';
   $('customLabel').hidden = $('delayPreset').value !== 'custom';
   $('exclusions').value = s.exclusions.join('\n');
+  $('sleepingMode').value = s.sleepingMode; $('appearance').value = s.appearance; sleepingHelp();
 }
 function status(text) { $('status').classList.remove('error'); $('status').textContent = text; }
 async function save(operation, success) {
@@ -24,6 +30,7 @@ $('delayPreset').addEventListener('change', () => {
 $('settings').addEventListener('submit', event => {
   event.preventDefault();
   const settings = Object.fromEntries(flags.map(k => [k, $(k).checked]));
+  settings.sleepingMode = $('sleepingMode').value; settings.appearance = $('appearance').value;
   settings.delayMinutes = Number($('delayMinutes').value);
   settings.dwellSeconds = Number($('dwellSeconds').value);
   settings.exclusions = $('exclusions').value.split('\n').map(s => s.trim()).filter(Boolean);

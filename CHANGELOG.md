@@ -1,3 +1,12 @@
+# 1.5.0
+
+- **Let Chrome decide** is now the default tab sleeping mode, including upgrades. Parking leaves the previous tab in the background for Chrome Memory Saver to manage, without explicit discard requests.
+- Keep the previous behavior as **Discard immediately**, with the existing eligibility checks and exclusions.
+- Add **Auto / Light / Dark** appearance to all three extension pages. Saved changes update open pages; Auto follows the system.
+- Treat late messages from removed or navigated parking pages as completed requests. Stop page refresh listeners on teardown, while preserving unexpected errors for diagnosis.
+- Rewrite public guidance around the multi-window workflow and refresh store graphics and screenshots.
+- Keep permissions and local-only data handling unchanged; document the two new stored preferences.
+
 # 1.4.1
 
 - Make the toolbar popup wider and more compact, with single-line labels and 36px controls.

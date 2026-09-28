@@ -1,34 +1,38 @@
-Chrome may keep one selected tab loaded in every browser window, even when you have not used that window for a while. Chrome Window Parker lets that selected tab sleep too.
+Let idle windows rest. Pick up where you left off.
 
-After a configurable period of inactivity, Window Parker switches the unused window to a lightweight temporary parking page. That allows the previously selected real tab to be discarded while the rest of your window — tabs, order, pins and groups — stays in place.
+If you keep a Chrome window for each project or desktop, each one has a selected tab even while you work elsewhere. Chrome Window Parker switches an unused window to a lightweight parking page, giving its previous tab a chance to sleep under Chrome Memory Saver.
 
-When you return and remain in the window for a short configurable delay, the previous tab is restored and the temporary parking page closes. Briefly passing through a window does not wake it.
+Your tabs stay in the same window, with their order, pins and groups intact. Return and stay for a moment to bring back your previous tab and close the parking page. Briefly passing through another desktop leaves that window parked.
 
-Window Parker is designed to work alongside Chrome Memory Saver. Chrome continues managing normal background tabs; Window Parker focuses on the selected tab in an otherwise idle window. Already-sleeping tabs are left alone.
+CHOOSE HOW TABS SLEEP
 
-Key features:
-• Adjustable parking and restore delays
-• Protection for pinned and audio-playing tabs
-• Site and individual-tab exclusions
-• Clear parked tabs across all windows in one click
-• Pause/resume control from the toolbar
-• Parked-window and sleeping-tab status
-• Local-only operation with no telemetry or tracking
+Let Chrome decide is the default. Window Parker makes the previous tab a background tab, then leaves unloading to Chrome. It makes no discard requests in this mode. Keep Memory Saver enabled at your preferred level; Chrome decides whether and when to reclaim memory.
 
-Use Clear parked tabs to bring your windows back now, including while automation is paused. Your automatic parking setting stays unchanged.
+Discard immediately is optional. It asks Chrome to unload the previously selected tab after parking, subject to eligibility checks. Unloading can lose unsaved page state, so use exclusions for important work.
 
-Platform compatibility
+Both modes leave already-sleeping tabs and ordinary background tabs alone. Returning selects only your saved tab and Chrome reloads it if needed. Window Parker does not change Memory Saver settings or Chrome's always-active site list.
 
-Chrome Window Parker is currently tested on macOS only and was designed primarily for multi-window workflows using macOS Spaces. It uses standard Chrome extension APIs and may also work on Windows, Linux and ChromeOS, but those platforms have not yet been formally tested.
+SET IT UP ONCE
 
-Privacy
+• Park after 15 minutes and restore after 2 seconds by default, with adjustable delays.
+• Choose Auto, Light or Dark appearance across settings, popup and parking pages.
+• Skip windows whose selected tab is pinned, playing audio or excluded.
+• Exclude sites or protect individual tabs for the current browser session.
+• Check live parked-window and sleeping-tab counts in the toolbar.
+• Pause automation or clear parking pages across your windows when needed.
 
-The extension runs locally in your Chrome profile. It has no analytics, advertising, telemetry, tracking, external servers or remote code. Tab URLs and titles are used locally for exclusions and restoration and are not sent to the developer.
+BUILT FOR MULTIPLE WINDOWS
 
-Important
+Designed around macOS Spaces. Testing has been on macOS, with live release acceptance checks still outstanding. Windows, Linux and ChromeOS are unverified. Requires Chrome 120 or later. Incognito and special browser windows are excluded.
 
-Requires Chrome 120 or later. Discarding unloads a page and can lose unsaved work. Chrome cannot expose every kind of activity that should remain loaded, so exclude editing sessions, uploads, calls, screen sharing, silent media or other tabs that must stay active. An active Chrome download temporarily pauses parking.
+LOCAL BY DESIGN
 
-Chrome controls the final discard, session restoration and window placement, so memory savings vary by workload.
+No account, analytics, advertising, telemetry or remote code. Tab URLs, titles and window/tab activity are handled locally for exclusions and restoration, never sent to the developer. Settings and recovery details stay in your Chrome profile.
 
-Chrome Window Parker is an independent utility and is not affiliated with or endorsed by Google.
+GOOD TO KNOW
+
+Parking pauses during active Chrome downloads. Chrome cannot reliably expose every call, upload, screen-sharing session, video or unsaved edit to this extension. Exclude important sites; use Chrome's always-active site list too if they must remain loaded under Memory Saver.
+
+Window Parker does not move or focus windows. Chrome controls session restoration and window placement. Memory savings depend on your pages and Chrome's decisions; no fixed reduction is promised.
+
+Chrome Window Parker is an independent project, not affiliated with or endorsed by Google.

@@ -1,4 +1,4 @@
-import {DEFAULTS, validateSettings, skipReason} from './settings.js';
+import {DEFAULTS, validateSettings, storedSettings, skipReason} from './settings.js';
 import {systemClock} from './clock.js';
 
 // All asynchronous transitions are serialized by background.js. Focus signals
@@ -65,7 +65,7 @@ export class Parker {
       this.api.storage.session.get('runtimeState'),
       this.api.windows.getAll({populate: true, windowTypes: ['normal']})
     ]);
-    try { this.settings = validateSettings(local.settings || {}); } catch { this.settings = {...DEFAULTS, enabled: false}; }
+    try { this.settings = storedSettings(local.settings || {}); } catch { this.settings = {...DEFAULTS, enabled: false}; }
     // Storage can outlive older versions or be partially written. Rebuild invalid
     // entries from live tabs rather than letting them prevent worker startup.
     this.records = Object.fromEntries(Object.entries(local.parkingRecords || {}).filter(([token, r]) =>
@@ -210,6 +210,7 @@ export class Parker {
     await this.api.tabs.update(parking.id, {active: true});
     s.parked = true; s.qualified = false; await this.save();
     this.log('parked', id, 'previous tab', active.id);
+    if (this.settings.sleepingMode !== 'immediate' || !valid()) return;
     // Memory Saver owns ordinary background tabs. We address only the tab that
     // could not sleep while selected. Never activate a sleeping tab to inspect it.
     const freshWindow = await this.getWindow(id);
@@ -417,8 +418,9 @@ export class Parker {
       throw new Error('Unsupported page.');
     const isParking = page === this.parkingURL;
     if (isParking) {
+      if (!['restore', 'parked-info'].includes(msg.type)) throw new Error('Unsupported parking action.');
       const tab = await this.getTab(sender.tab?.id);
-      if (!this.token(tab)) throw new Error('Parking tab no longer exists.');
+      if (!this.token(tab) || (sender.url.includes('#') && this.token(tab) !== sender.url.split('#')[1])) return {gone: true};
       if (msg.type === 'restore') { const restored = await this.restore(tab.windowId); await this.schedule(); return {restored}; }
       if (msg.type === 'parked-info') {
         const w = await this.getWindow(tab.windowId);

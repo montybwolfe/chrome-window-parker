@@ -15,7 +15,7 @@ test('parking page title refreshes on reuse, renders site text safely and keeps 
   let title = 'Research & notes <script>sample</script>';
   const messages = [];
   globalThis.document = {title:'Parked', getElementById:element};
-  globalThis.window = {addEventListener(type, fn) {focus[type] = fn;}};
+  globalThis.window = {addEventListener(type, fn) {const old=focus[type];focus[type]=(...args)=>{old?.(...args);return fn(...args);};}};
   globalThis.chrome = {
     tabs: Object.fromEntries(['onUpdated','onCreated','onRemoved','onActivated','onAttached','onDetached'].map(k=>[k,{addListener(){}}])),
     runtime: {async sendMessage(msg) {
@@ -31,6 +31,9 @@ test('parking page title refreshes on reuse, renders site text safely and keeps 
     assert.equal(document.title, 'Parked · A different saved tab');
     title = ''; await focus.focus(); assert.equal(document.title, 'Parked');
     await element('restore').click(); assert.equal(messages.at(-1),'restore');
+    // Chrome may defer removing an inactive parking page. It must stay usable.
+    assert.equal(element('restore').disabled,false);title='Retained page';await focus.focus();assert.equal(element('previous').textContent,title);
+    focus.pagehide();const count=messages.length;await focus.focus();assert.equal(messages.length,count);
   } finally {Object.assign(globalThis, previous);}
 });
 

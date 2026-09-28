@@ -1,6 +1,6 @@
 export const DEFAULTS = Object.freeze({
   enabled: true, delayMinutes: 15, dwellSeconds: 2, discardPinned: false,
-  protectAudio: true, debug: false,
+  protectAudio: true, debug: false, sleepingMode: 'chrome', appearance: 'auto',
   exclusions: ['meet.google.com', 'zoom.us', 'teams.microsoft.com', 'music.youtube.com']
 });
 
@@ -9,6 +9,8 @@ export function validateSettings(input) {
   for (const key of ['enabled', 'discardPinned', 'protectAudio', 'debug']) {
     if (typeof s[key] !== 'boolean') throw new Error(`Invalid ${key}.`);
   }
+  if (!['chrome', 'immediate'].includes(s.sleepingMode)) throw new Error('Choose a tab sleeping mode.');
+  if (!['auto', 'light', 'dark'].includes(s.appearance)) throw new Error('Choose an appearance.');
   if (!Number.isFinite(s.delayMinutes) || s.delayMinutes < 1 || s.delayMinutes > 10080)
     throw new Error('Parking delay must be between 1 minute and 7 days.');
   if (!Number.isFinite(s.dwellSeconds) || s.dwellSeconds < 0.5 || s.dwellSeconds > 20)
@@ -53,4 +55,12 @@ export function skipReason(tab, settings, protectedIds = []) {
   if (protectedIds.includes(tab.id)) return 'individual exclusion';
   if (settings.exclusions.some(rule => matchesRule(tab.url, rule))) return 'URL exclusion';
   return null;
+}
+
+// Old installations acquire the new defaults; invalid stored enum values use
+// conservative defaults without discarding the user's other preferences.
+export function storedSettings(input = {}) {
+  return validateSettings({...input,
+    sleepingMode: ['chrome', 'immediate'].includes(input.sleepingMode) ? input.sleepingMode : 'chrome',
+    appearance: ['auto', 'light', 'dark'].includes(input.appearance) ? input.appearance : 'auto'});
 }

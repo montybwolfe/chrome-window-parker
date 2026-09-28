@@ -5,7 +5,7 @@
 - A focused window is never parked. Sustained focus counts as use; leaving a window after that updates its inactivity clock. Brief visits below the dwell threshold do not postpone parking or wake parked real tabs.
 - Selecting a real tab or navigating an active tab counts as meaningful activity. No mouse/keyboard monitoring or page-content inspection is used. A selected real tab reloads naturally under Chrome.
 - Parking creates an unpinned, ungrouped tab at the end when needed. After restoration confirms a real tab is active, the extension removes its own inactive parking page. A later cycle creates a new one. Existing tabs keep their relative order, URLs, pinned state and groups. There are no calls to move, close, resize, focus, merge or recreate windows, nor to move or close real tabs.
-- If the active real tab is protected, the entire window is skipped and retried after at least a minute. It is not hidden behind a parking page. Protected background tabs remain loaded while Chrome manages background tabs independently.
+- If the active real tab is protected, the entire window is skipped and retried after at least a minute. It is not hidden behind a parking page. Window Parker does not activate or discard protected background tabs. Chrome manages their memory independently.
 - One scheduler alarm targets the next inactive window deadline. Chrome may run it late. Protected windows retry at most once per minute; there is no one-second polling and no keepalive loop.
 - A two-second dwell uses a short worker timer plus a recovery alarm. The normal worker idle timeout exceeds the maximum configurable dwell (20 seconds). If the worker is interrupted, the next worker restarts a full dwell; it never assumes an old partial dwell proves focus. A timer delayed by over 1.5 seconds beyond its deadline also restarts the dwell, preventing sleep time from counting as attentive use. Restoration can therefore be later than the selected duration.
 - If focus changes during a parking pass, remaining work is cancelled. Operations re-read the live window and each tab before mutation. Browser checks and mutations are not one atomic operation; another extension or a last-instant user action can race them. The code still never asks Chrome to focus a window.
@@ -29,7 +29,7 @@ https://example.com/work/*
 
 Use the popup to protect the current tab, or the settings page to select individual tabs. These exclusions follow that tab through navigation but last only for the current browser session. Chrome restart, extension update/reload, or disabling/re-enabling can clear session storage; use domains for persistent protection. The extension does not change Chrome's own Memory Saver exclusions or other extensions' behavior.
 
-**Capture/video/devtools limitation:** The Tabs API does not provide reliable flags for microphone/camera/screen capture, silent video, Picture-in-Picture, attached developer tools, dirty forms or uploads. Explicit `tabs.discard(tabId)` is not equivalent to asking Memory Saver to select a safe candidate; do not assume automatic browser heuristics protect these conditions. `autoDiscardable: true` is not proof of safety. These activities require explicit exclusion/pinning/pause. Adding invasive debugger or broad content access was deliberately avoided, and broad content access alone would still not guarantee complete capture detection.
+**Capture/video/devtools limitation:** The Tabs API does not provide reliable flags for microphone/camera/screen capture, silent video, Picture-in-Picture, attached developer tools, dirty forms or uploads. In Discard immediately mode, explicit `tabs.discard(tabId)` is not equivalent to asking Memory Saver to select a safe candidate; do not assume automatic browser heuristics protect these conditions. `autoDiscardable: true` is not proof of safety. Use explicit exclusion, pinning or pause for these activities. In Chrome-managed mode, use Chrome's always-active site list too when a site must stay loaded.
 
 **Downloads:** The downloads permission is used only to query whether *any* download is in progress. Chrome's DownloadItem has no reliable source tab ID, so all parking/discarding pauses while any download is active (including a paused but unfinished download). A failed query also pauses parking. File transfers implemented inside a page are not necessarily Chrome downloads; exclude their tabs. Finished/interrupted downloads no longer block the next pass. A download starting between the last check and the discard call remains an unavoidable API race.
 
@@ -37,9 +37,11 @@ Native discarding retains the tab, navigation history and Chrome-managed tab met
 
 ## Chrome Memory Saver and statistics
 
-Keep Memory Saver at **Maximum** or your preferred level. Window Parker does not read, change or override that setting, Chrome's Memory Saver allowlist, or any tab's `autoDiscardable` flag. Window Parker explicitly discards **only the formerly selected real tab**, after selecting the parking page. It leaves every ordinary background tab to Chrome.
+Keep Memory Saver enabled at your preferred level. Window Parker does not read, change or override that setting, Chrome's Memory Saver allowlist, or any tab's `autoDiscardable` flag. **Let Chrome decide** is the default for new installs and upgrades: after selecting the parking page, the extension returns without calling `tabs.discard()`. The former selected tab becomes a background tab, and Chrome decides whether and when to unload it. Parking itself does not guarantee a memory reduction.
 
-Before discarding, Window Parker re-reads the current tab and skips `discarded: true`. If the selected real tab is already sleeping before parking begins, the window is left untouched. If Chrome wins a concurrent discard race, Window Parker re-reads state and accepts the result without retrying, activating or reloading the tab. An independent `discarded` update never triggers restoration. Returning after dwell activates only the saved tab (or the documented missing-tab fallback); sleeping neighbors remain asleep.
+**Discard immediately** retains the explicit-discard path: after selecting the parking page, Window Parker requests discard of only the formerly selected real tab. Ordinary background tabs are left to Chrome in both modes.
+
+In immediate mode, before discarding, Window Parker re-reads the current tab and skips `discarded: true`. If the selected real tab is already sleeping before parking begins, the window is left untouched. If Chrome wins a concurrent discard race, Window Parker re-reads state and accepts the result without retrying, activating or reloading the tab. An independent `discarded` update never triggers restoration. Returning after dwell activates only the saved tab (or the documented missing-tab fallback); sleeping neighbors remain asleep.
 
 The popup's **Clear parked tabs** action finds actual parking-page URLs, including inactive leftovers. It works while automation is paused, leaves the setting unchanged, restores a real tab in each affected window and starts a fresh inactivity interval. It never requests window focus or relocation. If a window has no real tabs, it creates an inactive `about:blank` tab in that same window, confirms a real tab is active, then removes its own pages one at a time. A user-selected real tab takes priority over a remembered target. Unavailable or busy tabs do not prevent other windows from being processed; the popup reports any pages still open.
 
@@ -61,7 +63,7 @@ Closed windows and removed parking tabs have their records removed once no live 
 
 | Permission | Purpose |
 | --- | --- |
-| `tabs` | Read URLs/titles for exclusions and recovery; select and discard tabs. It does not provide page-content access. |
+| `tabs` | Read URLs/titles for exclusions and recovery; select tabs and optionally request immediate discard. It does not provide page-content access. |
 | `storage` | Local settings/recovery and per-session state. |
 | `alarms` | Persistent inactivity scheduling and dwell recovery. |
 | `downloads` | Conservative global pause while any download is in progress. No downloads are initiated, modified, opened or deleted. |
@@ -74,8 +76,8 @@ No host permissions, `<all_urls>`, content scripts, scripting, debugger, tabCapt
 2. In Chrome's Task Manager (Window → Task Manager, or More tools → Task Manager if available in your version), enable the memory footprint column. Record memory for the relevant page processes and extension worker/page. Also record total Chrome memory in macOS Activity Monitor. Process sharing means tab sums and total process memory need not match.
 3. Open `chrome://discards` to inspect loaded/discarded tab states. Its layout is version-dependent. Do not use the manual discard buttons during the comparison.
 4. Temporarily set **Custom → 1 minute**, dwell **2 seconds**. Focus another window or another app and wait roughly 90 seconds; alarms can be delayed further under load.
-5. Inspect the target window: its parking page should be selected, the formerly selected real tab still present and marked discarded. Other real tabs retain Chrome’s own state. Record memory again after it settles. Avoid selecting real tabs while recording the parked baseline.
-6. Rapidly traverse four Spaces, staying below two seconds on intermediate Spaces. Stop on the fourth for over two seconds. Only that window's previous real tab should reload. Check that other windows still show their parking pages.
+5. Inspect the target window: its parking page should be selected, the formerly selected real tab still present. In Let Chrome decide, it may remain loaded until Chrome chooses to unload it. In Discard immediately, an eligible tab should be marked discarded unless Chrome refuses. Other real tabs retain Chrome’s own state. Record memory again after it settles. Avoid selecting real tabs while recording the parked baseline.
+6. Rapidly traverse four Spaces, staying below two seconds on intermediate Spaces. Stop on the fourth for over two seconds. Only that window's saved tab should become selected; it reloads only if Chrome had unloaded it. Check that other windows still show their parking pages.
 7. Compare several runs. Savings depend on actual tab contents, shared renderer processes, protected tabs, Chrome's own reclamation, and extension-page overhead. No fixed memory reduction is promised.
 8. Restore the production delay to 15 minutes when finished. Repeat with ten windows after the small test passes.
 
@@ -97,3 +99,11 @@ Restoration selects the remembered real tab, or the existing same-window fallbac
 Manual real-tab selection also cleans up the parking page. A worker starting after an interrupted restoration removes an inactive leftover when those checks pass. Automatic restoration keeps a parking-only window open. Explicit bulk close creates a blank tab first. A temporary Chrome refusal leaves the page for a later activity/sweep/startup retry; there is no fast polling loop. A target that disappears during activation gets one fresh fallback attempt.
 
 Chrome does not offer an atomic “remove this tab only if another tab still exists” call. The final checks minimize races, but cannot guarantee against an unrelated last-instant closure or navigation between that check and Chrome processing removal. Keep that API limitation separate from the guarded, tested normal flow.
+
+## Settings and page lifecycle
+
+The `sleepingMode` setting stores `chrome` or `immediate`; `appearance` stores `auto`, `light` or `dark`. Missing or unrecognized stored enum values fall back to Chrome-managed sleeping and Auto. New malformed settings sent from a page are rejected. Reset persists the defaults. A queued configure/reset signal invalidates in-flight parking before the queue processes the new settings. Changing mode does not retroactively discard already parked tabs.
+
+All three pages load `theme.js` in the head and share CSS color tokens. Auto follows `prefers-color-scheme`; explicit themes override it. Local storage changes update open pages. A revision guard prevents a late initial read from overwriting a newer setting. Content waits for that first read to avoid showing the wrong theme; a read failure falls back to Auto.
+
+A parking page can queue a status request just before restoration removes it. The worker validates the sender, then checks the live tab and token. If that page has gone or navigated away, parked-info/restore returns `{gone: true}` without mutation or error logging. Unexpected API failures still reject and reach the worker console. Parking pages stop coalesced refresh timers and tab listeners on teardown and while restoration is in progress; no background polling was added.

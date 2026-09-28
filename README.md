@@ -2,142 +2,61 @@
 
 <img src="icons/parker-timer-128.png" width="64" height="64" alt="Chrome Window Parker timer icon">
 
-**Let the selected tab in an idle Chrome window sleep, too.**
+**Let idle windows rest. Pick up where you left off.**
 
-Chrome normally keeps one selected tab active in every browser window. If you keep several Chrome windows open, that can leave a surprising amount of memory tied up even when those windows have not been used for a while.
+Keep a Chrome window for each project or desktop? Each window has a selected tab, even when you are working somewhere else. Window Parker switches an unused window to a lightweight parking page, giving its previous tab a chance to sleep under Chrome Memory Saver.
 
-Chrome Window Parker solves that specific problem. After a window has been idle for a while, it switches that window to a tiny parking page so the previously selected tab can be discarded. When you genuinely return to the window, the original tab is restored.
+Your tabs stay in the same window, with their order, pins and groups intact. When you return and stay for a moment, your previous tab comes back and the parking page closes. Briefly passing through another desktop leaves its window parked.
 
-It is designed to work **alongside Chrome Memory Saver**, not replace it.
+## Getting started
 
-## How it works
+Download **`chrome-window-parker-v1.5.0.zip`** from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.0). This is the extension package; GitHub's automatic source-code archives contain development files too.
 
-- An idle window is parked after a configurable delay (15 minutes by default).
-- The extension activates a lightweight temporary parking page in that same window.
-- The previously selected real tab can then be discarded by Chrome.
-- Your other tabs stay where they are, including their order, pins and groups.
-- When you return and remain in the window for a short dwell period (2 seconds by default), the previous tab is restored.
-- Briefly passing through a window does not wake it.
-- After restoration, the temporary parking tab closes automatically.
+1. Extract the release ZIP to a permanent folder.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Choose **Load unpacked**, then select the extracted folder containing `manifest.json`.
+4. Leave the defaults in place to start: park after **15 minutes**, restore after **2 seconds**, and **Let Chrome decide** when tabs sleep.
 
-The toolbar popup also shows the current number of parked windows and sleeping tabs.
+Requires Chrome 120 or later. Testing has been on macOS, with live release checks still outstanding; Windows, Linux and ChromeOS are unverified. See [testing](TESTING.md) and [compatibility](SUPPORT.md).
 
-## Compatibility
+## Two ways to handle tab sleeping
 
-Chrome Window Parker is currently **tested on macOS only**, and was designed around multi-window workflows using macOS Spaces.
+**Let Chrome decide** is the default, including when upgrading from an older version. Parking makes the previous tab a background tab; Chrome controls whether and when it unloads. Window Parker makes no discard requests in this mode. Keep Chrome Memory Saver enabled at your preferred level. A parked window can still have loaded tabs, and memory savings vary.
 
-The extension itself uses standard Chrome extension APIs and contains no macOS-specific code, so it may also work on Windows, Linux and ChromeOS. Those platforms have not yet been formally tested and should be treated as unverified.
+**Discard immediately** asks Chrome to unload the previously selected tab as soon as the window is parked, after the extension's eligibility checks. Choose this only if you want more aggressive sleeping. Unloading can lose unsaved page state.
 
-Requires **Chrome 120 or later**.
+Both modes leave already-sleeping tabs and ordinary background tabs alone. Returning selects only your saved tab, which Chrome reloads if necessary. Window Parker does not change Chrome's Memory Saver settings or its always-active site list. [About Chrome Memory Saver](https://support.google.com/chrome/answer/12929150?hl=en).
 
-## Install
+## Make it fit your workflow
 
-### GitHub release
+Open **Settings** from the toolbar popup to change the parking delay, return delay, sleeping mode or **Auto / Light / Dark** appearance. Auto follows your system theme. Saving an appearance updates every open Window Parker page.
 
-Until the Chrome Web Store listing is available, download the latest prepared extension ZIP from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases).
+By default, a window is skipped when its selected tab is pinned, playing audio or excluded. Add site exclusions for work you want to keep selected, or protect a single tab for the current browser session. Window Parker's exclusions do not control Chrome's own memory decisions.
 
-For version 1.4.1, use:
+The popup shows **Parked windows** and **Sleeping tabs**, plus controls to protect the current tab and pause automation. **Clear parked tabs** returns affected windows to real tabs and removes their parking pages, even while paused. A window with only parking pages receives a blank tab so it stays open.
 
-`chrome-window-parker-v1.4.1.zip`
+## A few things to know
 
-Do **not** use GitHub's automatically generated “Source code (zip)” archive.
+Parking pauses during active Chrome downloads. Incognito, special browser windows and selected internal pages are excluded. Chrome's APIs cannot reliably identify every call, upload, screen-sharing session, video or unsaved edit. Exclude important sites; use Chrome's always-active site list too if they must stay loaded under Memory Saver.
 
-1. Download and extract the release ZIP to a permanent folder.
-2. Open `chrome://extensions`.
-3. Enable **Developer mode**.
-4. Choose **Load unpacked**.
-5. Select the extracted folder containing `manifest.json`.
-
-## Settings
-
-You can configure:
-
-- how long a window must be idle before parking;
-- how long a returned window must remain focused before restoring;
-- whether pinned tabs may be discarded;
-- protection for audio-playing tabs;
-- site exclusions;
-- individual tab exclusions;
-- debug logging.
-
-Automation can also be paused from the toolbar popup. **Clear parked tabs** restores all parked windows and removes their temporary parking pages, even while automation is paused. Each affected window gets a fresh inactivity interval. If a window contains only parking pages, a blank tab keeps it open.
-
-## Chrome Memory Saver
-
-Window Parker complements Chrome's native Memory Saver.
-
-Chrome continues to manage ordinary background tabs. Window Parker focuses on the selected tab in an otherwise unused window — the tab Chrome may otherwise keep loaded because it is still that window's active tab.
-
-Already-sleeping tabs are left alone, and returning to a parked window restores only the saved tab rather than waking every background tab.
-
-## Important limitations
-
-Discarding a tab unloads the page and can lose unsaved work.
-
-Pinned tabs, audible tabs, excluded sites and individually protected tabs are skipped by default. Chrome internal pages and incognito windows are not parked. An active Chrome download temporarily pauses parking.
-
-Chrome's APIs cannot reliably detect every activity that should remain loaded, including some editing sessions, uploads, calls, screen sharing, Picture-in-Picture and silent media. Exclude any site or tab that must remain active.
-
-Chrome itself controls session restoration, window placement and whether a discard request succeeds. Memory savings therefore vary by workload and are not guaranteed.
-
-See [TESTING.md](TESTING.md) for current test coverage.
+Window Parker never asks Chrome to move or focus a window. Chrome still controls session restoration and macOS Space placement. See [behavior and recovery](docs/BEHAVIOR.md) for timing, safeguards and API limitations.
 
 ## Privacy
 
-Chrome Window Parker runs locally in your Chrome profile.
+Everything runs locally in your Chrome profile. There are no accounts, analytics, ads, telemetry, external servers or remote code. Tab URLs, titles and activity state are used locally for exclusions and restoration. [Read the privacy policy](PRIVACY.md).
 
-- No telemetry
-- No analytics
-- No advertising
-- No tracking
-- No external servers
-- No remote code
+## Development and support
 
-Tab URLs and titles are used locally for exclusions and restoration and are not sent to the developer.
-
-See the full [privacy policy](PRIVACY.md).
-
-## Development
-
-Clone the repository:
-
-```sh
-git clone https://github.com/montybwolfe/chrome-window-parker.git
-cd chrome-window-parker
-```
-
-Load the project folder through `chrome://extensions` → **Developer mode** → **Load unpacked**.
-
-No build step is required to run the extension.
-
-Run the automated tests with:
+The repository runs directly as an unpacked extension; no build step is needed. With Node 20+ and Python 3 installed:
 
 ```sh
 npm test
-```
-
-Create a Chrome Web Store-ready package with:
-
-```sh
 python3 scripts/package.py
+npm run preview
 ```
 
-The generated ZIP is placed in `dist/` with `manifest.json` at its root. Release ZIPs are also attached to the corresponding GitHub Release.
+The package is written to `dist/`. The preview uses synthetic data and is separate from an installed extension. [Testing](TESTING.md) explains the checks and their limits; [store submission notes](docs/WEB_STORE.md) identify the upload files.
 
-More technical documentation:
+Report reproducible problems through [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues), with private URLs and titles removed. Changes are recorded in the [changelog](CHANGELOG.md).
 
-- [Behavior and recovery](docs/BEHAVIOR.md)
-- [Testing](TESTING.md)
-- [Compatibility and support](SUPPORT.md)
-- [Chrome Web Store submission notes](docs/WEB_STORE.md)
-- [Changelog](CHANGELOG.md)
-
-## License
-
-Chrome Window Parker is released under the [MIT License](LICENSE).
-
-## Support
-
-Found a reproducible issue? Open a [GitHub Issue](https://github.com/montybwolfe/chrome-window-parker/issues). Please remove private URLs, tab titles and other personal browsing information from screenshots or logs.
-
-Chrome Window Parker is an independent project and is not affiliated with or endorsed by Google.
+Released under the [MIT License](LICENSE). This independent project is not affiliated with or endorsed by Google.

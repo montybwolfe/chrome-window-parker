@@ -1,4 +1,4 @@
-# Icon inventory — 1.4.1
+# Icon inventory — 1.5.0
 
 The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Each PNG is rasterized independently at its target resolution. No low-resolution bitmap is upscaled to make larger artwork.
 
@@ -12,7 +12,7 @@ The single design is the blue timer in `icons/parker-timer.svg`, an editable 102
 | Options, popup and parked favicons | `icons/parker-timer-32.png` |
 | README | `icons/parker-timer-128.png`, displayed at 64 CSS pixels |
 | High-resolution artwork | `docs/assets/parker-timer-256.png`, `docs/assets/parker-timer-512.png`, `docs/assets/parker-timer-1024.png` |
-| Store promotional tile | `docs/assets/promo-440x280.png`, using the same timer |
+| Documentation promotional tile | `docs/assets/promo-440x280.png`, using the same timer |
 | Store ZIP | Only the four runtime timer PNGs; no SVG or marketing art |
 
 All current runtime references use this timer. There are no CSS background images, remote favicons or runtime icon replacements. Store listing assets use the same design.
