@@ -1,10 +1,10 @@
 # Chrome Web Store submission
 
-Prepared for version 1.3.0. This document is submission copy and a release checklist; it does not mean the extension has been submitted or approved.
+Public listing copy and submission notes for Chrome Window Parker 1.3.0.
 
 ## Name
 
-Chrome Window Parker
+**Chrome Window Parker**
 
 ## Short description
 
@@ -12,61 +12,105 @@ Let the selected tab in an idle window sleep. Works alongside Chrome Memory Save
 
 ## Detailed description
 
-Chrome may keep one selected tab loaded in every window, even while you work elsewhere. Window Parker gives an unused window a lightweight parking tab so the previously selected page can sleep too.
+Chrome may keep one selected tab loaded in every browser window, even when you have not used that window for a while. Chrome Window Parker lets that selected tab sleep too.
 
-**Platform status**
+After a configurable period of inactivity, Window Parker switches the unused window to a lightweight temporary parking page. That allows the previously selected real tab to be discarded while the rest of your window — tabs, order, pins and groups — stays in place.
 
-Chrome Window Parker has currently only been tested on macOS and is designed primarily for multi-window workflows across macOS Spaces. It uses standard Chrome extension APIs and may work on Windows, Linux, and ChromeOS, but those platforms have not been formally tested; their compatibility is unverified.
+When you return and remain in the window for a short configurable delay, the previous tab is restored and the temporary parking page closes. Briefly passing through a window does not wake it.
 
-**How it works**
+Window Parker is designed to work alongside Chrome Memory Saver. Chrome continues managing normal background tabs; Window Parker focuses on the selected tab in an otherwise idle window. Already-sleeping tabs are left alone.
 
-After an adjustable period of inactivity, Window Parker switches an eligible window to its parking page without asking Chrome to move or focus that window. Your real tabs stay in place. Return and remain in the window for a short, adjustable delay to restore the previous tab; brief visits do not wake it. Once a real tab is successfully active, the temporary parking page closes. A later parking cycle creates a new one. You can also select a tab or use Restore tab at any time.
+### Key features
 
-Window Parker complements Chrome Memory Saver rather than replacing it. Only the formerly selected real tab is explicitly discarded; Chrome continues managing ordinary background tabs. Existing sleeping tabs are left alone. The extension does not change Chrome's Memory Saver settings or exclusions.
+- Adjustable parking and restore delays
+- Protection for pinned and audio-playing tabs
+- Site and individual-tab exclusions
+- Pause/resume control from the toolbar
+- Parked-window and sleeping-tab status
+- Local-only operation with no telemetry or tracking
 
-Defaults are a 15-minute parking delay and a two-second return delay. Pinned tabs and tabs playing audio are protected by default. Add site or individual-tab exclusions and pause automation from the toolbar popup. Sleeping-tab counts describe the current state, including tabs put to sleep by Chrome; they do not claim how much memory this extension saved.
+### Platform compatibility
 
-**Privacy**
+Chrome Window Parker is currently **tested on macOS only** and was designed primarily for multi-window workflows using macOS Spaces.
 
-Local-only, with no telemetry, analytics, tracking, external servers or remote code. Settings and the previous tab's recovery details stay in your Chrome profile. Tab URLs and titles are used locally and are not sent to the developer. The extension does not inspect page content.
+It uses standard Chrome extension APIs and may also work on Windows, Linux and ChromeOS, but those platforms have not yet been formally tested and should be treated as unverified.
 
-**Before using it**
+Requires Chrome 120 or later.
 
-Requires Chrome 120 or later. Incognito windows are excluded. Discarding unloads a page and can lose unsaved work. Exclude editing sessions, calls, screen sharing, uploads, silent video and other activities that must stay loaded; these cannot all be detected reliably. An active Chrome download pauses parking. Chrome may delay or decline parking operations, and memory savings vary. Chrome controls startup restoration and window placement. Other desktop platforms remain unverified as stated above.
+### Privacy
 
-An independent utility, not affiliated with or endorsed by Google.
+The extension runs locally in the user's Chrome profile. It has no analytics, advertising, telemetry, tracking, external servers or remote code. Tab URLs and titles are used locally for exclusions and restoration and are not sent to the developer.
 
-## Privacy and permissions for the dashboard
+### Important limitations
 
-Single purpose: allow eligible selected tabs in inactive windows to sleep, then restore the saved tab when the user deliberately returns.
+Discarding unloads a page and can lose unsaved work. Chrome cannot expose every kind of activity that should remain loaded, so users should exclude editing sessions, uploads, calls, screen sharing, silent media or other tabs that must stay active.
 
-| Permission | Reason |
+An active Chrome download temporarily pauses parking. Chrome controls the final discard, session restoration and window placement, so memory savings vary by workload.
+
+Chrome Window Parker is an independent utility and is not affiliated with or endorsed by Google.
+
+## Privacy and permission notes
+
+**Single purpose:** allow the selected tab in an eligible inactive Chrome window to sleep, then restore it when the user deliberately returns.
+
+| Permission | Why it is needed |
 | --- | --- |
 | `tabs` | Read local tab titles, URLs and state for exclusions, parking and restoration. |
-| `storage` | Store local settings and recovery metadata; keep transient window state and exclusions in session storage. |
-| `alarms` | Schedule inactivity checks and recover interrupted return delays without continuous polling. |
-| `downloads` | Check whether any download is in progress and pause parking globally. Download metadata is not retained. |
+| `storage` | Store settings and local recovery metadata. |
+| `alarms` | Schedule inactivity checks and restore delays without continuous polling. |
+| `downloads` | Detect active downloads and temporarily pause parking. Download metadata is not retained. |
 
-No host permissions, content scripts or remote code are used. No user data is transmitted to the publisher or third parties. The extension does access and retain local tab URLs/titles for its purpose; do not describe it as never accessing browsing information. Review the current dashboard definitions when completing the data-use declarations and disclose local processing where applicable. The declarations and the policy must agree.
+There are no host permissions, content scripts or remote code. No user data is transmitted to the publisher or third parties.
 
-Public policy: https://github.com/montybwolfe/chrome-window-parker/blob/main/PRIVACY.md
+Because the extension processes local tab URLs, titles and focus state, those uses should still be disclosed in the Chrome Web Store privacy questionnaire. The public privacy policy and the dashboard declarations should remain consistent.
 
-Support: https://github.com/montybwolfe/chrome-window-parker/issues
+- **Privacy policy:** https://github.com/montybwolfe/chrome-window-parker/blob/main/PRIVACY.md
+- **Support:** https://github.com/montybwolfe/chrome-window-parker/issues
+- **License:** MIT
 
-## Assets
+## Store assets
 
-- `icons/parker-timer.svg`: editable vector master with a 1024-pixel default size.
-- `icons/parker-timer-16.png`, `icons/parker-timer-32.png`, `icons/parker-timer-48.png`, `icons/parker-timer-128.png`: transparent extension exports, wired into the manifest.
-- `docs/assets/parker-timer-256.png`, `docs/assets/parker-timer-512.png`, `docs/assets/parker-timer-1024.png`: high-resolution transparent artwork.
-- `docs/assets/promo-440x280.png`: small promotional image.
-- `store-listing/` contains the ready-to-upload icon, promotional images, interface screenshots and copy-and-paste field guide. The screenshots show the actual UI with synthetic fixture data; they are not proof of installed behavior or memory savings. See its START-HERE.md for provenance.
+Ready-to-upload assets are in [`store-listing/`](../store-listing/):
+
+- `store-icon-128.png`
+- `screenshot-1-settings-1280x800.jpg`
+- `screenshot-2-parked-1280x800.jpg`
+- `small-promo-440x280.jpg`
+- `marquee-promo-1400x560.jpg`
+
+The screenshots use synthetic test data and do not contain personal browsing information.
+
+## Package
+
+Run:
+
+```sh
+python3 scripts/package.py
+```
+
+For version 1.3.0 this creates:
+
+```text
+dist/chrome-window-parker-v1.3.0.zip
+```
+
+Upload that prepared ZIP to the Chrome Web Store. The same package is attached to the matching GitHub Release.
+
+Do **not** upload:
+
+- GitHub's automatically generated “Source code (zip)” archive;
+- the full repository;
+- the store-listing asset ZIP.
+
+The runtime ZIP has `manifest.json` at its root and contains only the files needed by the extension.
 
 ## Before submitting
 
-1. Complete and record the live macOS checks in [Testing](../TESTING.md), including exact OS and Chrome versions. Keep other platforms described as unverified.
-2. Review the supplied interface screenshots and upload previews; replace them with installed-copy captures if desired. Check the icon on actual light and dark toolbars at normal and Retina scale.
-3. Verify the public policy and support links, review the current dashboard privacy questions and [program policies](https://developer.chrome.com/docs/webstore/program-policies/), and choose a source-code license if you intend to grant reuse rights. Public repository visibility alone does not do that.
-4. Run tests and `python3 scripts/package.py`; upload **`dist/chrome-window-parker-v1.3.0.zip`** with `manifest.json` at its root. The matching attached GitHub Release asset is the same package. Never upload GitHub's “Source code (zip)” archive. Do not upload the entire repository.
-5. Enter the copy above, attach assets and privacy disclosures, and submit through your developer account. Review approval is a separate step; nothing here guarantees approval. This task does not publish to the store.
+- Complete the relevant live checks in [TESTING.md](../TESTING.md).
+- Confirm the icon on a real Chrome toolbar and in the Web Store preview.
+- Review the screenshots and listing copy.
+- Confirm the public privacy and support URLs work.
+- Keep Windows/Linux/ChromeOS described as unverified until they have actually been tested.
+- Upload the prepared runtime ZIP and complete the privacy declarations in the developer dashboard.
 
-Asset sizes follow the [Chrome Web Store image guidance](https://developer.chrome.com/docs/webstore/images). See the [publishing guide](https://developer.chrome.com/docs/webstore/publish) for the current submission process.
+Chrome Web Store approval is handled by Google and is separate from the GitHub release process.
