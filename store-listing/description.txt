@@ -10,9 +10,12 @@ Key features:
 • Adjustable parking and restore delays
 • Protection for pinned and audio-playing tabs
 • Site and individual-tab exclusions
+• Close parked tabs across all windows in one click
 • Pause/resume control from the toolbar
 • Parked-window and sleeping-tab status
 • Local-only operation with no telemetry or tracking
+
+Use Close parked tabs to bring your windows back now, including while automation is paused. Your automatic parking setting stays unchanged.
 
 Platform compatibility
 

@@ -1,19 +1,20 @@
 # Testing
 
-Validation date: 28 September 2026. Version 1.3.0.
+Validation date: 28 September 2026. Version 1.4.0.
 
-## Evidence and limits
+## Coverage
 
-Testing has only been performed on macOS. Windows, Linux and ChromeOS are unverified. The code uses standard Chrome extension APIs; passing simulated API tests does not establish platform support.
+**103 automated tests pass** with Node 24.19.0. Coverage includes settings persistence, worker queue and native timer receivers, parking and restoration races, Memory Saver coexistence, restart recovery, bulk close, window preservation and popup state.
 
-- **78 automated tests pass** with Node 24.19.0. They cover the engine, serialized background queue, settings persistence, timer receivers, focus races, Memory Saver coexistence, recovery and UI event handling.
-- The new title tests cover literal site-title rendering, repeated parking with a different saved tab, worker restart, the restored target and absence of pin changes. Lifecycle tests verify active-target confirmation before removal, a second parking cycle, manual selection/closure, missing targets, parking-only windows, transient remove failures, recovery after interruption and navigation/focus/detach races. The actual background queue is tested with its own activation/removal events.
-- The Chrome browser fixture uses the actual UI, background queue and engine with native worker timers and simulated Chrome APIs. Settings save/reload/reset and the new parked-page title were checked in this fixture. It cannot access real user tabs or installed extensions.
-- The icon was reviewed at 16, 32, 48 and 128 pixels on light and dark backgrounds. The manifest and release ZIP are checked for referenced assets, permissions and exclusion of test/development files.
-- The prior native-worker reproduction confirmed that detached native timer methods caused Illegal invocation; owner-preserving wrappers passed. Settings coverage includes parking delay, custom delay, dwell, pinned/audio protection, exclusions, debug and Reset.
-- The user has reported that the unpacked extension's core behavior is working. That is useful feedback, not a recorded release acceptance run.
+Bulk-close tests cover paused automation, inactive leftovers, duplicate pages, parking-only windows, manual selections, missing targets/windows, navigation, transient and unexpected API failures, fresh inactivity intervals and record cleanup. The background queue is exercised with its own creation, activation and removal events.
 
-The installed extension's Errors page and worker console could not be inspected through the available automation, which blocks internal Chrome pages. Real Chrome discard calls, Spaces placement, session restoration, sleep/wake and RAM reductions have not been certified by these tests. Do not report the live checklist below as passed until it is performed.
+Chrome UI checks on macOS use the packaged interface with simulated extension APIs and synthetic tabs. They cover keyboard bulk close, refreshed counters, closing while paused, all settings types, persistence after reload and reset. These tests do not operate an installed extension or real user tabs.
+
+Package validation checks the runtime allowlist, module and HTML references, icon dimensions, permissions, license and archive integrity. All 102 runtime tests also pass against extracted release files; the remaining test checks source artwork.
+
+## Remaining live checks
+
+The installed-extension Errors page and service-worker console have not been verified for this release. Actual discards, macOS Spaces placement, sleep/wake, session restoration and memory usage require the live checklist below. Testing has only been performed on macOS; Windows, Linux and ChromeOS remain unverified.
 
 ## Reproduce automated checks
 
@@ -31,13 +32,14 @@ The preview command serves a loopback-only development fixture at `http://127.0.
 
 Use a disposable Chrome profile and saved test work. Record the Chrome, OS and extension versions. Start with a one-minute custom delay and two-second dwell, then repeat with production defaults. Close worker DevTools when testing lifecycle behavior.
 
-1. Load/reload version 1.3.0. Inspect the extension's Errors page and worker console for new errors, then close the inspector.
+1. Load/reload version 1.4.0. Inspect the extension's Errors page and worker console for new errors, then close the inspector.
 2. Save and reopen every setting type; reset and reopen again. Values must persist without errors.
 3. Park a window and inspect “Parked · previous tab title” in the tab strip and window-switching tools. Restore and confirm the parking page closes. Select a different real tab and park again; a newly created page must show the new saved title. Repeat after worker termination and Chrome session restoration. Window-switcher title display is controlled by Chrome/macOS and may differ between tools.
 4. Verify the parking tab stays unpinned at the end while parked, closes after successful restoration, and is recreated for the next cycle; the real tab order/groups/pins stay intact, and only the saved tab restores. There must be no unsolicited foreground or Space changes.
 5. With Memory Saver Maximum, record already-discarded backgrounds, park and restore, and check that those backgrounds stay asleep. Check live sleeping-tab counts without attributing ownership.
-6. Extract `dist/chrome-window-parker-v1.3.0.zip` and load that extracted folder in a disposable Chrome profile. Confirm no errors and the same behavior. Static package validation is not proof that Chrome loaded it successfully.
-7. Run the broader scenarios below. Inspect the timer icon on actual light/dark Chrome toolbars, both normal and Retina displays, and at the store's 128-pixel size.
+6. Extract `dist/chrome-window-parker-v1.4.0.zip` and load that extracted folder in a disposable Chrome profile. Confirm no errors and the same behavior. Static package validation is not proof that Chrome loaded it successfully.
+7. Use **Close parked tabs** with multiple parked windows, then with automation paused. Confirm all parking pages close, real tabs and windows remain, the pause setting stays unchanged and no affected window parks again until its full delay passes. Repeat with inactive leftovers, a closed original target and a window containing only parking pages; the last case must leave one blank tab. Try while dragging a tab, then retry after releasing it.
+8. Run the broader scenarios below. Inspect the timer icon on actual light/dark Chrome toolbars, both normal and Retina displays, and at the store's 128-pixel size.
 
 | # | Scenario | Automated evidence | Live expected result / check |
 |---|---|---|---|
@@ -75,6 +77,6 @@ Do not promise a fixed reduction. Compare several equivalent workloads with and 
 
 Before describing Windows, Linux or ChromeOS as supported, run the live checks on that platform, including application switching, multiple windows, sleep/wake and browser restart. Add exact tested versions and results here. CI running simulated tests on an OS does not constitute browser compatibility validation.
 
-## Icon and package audit
+## Icon and package checks
 
-See [the icon inventory](docs/ICONS.md) for every runtime and documentation reference. Version 1.3.0 gives the timer new filenames and uses 128px sources for the 28–40px page images to avoid undersized Retina artwork. Extension-manager and toolbar rendering still require an actual reload in Chrome; internal-page access is blocked in the available browser automation. The release packager excludes documentation, source SVGs, high-resolution marketing art, tests and private development files.
+See [the icon inventory](docs/ICONS.md) for runtime and documentation references. Page images use 128px sources for Retina rendering. Check toolbar and extension-manager rendering after reloading an installed copy. The release package contains runtime files, four timer PNGs and the MIT license; documentation, source artwork, tests and development fixtures are excluded.

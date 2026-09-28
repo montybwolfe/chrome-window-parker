@@ -1,6 +1,6 @@
 # Chrome Web Store submission
 
-Public listing copy and submission notes for Chrome Window Parker 1.3.0.
+Public listing copy and submission notes for Chrome Window Parker 1.4.0.
 
 ## Name
 
@@ -25,9 +25,12 @@ Window Parker is designed to work alongside Chrome Memory Saver. Chrome continue
 - Adjustable parking and restore delays
 - Protection for pinned and audio-playing tabs
 - Site and individual-tab exclusions
+- Close parked tabs across all windows in one click
 - Pause/resume control from the toolbar
 - Parked-window and sleeping-tab status
 - Local-only operation with no telemetry or tracking
+
+Use **Close parked tabs** to bring your windows back now, including while automation is paused. Your automatic parking setting stays unchanged.
 
 ### Platform compatibility
 
@@ -75,6 +78,7 @@ Ready-to-upload assets are in [`store-listing/`](../store-listing/):
 - `store-icon-128.png`
 - `screenshot-1-settings-1280x800.jpg`
 - `screenshot-2-parked-1280x800.jpg`
+- `screenshot-3-popup-1280x800.jpg`
 - `small-promo-440x280.jpg`
 - `marquee-promo-1400x560.jpg`
 
@@ -88,10 +92,10 @@ Run:
 python3 scripts/package.py
 ```
 
-For version 1.3.0 this creates:
+For version 1.4.0 this creates:
 
 ```text
-dist/chrome-window-parker-v1.3.0.zip
+dist/chrome-window-parker-v1.4.0.zip
 ```
 
 Upload that prepared ZIP to the Chrome Web Store. The same package is attached to the matching GitHub Release.
@@ -102,7 +106,7 @@ Do **not** upload:
 - the full repository;
 - the store-listing asset ZIP.
 
-The runtime ZIP has `manifest.json` at its root and contains only the files needed by the extension.
+The runtime ZIP has `manifest.json` at its root and contains the extension runtime, required icons and MIT license.
 
 ## Before submitting
 

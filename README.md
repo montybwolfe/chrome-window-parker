@@ -36,9 +36,9 @@ Requires **Chrome 120 or later**.
 
 Until the Chrome Web Store listing is available, download the latest prepared extension ZIP from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases).
 
-For version 1.3.0, use:
+For version 1.4.0, use:
 
-`chrome-window-parker-v1.3.0.zip`
+`chrome-window-parker-v1.4.0.zip`
 
 Do **not** use GitHub's automatically generated “Source code (zip)” archive.
 
@@ -60,7 +60,7 @@ You can configure:
 - individual tab exclusions;
 - debug logging.
 
-Automation can also be paused from the toolbar popup.
+Automation can also be paused from the toolbar popup. **Close parked tabs** restores all parked windows and removes their temporary parking pages, even while automation is paused. Each affected window gets a fresh inactivity interval. If a window contains only parking pages, a blank tab keeps it open.
 
 ## Chrome Memory Saver
 
