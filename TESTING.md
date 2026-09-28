@@ -1,6 +1,12 @@
 # Testing
 
-Validation date: 28 September 2026. Version 1.4.0.
+Validation date: 28 September 2026. Version 1.4.1.
+
+## v1.4.1 popup checks
+
+The popup renders in Chrome at 360 × 311 CSS pixels before status messages, with 36px action buttons. The title, controls, stats note and footer fit on one line. Synthetic-fixture checks cover Protect/Unprotect, Pause/Resume, keyboard clearing while paused, counter refresh and the disabled Clear state; no page-console errors were observed. The 128px header icon remains displayed at 28 CSS pixels for Retina resolution. Native installed-toolbar presentation still requires a manual check.
+
+This patch changes popup layout and wording only. The parking engine, background worker, permissions and data handling are unchanged from v1.4.0.
 
 ## Coverage
 
@@ -32,13 +38,13 @@ The preview command serves a loopback-only development fixture at `http://127.0.
 
 Use a disposable Chrome profile and saved test work. Record the Chrome, OS and extension versions. Start with a one-minute custom delay and two-second dwell, then repeat with production defaults. Close worker DevTools when testing lifecycle behavior.
 
-1. Load/reload version 1.4.0. Inspect the extension's Errors page and worker console for new errors, then close the inspector.
+1. Load/reload version 1.4.1. Inspect the extension's Errors page and worker console for new errors, then close the inspector.
 2. Save and reopen every setting type; reset and reopen again. Values must persist without errors.
 3. Park a window and inspect “Parked · previous tab title” in the tab strip and window-switching tools. Restore and confirm the parking page closes. Select a different real tab and park again; a newly created page must show the new saved title. Repeat after worker termination and Chrome session restoration. Window-switcher title display is controlled by Chrome/macOS and may differ between tools.
 4. Verify the parking tab stays unpinned at the end while parked, closes after successful restoration, and is recreated for the next cycle; the real tab order/groups/pins stay intact, and only the saved tab restores. There must be no unsolicited foreground or Space changes.
 5. With Memory Saver Maximum, record already-discarded backgrounds, park and restore, and check that those backgrounds stay asleep. Check live sleeping-tab counts without attributing ownership.
-6. Extract `dist/chrome-window-parker-v1.4.0.zip` and load that extracted folder in a disposable Chrome profile. Confirm no errors and the same behavior. Static package validation is not proof that Chrome loaded it successfully.
-7. Use **Close parked tabs** with multiple parked windows, then with automation paused. Confirm all parking pages close, real tabs and windows remain, the pause setting stays unchanged and no affected window parks again until its full delay passes. Repeat with inactive leftovers, a closed original target and a window containing only parking pages; the last case must leave one blank tab. Try while dragging a tab, then retry after releasing it.
+6. Extract `dist/chrome-window-parker-v1.4.1.zip` and load that extracted folder in a disposable Chrome profile. Confirm no errors and the same behavior. Static package validation is not proof that Chrome loaded it successfully.
+7. Use **Clear parked tabs** with multiple parked windows, then with automation paused. Confirm all parking pages close, real tabs and windows remain, the pause setting stays unchanged and no affected window parks again until its full delay passes. Repeat with inactive leftovers, a closed original target and a window containing only parking pages; the last case must leave one blank tab. Try while dragging a tab, then retry after releasing it.
 8. Run the broader scenarios below. Inspect the timer icon on actual light/dark Chrome toolbars, both normal and Retina displays, and at the store's 128-pixel size.
 
 | # | Scenario | Automated evidence | Live expected result / check |

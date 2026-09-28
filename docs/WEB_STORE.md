@@ -1,6 +1,6 @@
 # Chrome Web Store submission
 
-Public listing copy and submission notes for Chrome Window Parker 1.4.0.
+Public listing copy and submission notes for Chrome Window Parker 1.4.1.
 
 ## Name
 
@@ -25,12 +25,12 @@ Window Parker is designed to work alongside Chrome Memory Saver. Chrome continue
 - Adjustable parking and restore delays
 - Protection for pinned and audio-playing tabs
 - Site and individual-tab exclusions
-- Close parked tabs across all windows in one click
+- Clear parked tabs across all windows in one click
 - Pause/resume control from the toolbar
 - Parked-window and sleeping-tab status
 - Local-only operation with no telemetry or tracking
 
-Use **Close parked tabs** to bring your windows back now, including while automation is paused. Your automatic parking setting stays unchanged.
+Use **Clear parked tabs** to bring your windows back now, including while automation is paused. Your automatic parking setting stays unchanged.
 
 ### Platform compatibility
 
@@ -92,10 +92,10 @@ Run:
 python3 scripts/package.py
 ```
 
-For version 1.4.0 this creates:
+For version 1.4.1 this creates:
 
 ```text
-dist/chrome-window-parker-v1.4.0.zip
+dist/chrome-window-parker-v1.4.1.zip
 ```
 
 Upload that prepared ZIP to the Chrome Web Store. The same package is attached to the matching GitHub Release.

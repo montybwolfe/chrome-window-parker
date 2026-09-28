@@ -2,7 +2,7 @@ SINGLE PURPOSE DESCRIPTION
 Allow the selected tab in an eligible inactive Chrome window to sleep, then restore the saved tab when the user deliberately returns. A temporary parking page keeps the window in place and is removed after a real tab is active.
 
 TABS PERMISSION JUSTIFICATION
-Read tab URLs, titles and state locally to apply exclusions, identify the previously selected tab, create the temporary parking page, discard the eligible previously selected tab and restore it later. The Close parked tabs action restores regular tabs across parked windows and closes only this extension's inactive parking pages after checking a real tab is active. A parking-only window first receives a blank tab to preserve it. It does not read website page contents or transmit browsing information.
+Read tab URLs, titles and state locally to apply exclusions, identify the previously selected tab, create the temporary parking page, discard the eligible previously selected tab and restore it later. The Clear parked tabs action restores regular tabs across parked windows and closes only this extension's inactive parking pages after checking a real tab is active. A parking-only window first receives a blank tab to preserve it. It does not read website page contents or transmit browsing information.
 
 STORAGE PERMISSION JUSTIFICATION
 Save timing settings and site exclusions in local extension storage. Store the previous tab's URL, title and position locally for restart recovery, and keep transient window state and individual-tab exclusions in session storage. No Chrome sync storage or external database is used.

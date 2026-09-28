@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Window Parker</title><link rel="icon" href="icons/parker-timer-32.png"><link rel="stylesheet" href="ui.css"><script type="module" src="popup.js"></script></head>
+<html lang="en" class="popup-root"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Window Parker</title><link rel="icon" href="icons/parker-timer-32.png"><link rel="stylesheet" href="ui.css"><script type="module" src="popup.js"></script></head>
 <body class="popup"><header class="app-header"><img src="icons/parker-timer-128.png" width="28" height="28" alt=""><h1>Window Parker</h1></header>
 <dl class="stats"><div><dt>Parked windows</dt><dd id="parkedCount">—</dd></div><div><dt>Sleeping tabs</dt><dd id="sleepingCount">—</dd></div></dl>
-<p class="hint stats-help">Across regular windows, including tabs put to sleep by Chrome. Returning wakes only your selected tab.</p>
-<div class="popup-actions"><button id="closeParked" disabled aria-describedby="closeHelp">Close parked tabs</button><p id="closeHelp" class="hint">Restore parked windows now. Automatic parking keeps its current setting.</p><button id="protect" disabled>Protect this tab for this session</button><button id="toggle" disabled>Pause automatic parking</button></div>
+<p class="hint stats-help">Includes tabs put to sleep by Chrome.</p>
+<div class="popup-actions"><button id="closeParked" disabled title="Returns parked windows to their normal tabs.">Clear parked tabs</button><button id="protect" disabled title="Protection lasts for this browser session.">Protect this tab</button><button id="toggle" disabled>Pause automatic parking</button></div>
 <div class="popup-footer"><span id="mode" class="hint">Checking status…</span><button class="text-button" id="options">Settings…</button></div>
 <p id="status" role="status" aria-live="polite"></p></body></html>
