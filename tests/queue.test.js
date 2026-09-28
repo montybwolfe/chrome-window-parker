@@ -60,5 +60,11 @@ test('real worker queue handles its own activation/removal events and a second p
     assert(!h.tab(first));assert(h.tab(200).active);assert.equal(h.windows[1].tabs.length,1);
     for(const w of h.windows)w.focused=false;h.api.windows.onFocusChanged.emit(-1);await drain();h.jump(16*60000);h.api.alarms.onAlarm.emit({name:'parking'});await drain();
     const second=h.windows[1].tabs.at(-1);assert.notEqual(second.id,first);assert(second.active);assert(h.tab(200).discarded);assert.deepEqual(errors,[]);
+    const settings=(await send({type:'settings'})).data;
+    assert((await send({type:'configure',settings:{...settings,enabled:false}})).ok);
+    const closed=await send({type:'close-parked'});assert(closed.ok);assert.equal(closed.data.remaining,0);assert.equal(closed.data.closed,2);
+    await drain();const status=(await send({type:'status'})).data;
+    assert.equal(status.parkingTabs,0);assert.equal(status.enabled,false);assert.equal(h.windows.length,2);
+    assert(h.windows.every(w=>w.tabs.length===1));assert.equal(h.alarms.has('parking'),false);assert.deepEqual(errors,[]);
   }finally{globalThis.chrome=original.chrome;Date.now=original.now;globalThis.setTimeout=original.setTimeout;globalThis.clearTimeout=original.clearTimeout;console.error=original.error;}
 });

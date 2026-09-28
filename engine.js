@@ -28,6 +28,10 @@ export class Parker {
     return /^[a-zA-Z0-9-]{8,80}$/.test(token) ? token : null;
   }
   real(t) { return !this.token(t); }
+  removable(t) {
+    const token = this.token(t);
+    return token && t.url === `${this.parkingURL}#${token}` && (!t.pendingUrl || t.pendingUrl === t.url) ? token : null;
+  }
   supported(w) { return w && w.type === 'normal' && !w.incognito; }
   async save() {
     await this.api.storage.session.set({runtimeState: {states: this.states, protectedIds: this.protectedIds,
@@ -62,9 +66,16 @@ export class Parker {
       this.api.windows.getAll({populate: true, windowTypes: ['normal']})
     ]);
     try { this.settings = validateSettings(local.settings || {}); } catch { this.settings = {...DEFAULTS, enabled: false}; }
-    this.records = local.parkingRecords || {};
-    this.states = session.runtimeState?.states || {};
-    this.protectedIds = session.runtimeState?.protectedIds || [];
+    // Storage can outlive older versions or be partially written. Rebuild invalid
+    // entries from live tabs rather than letting them prevent worker startup.
+    this.records = Object.fromEntries(Object.entries(local.parkingRecords || {}).filter(([token, r]) =>
+      /^[a-zA-Z0-9-]{8,80}$/.test(token) && r && typeof r.url === 'string' && typeof r.title === 'string' &&
+      Number.isInteger(r.index) && r.index >= 0 && Number.isFinite(r.updated)));
+    this.states = Object.fromEntries(Object.entries(session.runtimeState?.states || {}).filter(([id, s]) =>
+      /^\d+$/.test(id) && s && Number.isFinite(s.lastUse) && s.lastUse <= this.clock.now()));
+    for (const s of Object.values(this.states)) if (!Number.isFinite(s.retryAt)) s.retryAt = 0;
+    this.protectedIds = Array.isArray(session.runtimeState?.protectedIds) ?
+      session.runtimeState.protectedIds.filter(Number.isInteger) : [];
     const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
     for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
     for (const w of windows) this.adopt(w);
@@ -177,7 +188,9 @@ export class Parker {
       const token = crypto.randomUUID();
       parking = await this.api.tabs.create({windowId: id, active: false, index: w.tabs.length, url: `${this.parkingURL}#${token}`});
     }
-    s.parkingId = parking.id; s.token = this.token(parking);
+    const parkingToken = this.token(parking);
+    if (!parkingToken) return;
+    s.parkingId = parking.id; s.token = parkingToken;
     s.previousId = active.id;
     this.records[s.token] = {url: active.url, title: active.title || 'Previous tab', index: active.index,
       occurrence: w.tabs.filter(t => t.url === active.url && t.index < active.index).length, updated: this.clock.now()};
@@ -188,6 +201,11 @@ export class Parker {
         w.tabs.find(t => t.active)?.id !== active.id ||
         skipReason(w.tabs.find(t => t.id === active.id), this.settings, this.protectedIds)) return;
     if (await this.downloading() || !valid()) return;
+    w = await this.getWindow(id);
+    if (!this.supported(w) || w.focused || !valid() || (this.tabEpoch.get(id) || 0) !== tabEpoch ||
+        w.tabs.find(t => t.active)?.id !== active.id ||
+        !w.tabs.some(t => t.id === parking.id && this.token(t) === s.token) ||
+        skipReason(w.tabs.find(t => t.id === active.id), this.settings, this.protectedIds)) return;
     // No windows.update, window creation, tab moves, or focus-changing API calls.
     await this.api.tabs.update(parking.id, {active: true});
     s.parked = true; s.qualified = false; await this.save();
@@ -228,11 +246,7 @@ export class Parker {
     const tabEpoch = this.tabEpoch.get(id) || 0;
     const w = await this.getWindow(id), s = this.adopt(w);
     if (!s?.parked || !w.focused || this.focus !== id || this.epoch !== epoch) return false;
-    const real = w.tabs.filter(t => this.real(t));
-    const record = this.records[s.token];
-    const target = real.find(t => t.id === s.previousId) ||
-      real.find(t => t.url === record?.url) || real.reduce((best,t) =>
-        !best || Math.abs(t.index - (record?.index || 0)) < Math.abs(best.index - (record?.index || 0)) ? t : best, null);
+    const target = this.restoreTarget(w, s);
     if (!target) return false;
     // Recheck after async reads; restoring is only allowed in the focused window.
     if (this.epoch !== epoch || this.focus !== id || (this.tabEpoch.get(id) || 0) !== tabEpoch) return false;
@@ -248,12 +262,87 @@ export class Parker {
     await this.cleanupParking(id);
     return true;
   }
-  async cleanupParking(id) {
+  restoreTarget(w, s) {
+    const real = w.tabs.filter(t => this.real(t)), record = this.records[s.token];
+    return real.find(t => t.active) || real.find(t => t.id === s.previousId) ||
+      real.find(t => t.url === record?.url) || real.reduce((best,t) =>
+        !best || Math.abs(t.index - (record?.index || 0)) < Math.abs(best.index - (record?.index || 0)) ? t : best, null);
+  }
+  async forgetRecord(token) {
+    if (!token) return;
+    const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
+    if (!windows.some(w => this.supported(w) && w.tabs.some(t => this.token(t) === token))) delete this.records[token];
+  }
+  async closeParkedTabs() {
+    const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
+    const candidates = windows.filter(w => this.supported(w) && w.tabs.some(t => this.token(t)));
+    let closed = 0, failed = 0;
+    for (const initial of candidates) {
+      try {
+        let w = await this.getWindow(initial.id), s = this.adopt(w);
+        if (!s || !w.tabs.some(t => this.token(t))) continue;
+        s.lastUse = this.clock.now(); s.retryAt = 0; s.qualified = false;
+        if (this.dwell?.id === w.id) {
+          this.clock.clearTimeout(this.dwell.timer); this.dwell = null;
+          await this.api.alarms.clear('dwell-recovery');
+        }
+        await this.save();
+        // A bounded retry handles a vanished target or a user selection. Never
+        // activate an old saved target over a real tab the user just selected.
+        for (let attempt = 0; attempt < 2; attempt++) {
+          w = await this.getWindow(initial.id); s = this.adopt(w);
+          if (!s || !w.tabs.some(t => this.token(t))) break;
+          if (!w.tabs.some(t => this.real(t))) {
+            // Explicitly use an existing window and an inert page. This is the
+            // only action that creates a real tab, solely to keep this window.
+            await this.api.tabs.create({windowId: w.id, active: false, url: 'about:blank'});
+            w = await this.getWindow(initial.id); s = this.adopt(w);
+            if (!s) break;
+          }
+          const epoch = this.tabEpoch.get(w.id) || 0, target = this.restoreTarget(w, s);
+          if (!target) continue;
+          if (!target.active) {
+            const live = await this.getTab(target.id);
+            if (!live || live.windowId !== w.id || !this.real(live) || (this.tabEpoch.get(w.id) || 0) !== epoch) continue;
+            try { await this.api.tabs.update(target.id, {active: true}); }
+            catch (error) {
+              if (/No tab with id|Invalid tab ID/i.test(error.message)) continue;
+              throw error;
+            }
+          }
+          w = await this.getWindow(initial.id);
+          if (!this.supported(w) || !w.tabs.some(t => t.active && this.real(t))) continue;
+          // Remove one verified page at a time; duplicate parking pages and
+          // independent failures must not prevent the other pages being handled.
+          for (const parking of w.tabs.filter(t => this.token(t))) {
+            try { if (await this.cleanupParking(w.id, parking.id)) closed++; }
+            catch (error) { failed++; console.error('[Window Parker] parking cleanup', error); }
+          }
+          break;
+        }
+        const final = await this.getWindow(initial.id), state = this.adopt(final);
+        if (state) { state.lastUse = this.clock.now(); state.retryAt = 0; }
+      } catch (error) {
+        if (!/No (tab|window) with id|Invalid (tab|window) ID/i.test(error.message)) {
+          failed++; console.error('[Window Parker] window cleanup', error);
+        }
+      }
+    }
+    const live = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
+    const tokens = new Set(live.filter(w => this.supported(w)).flatMap(w => w.tabs.map(t => this.token(t))).filter(Boolean));
+    for (const token of Object.keys(this.records)) if (!tokens.has(token)) delete this.records[token];
+    const ids = new Set(live.filter(w => this.supported(w)).map(w => String(w.id)));
+    for (const id of Object.keys(this.states)) if (!ids.has(id)) delete this.states[id];
+    for (const w of live) this.adopt(w);
+    await this.saveRecords(); await this.save(); await this.schedule();
+    return {closed, remaining: live.filter(w => this.supported(w)).reduce((n,w) => n + w.tabs.filter(t => this.token(t)).length, 0), failed};
+  }
+  async cleanupParking(id, parkingId) {
     const epoch = this.epoch, tabEpoch = this.tabEpoch.get(id) || 0;
     const w = await this.getWindow(id);
     if (!this.supported(w)) return false;
     const active = w.tabs.find(t => t.active && this.real(t));
-    const parking = w.tabs.find(t => !t.active && this.token(t));
+    const parking = w.tabs.find(t => !t.active && this.removable(t) && (parkingId === undefined || t.id === parkingId));
     if (!active || !parking) return false;
     const token = this.token(parking);
     // Only close our still-inactive page while a real tab is still selected in
@@ -263,7 +352,7 @@ export class Parker {
     if (this.epoch !== epoch || (this.tabEpoch.get(id) || 0) !== tabEpoch ||
         !this.supported(fresh) || fresh.tabs.length < 2 ||
         !fresh.tabs.some(t => t.id === active.id && t.active && this.real(t)) ||
-        !fresh.tabs.some(t => t.id === parking.id && !t.active && this.token(t) === token)) return false;
+        !fresh.tabs.some(t => t.id === parking.id && !t.active && this.removable(t) === token)) return false;
     try { await this.api.tabs.remove(parking.id); }
     catch (error) {
       if (/No tab with id|Invalid tab ID|Tabs cannot be edited right now/i.test(error.message)) {
@@ -271,7 +360,7 @@ export class Parker {
       }
       throw error;
     }
-    delete this.records[token];
+    await this.forgetRecord(token);
     const s = this.states[id];
     if (s?.parkingId === parking.id) { s.parkingId = null; s.token = null; s.parked = false; }
     await this.saveRecords(); await this.save();
@@ -300,7 +389,7 @@ export class Parker {
     if (s) {
       if (s.previousId === tabId) s.previousId = null;
       if (s.parkingId === tabId) {
-        delete this.records[s.token]; s.parkingId = null; s.token = null; s.parked = false;
+        await this.forgetRecord(s.token); s.parkingId = null; s.token = null; s.parked = false;
         s.lastUse = this.clock.now(); await this.saveRecords();
       }
     }
@@ -308,7 +397,7 @@ export class Parker {
   }
   async closed(id) {
     const s = this.states[id];
-    if (s?.token) delete this.records[s.token];
+    if (s?.token) await this.forgetRecord(s.token);
     delete this.states[id]; this.tabEpoch.delete(id);
     await this.saveRecords(); await this.save(); await this.schedule();
   }
@@ -321,6 +410,7 @@ export class Parker {
     return settings;
   }
   async message(msg, sender) {
+    if (!msg || typeof msg.type !== 'string') throw new Error('Invalid message.');
     if (sender.id !== this.api.runtime.id) throw new Error('Invalid sender.');
     const page = sender.url?.split(/[?#]/)[0];
     if (![this.parkingURL, this.api.runtime.getURL('options.html'), this.api.runtime.getURL('popup.html')].includes(page))
@@ -341,7 +431,9 @@ export class Parker {
     if (msg.type === 'settings') return this.settings;
     if (msg.type === 'configure') return this.configure(msg.settings);
     if (msg.type === 'reset') return this.configure({...DEFAULTS});
+    if (msg.type === 'close-parked') return this.closeParkedTabs();
     if (msg.type === 'protect') {
+      if (typeof msg.protected !== 'boolean') throw new Error('Invalid tab protection.');
       const tab = await this.getTab(msg.tabId);
       if (!tab || tab.incognito || !this.real(tab)) throw new Error('Choose a regular tab.');
       this.protectedIds = this.protectedIds.filter(id => id !== tab.id);
@@ -353,6 +445,7 @@ export class Parker {
       const supported = windows.filter(w => this.supported(w));
       const current = supported.find(w => w.focused)?.tabs.find(t => t.active && this.real(t));
       return {enabled: this.settings.enabled,
+        parkingTabs: supported.reduce((n,w) => n + w.tabs.filter(t => this.token(t)).length, 0),
         currentTab: current ? {id: current.id, protected: this.protectedIds.includes(current.id)} : null,
         ...(msg.includeTabs ? {protectedIds: this.protectedIds,
           tabs: supported.flatMap(w => w.tabs.filter(t => this.real(t)).map(t =>
