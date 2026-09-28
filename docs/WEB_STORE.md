@@ -59,12 +59,12 @@ Support: https://github.com/montybwolfe/chrome-window-parker/issues
 - `icons/parker-timer-16.png`, `icons/parker-timer-32.png`, `icons/parker-timer-48.png`, `icons/parker-timer-128.png`: transparent extension exports, wired into the manifest.
 - `docs/assets/parker-timer-256.png`, `docs/assets/parker-timer-512.png`, `docs/assets/parker-timer-1024.png`: high-resolution transparent artwork.
 - `docs/assets/promo-440x280.png`: small promotional image.
-- Capture at least one **actual installed-extension** screenshot before submission (1280×800 or 640×400). Development fixture previews are not evidence of installed behavior and should not be submitted as such.
+- `store-listing/` contains the ready-to-upload icon, promotional images, interface screenshots and copy-and-paste field guide. The screenshots show the actual UI with synthetic fixture data; they are not proof of installed behavior or memory savings. See its START-HERE.md for provenance.
 
 ## Before submitting
 
 1. Complete and record the live macOS checks in [Testing](../TESTING.md), including exact OS and Chrome versions. Keep other platforms described as unverified.
-2. Capture genuine screenshots with synthetic, non-private tabs. Check the icon on light and dark toolbars at normal and Retina scale.
+2. Review the supplied interface screenshots and upload previews; replace them with installed-copy captures if desired. Check the icon on actual light and dark toolbars at normal and Retina scale.
 3. Verify the public policy and support links, review the current dashboard privacy questions and [program policies](https://developer.chrome.com/docs/webstore/program-policies/), and choose a source-code license if you intend to grant reuse rights. Public repository visibility alone does not do that.
 4. Run tests and `python3 scripts/package.py`; upload **`dist/chrome-window-parker-v1.3.0.zip`** with `manifest.json` at its root. The matching attached GitHub Release asset is the same package. Never upload GitHub's “Source code (zip)” archive. Do not upload the entire repository.
 5. Enter the copy above, attach assets and privacy disclosures, and submit through your developer account. Review approval is a separate step; nothing here guarantees approval. This task does not publish to the store.
