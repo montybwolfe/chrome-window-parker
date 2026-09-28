@@ -24,6 +24,11 @@ onmessage=async({data})=>{
     parkingTab=await h.api.tabs.create({windowId:1,active:true,url:'chrome-extension://test/parked.html#browser-test-token'});
     h.local.parkingRecords={'browser-test-token':{url:h.tab(100).url,title:'Research notes — Project Atlas',index:0,occurrence:0,updated:Date.now()}};
    }
+   if(data.page==='popup.html'){
+    h.tab(200).active=false;h.tab(200).discarded=true;
+    await h.api.tabs.create({windowId:2,active:true,url:'chrome-extension://test/parked.html#popup-test-token'});
+    h.local.parkingRecords={...h.local.parkingRecords,'popup-test-token':{url:h.tab(200).url,title:'Project notes',index:0,occurrence:0,updated:Date.now()}};
+   }
    await import('../../background.js');postMessage({kind:'ready'});return;
   }
   if(data.type==='repro'){

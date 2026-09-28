@@ -56,7 +56,7 @@ chrome.runtime.onStartup.addListener(() => enqueue(() => parker.schedule()));
 chrome.runtime.onInstalled.addListener(() => enqueue(() => parker.schedule()));
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   // Cancel any in-flight parking before queued settings / protection changes.
-  if (sender.id === chrome.runtime.id && ['configure', 'reset', 'protect'].includes(msg?.type))
+  if (sender.id === chrome.runtime.id && ['configure', 'reset', 'protect', 'close-parked'].includes(msg?.type))
     parker.safetyEpoch++;
   enqueue(() => parker.message(msg, sender)).then(data => reply({ok: true, data}), error => reply({ok: false, error: error.message}));
   return true;
