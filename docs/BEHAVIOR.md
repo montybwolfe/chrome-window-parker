@@ -10,7 +10,7 @@
 - A two-second dwell uses a short worker timer plus a recovery alarm. The normal worker idle timeout exceeds the maximum configurable dwell (20 seconds). If the worker is interrupted, the next worker restarts a full dwell; it never assumes an old partial dwell proves focus. A timer delayed by over 1.5 seconds beyond its deadline also restarts the dwell, preventing sleep time from counting as attentive use. Restoration can therefore be later than the selected duration.
 - If focus changes during a parking pass, remaining work is cancelled. Operations re-read the live window and each tab before mutation. Browser checks and mutations are not one atomic operation; another extension or a last-instant user action can race them. The code still never asks Chrome to focus a window.
 - The parking page loads only packaged files. No site favicon is fetched. The page displays the saved previous title and current sleeping-tab count. Its document title is “Parked · previous tab title”, read from that parking cycle's saved record. Counts refresh on relevant tab events while the page is open, with short burst coalescing and no background polling.
-- A window with one real tab works normally. An empty parking-only window stays open without inventing a replacement tab. A missing previous tab falls back to a real tab near its saved index.
+- A window with one real tab works normally. Automatic restoration leaves a parking-only window open; the explicit Close parked tabs action first creates a blank tab in that window. A missing previous tab falls back to a real tab near its saved index.
 - Incognito is explicitly unsupported and disabled in the manifest. Popup/app/devtools windows are ignored. Split-view tabs are excluded where Chrome exposes their split-view ID.
 
 ## Safety and exclusions
@@ -41,6 +41,8 @@ Keep Memory Saver at **Maximum** or your preferred level. Window Parker does not
 
 Before discarding, Window Parker re-reads the current tab and skips `discarded: true`. If the selected real tab is already sleeping before parking begins, the window is left untouched. If Chrome wins a concurrent discard race, Window Parker re-reads state and accepts the result without retrying, activating or reloading the tab. An independent `discarded` update never triggers restoration. Returning after dwell activates only the saved tab (or the documented missing-tab fallback); sleeping neighbors remain asleep.
 
+The popup's **Close parked tabs** action finds actual parking-page URLs, including inactive leftovers. It works while automation is paused, leaves the setting unchanged, restores a real tab in each affected window and starts a fresh inactivity interval. It never requests window focus or relocation. If a window has no real tabs, it creates an inactive `about:blank` tab in that same window, confirms a real tab is active, then removes its own pages one at a time. A user-selected real tab takes priority over a remembered target. Unavailable or busy tabs do not prevent other windows from being processed; the popup reports any pages still open.
+
 The popup reports **Parked windows** and **Sleeping tabs** across regular, non-incognito windows. Sleeping tabs are the current real tabs with Chrome's `discarded` flag, including tabs discarded by Chrome or another extension. Parking pages themselves are excluded. A window can have zero parking activity and several sleeping tabs: that is normal. No discard provenance or cumulative savings are claimed, tracked or persisted. Statistics are computed on demand; event listeners exist only in open extension pages. The full tab-title list is requested only when the individual-exclusion section is opened.
 
 ## Restart and recovery
@@ -53,7 +55,7 @@ The recovery journal is written before activating the parking tab. A crash durin
 
 Chrome owns session restoration. It may reload selected real tabs before the extension can act, and it may choose not to restore your windows at all depending on your startup settings. The extension neither creates replacement windows nor forces Chrome's session restore. It only preserves/reconstructs parking for windows Chrome actually restores. It cannot guarantee a zero-reload Chrome startup or restore macOS Space assignments that Chrome itself changes.
 
-Closed windows and removed parking tabs have their records removed, including normal removal after restoration. Abandoned crash records are bounded to the latest 100 in addition to live records. Settings and restart metadata stay only in the local Chrome profile; uninstalling removes extension storage. No `storage.sync` is used.
+Closed windows and removed parking tabs have their records removed once no live page uses that token, including normal removal after restoration. Bulk close also prunes abandoned recovery records. Abandoned crash records are bounded to the latest 100 in addition to live records. Settings and restart metadata stay only in the local Chrome profile; uninstalling removes extension storage. No `storage.sync` is used.
 
 ## Permissions and privacy
 
@@ -92,6 +94,6 @@ If a window does not park, check that it is unfocused, the active tab is eligibl
 
 Restoration selects the remembered real tab, or the existing same-window fallback if it was closed. It verifies activation before cleanup. Cleanup re-reads the window, checks that the parking page is still an inactive page owned by this extension, and requires another, active real tab in the same window. Navigation, tab detach/removal and focus signals invalidate an in-flight snapshot. Real tabs are never intentionally removed.
 
-Manual real-tab selection also cleans up the parking page. A worker starting after an interrupted restoration removes an inactive leftover when those checks pass. A window containing only its parking page remains open. A temporary Chrome refusal leaves the page for a later activity/sweep/startup retry; there is no fast polling loop. A target that disappears during activation gets one fresh fallback attempt.
+Manual real-tab selection also cleans up the parking page. A worker starting after an interrupted restoration removes an inactive leftover when those checks pass. Automatic restoration keeps a parking-only window open. Explicit bulk close creates a blank tab first. A temporary Chrome refusal leaves the page for a later activity/sweep/startup retry; there is no fast polling loop. A target that disappears during activation gets one fresh fallback attempt.
 
 Chrome does not offer an atomic “remove this tab only if another tab still exists” call. The final checks minimize races, but cannot guarantee against an unrelated last-instant closure or navigation between that check and Chrome processing removal. Keep that API limitation separate from the guarded, tested normal flow.

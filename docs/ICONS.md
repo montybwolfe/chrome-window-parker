@@ -1,4 +1,4 @@
-# Icon inventory — 1.3.0
+# Icon inventory — 1.4.0
 
 The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Each PNG is rasterized independently at its target resolution. No low-resolution bitmap is upscaled to make larger artwork.
 
@@ -15,8 +15,6 @@ The single design is the blue timer in `icons/parker-timer.svg`, an editable 102
 | Store promotional tile | `docs/assets/promo-440x280.png`, using the same timer |
 | Store ZIP | Only the four runtime timer PNGs; no SVG or marketing art |
 
-The old generic numeric PNG filenames and `icon.svg` are removed from the current source and installed-folder deliverables. There are no CSS background images, inline SVG substitutes, remote favicons or runtime `setIcon` calls. Historical Git commits and explicitly archived backups may retain old artwork; they are not loaded or packaged.
+All current runtime references use this timer. There are no CSS background images, remote favicons or runtime icon replacements. Store listing assets use the same design.
 
-The audit found that reusing the same icon paths could leave the old running extension displaying older artwork until reloaded. It also found 32/48px sources being rendered at 28/36 CSS pixels, insufficient for 2× displays. New paths and 128px page sources address those issues. They do not force Chrome to reload an already-running unpacked extension.
-
-Automated checks verify references, exact PNG dimensions, absence of legacy runtime paths and release contents. Actual Chrome manager/toolbar rendering must be checked after manually reloading the same unpacked extension, because internal extension-page access is blocked in the available automation. Refresh old options/parking pages too.
+Page headers use 128px sources for crisp rendering at 28–40 CSS pixels on Retina displays. Automated checks verify all declared PNG dimensions and references. Reload an unpacked extension and refresh its pages to display updated artwork; existing Chrome processes can retain cached icons.

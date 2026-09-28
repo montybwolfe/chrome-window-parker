@@ -2,6 +2,8 @@
 from pathlib import Path
 import hashlib
 import json
+import re
+from html.parser import HTMLParser
 import zipfile
 
 root = Path(__file__).resolve().parent.parent
@@ -11,6 +13,7 @@ assert manifest['permissions'] == ['tabs', 'storage', 'alarms', 'downloads']
 assert not manifest.get('host_permissions') and not manifest.get('content_scripts')
 assert len(manifest['description']) <= 132
 files = [
+    'LICENSE',
     'manifest.json', 'background.js', 'clock.js', 'engine.js', 'settings.js',
     'ui.js', 'ui.css', 'parked.html', 'parked.js', 'options.html', 'options.js',
     'popup.html', 'popup.js',
@@ -20,6 +23,26 @@ references = [manifest['background']['service_worker'], manifest['options_ui']['
               manifest['action']['default_popup'], *manifest['icons'].values(),
               *manifest['action']['default_icon'].values()]
 assert all(ref in files for ref in references)
+class References(HTMLParser):
+    def handle_starttag(self, tag, attrs):
+        for key, value in attrs:
+            if key in ('src', 'href'):
+                assert value in files, f'Unexpected HTML resource: {value}'
+
+for name in files:
+    source = (root / name).read_bytes()
+    if name.endswith('.html'):
+        References().feed(source.decode())
+    if name.endswith('.js'):
+        for dependency in re.findall(r"from\s+['\"]([^'\"]+)['\"]", source.decode()):
+            assert dependency.startswith('./') and dependency[2:] in files, dependency
+    if name.endswith('.png'):
+        size = int(name.rsplit('-', 1)[1][:-4])
+        assert source[:8] == b'\x89PNG\r\n\x1a\n'
+        assert int.from_bytes(source[16:20], 'big') == size
+        assert int.from_bytes(source[20:24], 'big') == size
+assert (root / 'LICENSE').read_text().startswith('MIT License')
+assert manifest['version'] == json.loads((root / 'package.json').read_text())['version']
 output = root / 'dist'
 output.mkdir(exist_ok=True)
 archive = output / f"chrome-window-parker-v{manifest['version']}.zip"

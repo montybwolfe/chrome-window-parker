@@ -1,3 +1,12 @@
+# 1.4.0
+
+- Add **Close parked tabs** to restore all parked windows and remove temporary parking pages, including inactive leftovers and while automation is paused.
+- Keep parking-only windows open with a blank tab and give affected windows a fresh inactivity interval without changing settings.
+- Recheck parking-page ownership and tab selection after download checks; retain recovery details while duplicate parking pages remain.
+- Recover from malformed saved state and reject malformed action messages.
+- Keep popup actions stable during requests and refresh counts after closing pages.
+- Refresh store copy and screenshots, include the MIT license in release packages, and restrict the local preview server to its required files.
+
 # 1.3.0
 
 - Remove the temporary parking page after confirming a real tab is active. Recreate it on the next parking cycle. Apply the same guarded cleanup to manual tab selection and interrupted-restoration recovery.

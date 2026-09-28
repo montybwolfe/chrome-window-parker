@@ -1,8 +1,8 @@
 # Chrome Web Store listing assets
 
-This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.3.0.
+This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.4.0.
 
-The extension package itself is separate. Upload **`chrome-window-parker-v1.3.0.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
+The extension package itself is separate. Upload **`chrome-window-parker-v1.4.0.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
 
 ## Product details
 
@@ -23,10 +23,11 @@ The listing copy clearly states that the extension has currently only been teste
 | Store icon | `store-icon-128.png` | 128 × 128 PNG |
 | Screenshot 1 | `screenshot-1-settings-1280x800.jpg` | 1280 × 800 JPEG |
 | Screenshot 2 | `screenshot-2-parked-1280x800.jpg` | 1280 × 800 JPEG |
+| Screenshot 3 | `screenshot-3-popup-1280x800.jpg` | 1280 × 800 JPEG |
 | Small promotional tile | `small-promo-440x280.jpg` | 440 × 280 JPEG |
 | Marquee promotional tile (optional) | `marquee-promo-1400x560.jpg` | 1400 × 560 JPEG |
 
-The screenshots use synthetic test data and contain no personal browsing information.
+The screenshots show the current interface rendered in Chrome with synthetic test data. The popup screenshot places the actual popup inside a presentation frame. They contain no personal browsing information and do not demonstrate measured memory savings.
 
 ## Links
 
