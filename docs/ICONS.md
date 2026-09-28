@@ -1,4 +1,4 @@
-# Icon inventory — 1.4.0
+# Icon inventory — 1.4.1
 
 The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Each PNG is rasterized independently at its target resolution. No low-resolution bitmap is upscaled to make larger artwork.
 

@@ -1,3 +1,9 @@
+# 1.4.1
+
+- Make the toolbar popup wider and more compact, with single-line labels and 36px controls.
+- Rename the popup action to **Clear parked tabs** and shorten protection and status copy. Parking behavior is unchanged.
+- Update the popup store screenshot and matching terminology.
+
 # 1.4.0
 
 - Add **Close parked tabs** to restore all parked windows and remove temporary parking pages, including inactive leftovers and while automation is paused.
