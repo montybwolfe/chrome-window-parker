@@ -1,6 +1,6 @@
 # Chrome Window Parker
 
-<img src="icons/128.png" width="64" height="64" alt="Window Parker timer icon">
+<img src="icons/parker-timer-128.png" width="64" height="64" alt="Window Parker timer icon">
 
 Let the selected tab in an idle Chrome window sleep, too.
 
@@ -17,18 +17,36 @@ Requires **Chrome 120 or later**. Testing so far includes automated simulations 
 - After 15 minutes of inactivity by default, an eligible window switches to a parking tab without asking Chrome to focus or move the window.
 - Only the formerly selected real tab is discarded. The other tabs stay in place, retaining their order, pins and groups.
 - Returning for a continuous two seconds restores the saved tab. Brief passes through other windows do not restore them. Both delays are adjustable.
-- The parking tab stays unpinned at the end and is reused. Its title, **Parked · previous tab title**, helps distinguish windows without changing the saved restoration target. Pinning was avoided because it would move the tab and hide that title.
+- The parking tab is temporary and unpinned. After a real tab is confirmed active, the parking page closes; the next parking cycle creates a new one. Its title, **Parked · previous tab title**, helps distinguish windows without changing the saved restoration target. Pinning was avoided because it would move the tab and hide that title.
 
 Window Parker works **alongside Chrome Memory Saver**, including Maximum mode. It does not change Chrome's performance settings or exclusions, and leaves ordinary background tabs to Chrome. The popup's **Sleeping tabs** count includes sleeping tabs regardless of which tool discarded them; it is not a measurement of memory saved.
 
-## Install locally
+## Install a release
 
-1. Download this repository or a release ZIP and keep the extracted folder in a permanent location.
-2. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
-3. Select the folder containing `manifest.json`.
-4. Open the extension's toolbar popup, then **Settings** to adjust timing or exclusions.
+Open [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases) and download the attached **`chrome-window-parker-v1.3.0.zip`** for version 1.3.0. Extract it to a permanent folder, then open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
 
-To update, replace the files in the same folder, click **Reload** in `chrome://extensions`, and refresh open extension pages. Avoid enabling a second copy. No build or Node installation is needed to use it.
+The GitHub release is a prerelease while live acceptance checks remain open. It is not a Chrome Web Store listing.
+
+## Develop from source
+
+```sh
+git clone https://github.com/montybwolfe/chrome-window-parker.git
+cd chrome-window-parker
+```
+
+In `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the project folder. No build or Node installation is required to load it. Open the toolbar popup, then **Settings** to adjust timing or exclusions.
+
+To update an unpacked copy, replace its files in the same folder, click **Reload** in `chrome://extensions`, and refresh open extension pages. Avoid enabling a second copy. Version 1.3.0 uses new icon filenames; a still-running older copy can keep displaying its old icon until reloaded.
+
+## Chrome Web Store upload package
+
+Run `python3 scripts/package.py` from a checkout. For this version it produces:
+
+```text
+dist/chrome-window-parker-v1.3.0.zip
+```
+
+**Upload that prepared ZIP to the Chrome Web Store**, or download the identically named attached GitHub Release asset. Do **not** upload GitHub's automatically generated “Source code (zip)” archive or zip the whole repository. The prepared package has `manifest.json` at its root and contains only runtime files and required icons. Generated packages stay out of Git.
 
 ## Limits and precautions
 
@@ -36,7 +54,7 @@ Pinned tabs, audible tabs, excluded sites and individually protected tabs are sk
 
 Discarding unloads a page and can lose unsaved work. The available APIs cannot reliably detect editing, uploads, calls, screen sharing, silent video, Picture-in-Picture or attached developer tools. Exclude those tabs or sites, keep them pinned with pinned discarding off, or pause automation. Window Parker exclusions do not control Chrome Memory Saver.
 
-Chrome can delay alarms or decline a discard. Memory savings depend on the pages involved and are not guaranteed or measured by this extension. Chrome controls session restoration and macOS Space placement. A remembered title may appear in Chrome or window-switching tools, but the labels those tools display are outside this extension's control.
+Chrome can delay alarms or decline a discard. Memory savings depend on the pages involved and are not guaranteed or measured by this extension. Chrome controls session restoration and macOS Space placement. If no real tab remains, the parking page stays open to preserve the window. If Chrome temporarily refuses removal, cleanup waits for later activity or worker startup. A remembered title may appear in Chrome or window-switching tools, but the labels those tools display are outside this extension's control.
 
 ## Privacy
 

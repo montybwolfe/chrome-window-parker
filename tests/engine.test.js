@@ -41,7 +41,7 @@ test('brief focus does not reset inactivity; sustained focus loss does',async()=
   await h.focus(2);await h.advance(2500);await h.advance(100000);await h.focus(-1);
   assert.equal(h.p.states[2].lastUse,h.clock.now());
 });
-test('one real tab and reusable parking tab',async()=>{
+test('one real tab and recreated parking tab',async()=>{
   const h=harness(1,1);await h.restart();await h.parkAll();assert.equal(h.windows[0].tabs.length,2);
   await h.focus(1);await h.advance(2000);assert.equal(h.windows[0].tabs[0].active,true);
   await h.parkAll();assert.equal(h.windows[0].tabs.length,2);assert(h.tab(100).discarded);
@@ -120,7 +120,8 @@ test('permission, network and destructive API audit',()=>{
   assert.equal(manifest.manifest_version,3);assert.deepEqual(manifest.permissions,['tabs','storage','alarms','downloads']);assert.equal(manifest.host_permissions,undefined);assert.equal(manifest.content_scripts,undefined);
   const code=readdirSync(root).filter(f=>f.endsWith('.js')).map(f=>readFileSync(new URL(f,root),'utf8')).join('\n');
   assert(!/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/.test(code));
-  assert(!/this\.api\.windows\.(update|create|remove)|this\.api\.tabs\.(move|remove|group|ungroup)/.test(code));
+  assert.equal((code.match(/this\.api\.tabs\.remove\(/g)||[]).length,1);
+  assert(!/this\.api\.windows\.(update|create|remove)|this\.api\.tabs\.(move|group|ungroup)/.test(code));
 });
 
 test('actual worker listeners: self-created page events do not cancel parking; navigation cancels dwell',async()=>{

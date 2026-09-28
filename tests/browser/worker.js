@@ -18,6 +18,8 @@ onmessage=async({data})=>{
   if(data.type==='bootstrap'){
    Object.assign(h.local,data.seed||{});
    if(data.page==='parked.html'){
+    // Keep the HTTP preview visible: a simulated removal cannot close this browser tab.
+    h.local.settings={...h.local.settings,enabled:false};
     h.windows[0].tabs.forEach(t=>{t.active=false;t.discarded=true;});
     parkingTab=await h.api.tabs.create({windowId:1,active:true,url:'chrome-extension://test/parked.html#browser-test-token'});
     h.local.parkingRecords={'browser-test-token':{url:h.tab(100).url,title:'Research notes — Project Atlas',index:0,occurrence:0,updated:Date.now()}};

@@ -4,12 +4,12 @@
 
 - A focused window is never parked. Sustained focus counts as use; leaving a window after that updates its inactivity clock. Brief visits below the dwell threshold do not postpone parking or wake parked real tabs.
 - Selecting a real tab or navigating an active tab counts as meaningful activity. No mouse/keyboard monitoring or page-content inspection is used. A selected real tab reloads naturally under Chrome.
-- Parking adds one unpinned, ungrouped tab at the end, then reuses it. Existing tabs keep their relative order, URLs, pinned state and groups. There are no calls to move, close, resize, focus, merge or recreate windows, nor to move or close real tabs.
+- Parking creates an unpinned, ungrouped tab at the end when needed. After restoration confirms a real tab is active, the extension removes its own inactive parking page. A later cycle creates a new one. Existing tabs keep their relative order, URLs, pinned state and groups. There are no calls to move, close, resize, focus, merge or recreate windows, nor to move or close real tabs.
 - If the active real tab is protected, the entire window is skipped and retried after at least a minute. It is not hidden behind a parking page. Protected background tabs remain loaded while Chrome manages background tabs independently.
 - One scheduler alarm targets the next inactive window deadline. Chrome may run it late. Protected windows retry at most once per minute; there is no one-second polling and no keepalive loop.
 - A two-second dwell uses a short worker timer plus a recovery alarm. The normal worker idle timeout exceeds the maximum configurable dwell (20 seconds). If the worker is interrupted, the next worker restarts a full dwell; it never assumes an old partial dwell proves focus. A timer delayed by over 1.5 seconds beyond its deadline also restarts the dwell, preventing sleep time from counting as attentive use. Restoration can therefore be later than the selected duration.
 - If focus changes during a parking pass, remaining work is cancelled. Operations re-read the live window and each tab before mutation. Browser checks and mutations are not one atomic operation; another extension or a last-instant user action can race them. The code still never asks Chrome to focus a window.
-- The parking page loads only packaged files. No site favicon is fetched. The page displays the saved previous title and current sleeping-tab count. Its document title is “Parked · previous tab title”, refreshed when the parking page is reused. Counts refresh on relevant tab events while the page is open, with short burst coalescing and no background polling.
+- The parking page loads only packaged files. No site favicon is fetched. The page displays the saved previous title and current sleeping-tab count. Its document title is “Parked · previous tab title”, read from that parking cycle's saved record. Counts refresh on relevant tab events while the page is open, with short burst coalescing and no background polling.
 - A window with one real tab works normally. An empty parking-only window stays open without inventing a replacement tab. A missing previous tab falls back to a real tab near its saved index.
 - Incognito is explicitly unsupported and disabled in the manifest. Popup/app/devtools windows are ignored. Split-view tabs are excluded where Chrome exposes their split-view ID.
 
@@ -53,7 +53,7 @@ The recovery journal is written before activating the parking tab. A crash durin
 
 Chrome owns session restoration. It may reload selected real tabs before the extension can act, and it may choose not to restore your windows at all depending on your startup settings. The extension neither creates replacement windows nor forces Chrome's session restore. It only preserves/reconstructs parking for windows Chrome actually restores. It cannot guarantee a zero-reload Chrome startup or restore macOS Space assignments that Chrome itself changes.
 
-Closed windows and manually closed parking tabs have their records removed. Abandoned crash records are bounded to the latest 100 in addition to live records. Settings and restart metadata stay only in the local Chrome profile; uninstalling removes extension storage. No `storage.sync` is used.
+Closed windows and removed parking tabs have their records removed, including normal removal after restoration. Abandoned crash records are bounded to the latest 100 in addition to live records. Settings and restart metadata stay only in the local Chrome profile; uninstalling removes extension storage. No `storage.sync` is used.
 
 ## Permissions and privacy
 
@@ -87,3 +87,11 @@ Enable **Debug logging** in Settings and save. Open `chrome://extensions`, find 
 
 If a window does not park, check that it is unfocused, the active tab is eligible, no downloads remain in progress, and no relevant exclusion applies. Protected windows retry later. If it remains on the parking page, select a real tab or press Restore tab; verify the extension is enabled for automatic dwell restoration. Extension changes require Reload in `chrome://extensions`; refresh an old parking page if its extension context was invalidated. Real tabs always remain selectable.
 
+
+## Safe parking-page cleanup
+
+Restoration selects the remembered real tab, or the existing same-window fallback if it was closed. It verifies activation before cleanup. Cleanup re-reads the window, checks that the parking page is still an inactive page owned by this extension, and requires another, active real tab in the same window. Navigation, tab detach/removal and focus signals invalidate an in-flight snapshot. Real tabs are never intentionally removed.
+
+Manual real-tab selection also cleans up the parking page. A worker starting after an interrupted restoration removes an inactive leftover when those checks pass. A window containing only its parking page remains open. A temporary Chrome refusal leaves the page for a later activity/sweep/startup retry; there is no fast polling loop. A target that disappears during activation gets one fresh fallback attempt.
+
+Chrome does not offer an atomic “remove this tab only if another tab still exists” call. The final checks minimize races, but cannot guarantee against an unrelated last-instant closure or navigation between that check and Chrome processing removal. Keep that API limitation separate from the guarded, tested normal flow.

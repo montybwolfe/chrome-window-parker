@@ -40,3 +40,25 @@ test('open-page metric updates coalesce tab events, ignore unrelated windows and
     assert.equal(timers.length,1);timers[0]();await Promise.resolve();assert.equal(refreshes,1);assert.equal(timers.length,1);
   }finally{globalThis.chrome=original.chrome;globalThis.setTimeout=original.setTimeout;}
 });
+
+test('real worker queue handles its own activation/removal events and a second parking cycle',async()=>{
+  const h=harness(2,1);
+  for(const [namespace,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))
+    for(const name of names)h.api[namespace][name]=event();
+  const original={chrome:globalThis.chrome,now:Date.now,setTimeout:globalThis.setTimeout,clearTimeout:globalThis.clearTimeout,error:console.error};
+  const errors=[];const update=h.api.tabs.update,remove=h.api.tabs.remove,create=h.api.tabs.create;
+  h.api.tabs.update=async(id,props)=>{const tab=await update(id,props);if(props.active)h.api.tabs.onActivated.emit({windowId:tab.windowId,tabId:id});return tab;};
+  h.api.tabs.remove=async id=>{const windowId=h.tab(id).windowId;await remove(id);h.api.tabs.onRemoved.emit(id,{windowId,isWindowClosing:false});};
+  h.api.tabs.create=async props=>{const tab=await create(props);h.api.tabs.onCreated.emit(tab);return tab;};
+  globalThis.chrome=h.api;Date.now=h.clock.now;globalThis.setTimeout=h.clock.setTimeout;globalThis.clearTimeout=h.clock.clearTimeout;console.error=(...args)=>errors.push(args);
+  const send=msg=>new Promise(resolve=>h.api.runtime.onMessage.emit(msg,{id:'test',url:h.api.runtime.getURL('options.html')},resolve));
+  const drain=async()=>{for(let i=0;i<5;i++)assert((await send({type:'settings'})).ok);};
+  try{
+    await import(`../background.js?lifecycle=${Math.random()}`);await drain();
+    h.jump(16*60000);h.api.alarms.onAlarm.emit({name:'parking'});await drain();const first=h.windows[1].tabs.at(-1).id;
+    for(const w of h.windows)w.focused=w.id===2;h.api.windows.onFocusChanged.emit(2);await drain();await h.advance(2000);await drain();
+    assert(!h.tab(first));assert(h.tab(200).active);assert.equal(h.windows[1].tabs.length,1);
+    for(const w of h.windows)w.focused=false;h.api.windows.onFocusChanged.emit(-1);await drain();h.jump(16*60000);h.api.alarms.onAlarm.emit({name:'parking'});await drain();
+    const second=h.windows[1].tabs.at(-1);assert.notEqual(second.id,first);assert(second.active);assert(h.tab(200).discarded);assert.deepEqual(errors,[]);
+  }finally{globalThis.chrome=original.chrome;Date.now=original.now;globalThis.setTimeout=original.setTimeout;globalThis.clearTimeout=original.clearTimeout;console.error=original.error;}
+});

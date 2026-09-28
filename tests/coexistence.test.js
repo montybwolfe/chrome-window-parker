@@ -58,10 +58,11 @@ test('Chrome sleeping backgrounds never reload or receive redundant discard call
   assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]), [200]);
   assert(h.tab(201).discarded); assert(h.tab(203).discarded);
   assert(!h.tab(202).discarded); // Chrome retains control of ordinary backgrounds.
+  const parkingId=h.p.states[2].parkingId;
   await h.focus(2); await h.advance(2000);
   assert(h.tab(200).active); assert(!h.tab(200).discarded);
   assert(h.tab(201).discarded); assert(h.tab(203).discarded);
-  assert.deepEqual(h.calls.filter(c=>c[0]==='update').map(c=>c[1]), [h.p.states[2].parkingId,200]);
+  assert.deepEqual(h.calls.filter(c=>c[0]==='update').map(c=>c[1]), [parkingId,200]);
 });
 
 test('already sleeping selected tab is left entirely untouched', async () => {
@@ -115,7 +116,7 @@ test('sleeping metrics are live state, exclude parking tabs and make no provenan
   h.tab(102).discarded=true;status=await h.p.message({type:'status'},sender);assert.equal(status.windows[0].sleeping,2);
   h.tab(101).discarded=false;status=await h.p.message({type:'status'},sender);assert.equal(status.windows[0].sleeping,1);
   await h.parkAll();await h.focus(2);await h.advance(2000);
-  h.tab(h.p.states[2].parkingId).discarded=true;
+  h.tab(h.p.states[1].parkingId).discarded=true;
   status=await h.p.message({type:'status'},sender);assert.equal(status.windows[1].sleeping,0);
   await h.restart();status=await h.p.message({type:'status'},sender);assert.equal(status.windows[0].sleeping,2);
 });

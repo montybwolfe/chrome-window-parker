@@ -13,16 +13,16 @@ assert len(manifest['description']) <= 132
 files = [
     'manifest.json', 'background.js', 'clock.js', 'engine.js', 'settings.js',
     'ui.js', 'ui.css', 'parked.html', 'parked.js', 'options.html', 'options.js',
-    'popup.html', 'popup.js', 'PRIVACY.md',
-    'icons/16.png', 'icons/32.png', 'icons/48.png', 'icons/128.png',
+    'popup.html', 'popup.js',
+    'icons/parker-timer-16.png', 'icons/parker-timer-32.png', 'icons/parker-timer-48.png', 'icons/parker-timer-128.png',
 ]
 references = [manifest['background']['service_worker'], manifest['options_ui']['page'],
               manifest['action']['default_popup'], *manifest['icons'].values(),
               *manifest['action']['default_icon'].values()]
 assert all(ref in files for ref in references)
-output = root / 'outputs'
+output = root / 'dist'
 output.mkdir(exist_ok=True)
-archive = output / f"chrome-window-parker-{manifest['version']}.zip"
+archive = output / f"chrome-window-parker-v{manifest['version']}.zip"
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:
     for name in sorted(files):
         info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
