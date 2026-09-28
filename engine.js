@@ -1,0 +1,314 @@
+import {DEFAULTS, validateSettings, skipReason} from './settings.js';
+import {systemClock} from './clock.js';
+
+// All asynchronous transitions are serialized by background.js. Focus signals
+// invalidate in-flight operations synchronously, before entering that queue.
+export class Parker {
+  constructor(api, clock = systemClock, dispatch = f => f()) {
+    this.api = api; this.clock = clock; this.dispatch = dispatch;
+    this.settings = {...DEFAULTS}; this.states = {}; this.records = {}; this.protectedIds = [];
+    this.focus = null; this.epoch = 0; this.safetyEpoch = 0; this.dwell = null; this.focusedState = null;
+    this.tabEpoch = new Map();
+    this.parkingURL = api.runtime.getURL('parked.html');
+  }
+  log(...args) { if (this.settings.debug) console.debug('[Window Parker]', ...args); }
+  async getWindow(id) {
+    try { return await this.api.windows.get(id, {populate: true}); }
+    catch (error) { if (/No window with id|Invalid window ID/i.test(error.message)) return null; throw error; }
+  }
+  async getTab(id) {
+    if (!Number.isInteger(id)) return null;
+    try { return await this.api.tabs.get(id); }
+    catch (error) { if (/No tab with id|Invalid tab ID/i.test(error.message)) return null; throw error; }
+  }
+  token(tab) {
+    const url = tab?.pendingUrl || tab?.url || '';
+    if (!url.startsWith(`${this.parkingURL}#`)) return null;
+    const token = url.slice(this.parkingURL.length + 1);
+    return /^[a-zA-Z0-9-]{8,80}$/.test(token) ? token : null;
+  }
+  real(t) { return !this.token(t); }
+  supported(w) { return w && w.type === 'normal' && !w.incognito; }
+  async save() {
+    await this.api.storage.session.set({runtimeState: {states: this.states, protectedIds: this.protectedIds,
+      pendingDwell: this.dwell ? {windowId: this.dwell.id, due: this.dwell.due} : null}});
+  }
+  async saveRecords() {
+    // Bound abandoned crash records, retaining those belonging to live windows.
+    const live = new Set(Object.values(this.states).map(s => s.token));
+    const stale = Object.keys(this.records).filter(k => !live.has(k)).sort((a,b) => this.records[b].updated - this.records[a].updated);
+    for (const key of stale.slice(100)) delete this.records[key];
+    await this.api.storage.local.set({parkingRecords: this.records});
+  }
+  adopt(w) {
+    if (!this.supported(w)) return null;
+    const tabs = w.tabs || [], active = tabs.find(t => t.active);
+    let s = this.states[w.id];
+    if (!s) s = this.states[w.id] = {lastUse: this.clock.now(), retryAt: 0, previousId: null, parked: false, qualified: false};
+    const parking = tabs.find(t => t.active && this.token(t)) || tabs.find(t => this.token(t));
+    s.parkingId = parking?.id ?? null; s.token = this.token(parking);
+    s.parked = !!(active && this.token(active));
+    if (s.parked && !tabs.some(t => t.id === s.previousId && this.real(t))) {
+      const record = this.records[s.token];
+      const matches = tabs.filter(t => this.real(t) && t.url === record?.url);
+      s.previousId = matches[record?.occurrence || 0]?.id ?? null;
+    }
+    return s;
+  }
+  async init() {
+    const [local, session, windows] = await Promise.all([
+      this.api.storage.local.get(['settings', 'parkingRecords']),
+      this.api.storage.session.get('runtimeState'),
+      this.api.windows.getAll({populate: true, windowTypes: ['normal']})
+    ]);
+    try { this.settings = validateSettings(local.settings || {}); } catch { this.settings = {...DEFAULTS, enabled: false}; }
+    this.records = local.parkingRecords || {};
+    this.states = session.runtimeState?.states || {};
+    this.protectedIds = session.runtimeState?.protectedIds || [];
+    const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
+    for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
+    for (const w of windows) this.adopt(w);
+    const ids = new Set(windows.flatMap(w => w.tabs || []).map(t => t.id));
+    this.protectedIds = this.protectedIds.filter(id => ids.has(id));
+    if (this.focus === null) this.signalFocus(windows.find(w => w.focused)?.id ?? -1);
+    // Never trust a persisted partial dwell. A new worker observes a full new dwell.
+    this.focusedState = this.focus;
+    await this.startDwell();
+    await this.save(); await this.schedule();
+  }
+  signalFocus(id) {
+    if (this.dwell) this.log('dwell cancel', this.dwell.id);
+    this.focus = id; this.epoch++;
+    if (this.dwell) this.clock.clearTimeout(this.dwell.timer);
+    this.dwell = null;
+    return this.epoch;
+  }
+  signalTab(windowId) { this.tabEpoch.set(windowId, (this.tabEpoch.get(windowId) || 0) + 1); }
+  async focusChanged(id, at, epoch) {
+    const old = this.states[this.focusedState];
+    if (old?.qualified) { old.lastUse = at; old.retryAt = 0; old.qualified = false; }
+    this.focusedState = id;
+    this.log('focus', id);
+    if (epoch === this.epoch) await this.startDwell();
+    await this.save(); await this.schedule();
+  }
+  async startDwell() {
+    if (this.dwell) this.clock.clearTimeout(this.dwell.timer);
+    this.dwell = null;
+    await this.api.alarms.clear('dwell-recovery');
+    const w = await this.getWindow(this.focus), s = this.adopt(w);
+    if (!s || !w.focused || !this.settings.enabled) return;
+    if (this.focus !== w.id) return;
+    const epoch = this.epoch, id = w.id, due = this.clock.now() + this.settings.dwellSeconds * 1000;
+    this.dwell = {id, epoch, due, timer: this.clock.setTimeout(() => this.dispatch(() => this.finishDwell(epoch)), this.settings.dwellSeconds * 1000)};
+    await this.api.alarms.create('dwell-recovery', {when: due + 30000});
+    this.log('dwell start', id, this.settings.dwellSeconds);
+  }
+  async finishDwell(epoch) {
+    const d = this.dwell;
+    if (!d || d.epoch !== epoch || this.epoch !== epoch || this.focus !== d.id) return;
+    const elapsed = this.clock.now() - d.due;
+    // A delayed timer (sleep / suspended execution) is not evidence of dwell.
+    if (elapsed < 0 || elapsed > 1500) { await this.startDwell(); return; }
+    const w = await this.getWindow(d.id);
+    if (!w?.focused || this.epoch !== epoch) return;
+    this.dwell = null; await this.api.alarms.clear('dwell-recovery');
+    const s = this.adopt(w);
+    if (!s || !this.settings.enabled) return;
+    s.qualified = true; s.lastUse = this.clock.now(); s.retryAt = 0;
+    if (s.parked) await this.restore(d.id, epoch);
+    await this.save(); await this.schedule();
+  }
+  async schedule() {
+    if (!this.settings.enabled) { await this.api.alarms.clear('parking'); return; }
+    const due = Object.entries(this.states)
+      .filter(([id,s]) => Number(id) !== this.focus && !s.parked)
+      .map(([,s]) => Math.max(s.lastUse + this.settings.delayMinutes * 60000, s.retryAt || 0));
+    if (due.length) {
+      const deadline = Math.min(...due), when = Math.max(this.clock.now() + 30000, deadline);
+      const existing = await this.api.alarms.get('parking');
+      // Unrelated tab events must not continually postpone an overdue alarm.
+      if (existing && existing.scheduledTime >= deadline && existing.scheduledTime <= when) return;
+      await this.api.alarms.create('parking', {when}); this.log('inactivity alarm', when);
+    } else await this.api.alarms.clear('parking');
+  }
+  async downloading() {
+    // Downloads have no reliable tab ID: conservatively pause ALL discards.
+    try { return (await this.api.downloads.search({state: 'in_progress'})).length > 0; }
+    catch (error) {
+      if (error instanceof TypeError) throw error;
+      this.log('download safety check unavailable', error.message);
+      return true; // Fail closed if safety information is unavailable.
+    }
+  }
+  async sweep() {
+    if (!this.settings.enabled) return;
+    const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
+    const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
+    for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
+    for (const w of windows) {
+      const s = this.adopt(w);
+      if (!s || s.parked || w.focused || w.id === this.focus) continue;
+      if (this.clock.now() < Math.max(s.lastUse + this.settings.delayMinutes * 60000, s.retryAt || 0)) continue;
+      s.retryAt = this.clock.now() + 60000;
+      try { await this.park(w.id); }
+      catch (error) {
+        if (/No (tab|window) with id|Tabs cannot be edited right now/i.test(error.message))
+          this.log('parking deferred', w.id, error.message);
+        else throw error;
+      }
+    }
+    await this.save(); await this.schedule();
+  }
+  async park(id) {
+    const epoch = this.epoch, safetyEpoch = this.safetyEpoch, tabEpoch = this.tabEpoch.get(id) || 0;
+    const valid = () => this.settings.enabled && this.epoch === epoch && this.safetyEpoch === safetyEpoch && this.focus !== id;
+    let w = await this.getWindow(id);
+    if (!this.supported(w) || w.focused || !valid() || await this.downloading()) return;
+    const active = w.tabs.find(t => t.active), s = this.adopt(w);
+    if (!active || s.parked) return;
+    const reason = skipReason(active, this.settings, this.protectedIds);
+    if (reason) { this.log('window skipped', id, reason); return; }
+    let parking = w.tabs.find(t => this.token(t));
+    if (!parking) {
+      const token = crypto.randomUUID();
+      parking = await this.api.tabs.create({windowId: id, active: false, index: w.tabs.length, url: `${this.parkingURL}#${token}`});
+    }
+    s.parkingId = parking.id; s.token = this.token(parking);
+    s.previousId = active.id;
+    this.records[s.token] = {url: active.url, title: active.title || 'Previous tab', index: active.index,
+      occurrence: w.tabs.filter(t => t.url === active.url && t.index < active.index).length, updated: this.clock.now()};
+    // Journal before activation: interruption can leave a parking page but never lose its target.
+    await this.saveRecords(); await this.save();
+    w = await this.getWindow(id);
+    if (!w || w.focused || !valid() || (this.tabEpoch.get(id) || 0) !== tabEpoch ||
+        w.tabs.find(t => t.active)?.id !== active.id ||
+        skipReason(w.tabs.find(t => t.id === active.id), this.settings, this.protectedIds)) return;
+    if (await this.downloading() || !valid()) return;
+    // No windows.update, window creation, tab moves, or focus-changing API calls.
+    await this.api.tabs.update(parking.id, {active: true});
+    s.parked = true; s.qualified = false; await this.save();
+    this.log('parked', id, 'previous tab', active.id);
+    // Memory Saver owns ordinary background tabs. We address only the tab that
+    // could not sleep while selected. Never activate a sleeping tab to inspect it.
+    const freshWindow = await this.getWindow(id);
+    if (!valid() || !freshWindow || freshWindow.focused || freshWindow.tabs.find(t => t.active)?.id !== parking.id) return;
+    if (await this.downloading()) return;
+    const tab = await this.getTab(active.id);
+    if (!valid() || !tab || tab.windowId !== id || tab.active) return;
+    const skip = skipReason(tab, this.settings, this.protectedIds);
+    if (skip) { this.log('skip tab', tab.id, skip); return; }
+    try { await this.api.tabs.discard(tab.id); this.log('discarded previous tab', tab.id); }
+    catch (error) {
+      // Chrome may win the race between our last read and discard(). Its current
+      // state is authoritative; no retries, activation, ownership or reloads.
+      const current = await this.getTab(tab.id);
+      if (!current || current.discarded || current.active || current.windowId !== id) {
+        this.log('discard no longer needed', tab.id); return;
+      }
+      if (/Cannot discard tab/i.test(error.message)) {
+        this.log('Chrome declined discard', tab.id); return;
+      }
+      throw error;
+    }
+  }
+  async restore(id, epoch = this.epoch) {
+    const w = await this.getWindow(id), s = this.adopt(w);
+    if (!s?.parked || !w.focused || this.focus !== id || this.epoch !== epoch) return false;
+    const real = w.tabs.filter(t => this.real(t));
+    const record = this.records[s.token];
+    const target = real.find(t => t.id === s.previousId) ||
+      real.find(t => t.url === record?.url) || real.reduce((best,t) =>
+        !best || Math.abs(t.index - (record?.index || 0)) < Math.abs(best.index - (record?.index || 0)) ? t : best, null);
+    if (!target) return false;
+    // Recheck after async reads; restoring is only allowed in the focused window.
+    if (this.epoch !== epoch || this.focus !== id) return false;
+    await this.api.tabs.update(target.id, {active: true});
+    s.parked = false; s.qualified = true; s.lastUse = this.clock.now(); s.retryAt = 0;
+    this.log('restored', id, target.id); await this.save(); return true;
+  }
+  async activated(id, tabId) {
+    const w = await this.getWindow(id), s = this.adopt(w);
+    const active = w?.tabs?.find(t => t.active);
+    if (!s || !active || active.id !== tabId) return;
+    if (this.real(active)) {
+      s.parked = false; s.previousId = active.id;
+      // Activation in a background window may be another extension; be conservative.
+      s.lastUse = this.clock.now(); s.retryAt = 0;
+      if (w.focused && this.focus === id) {
+        s.qualified = true;
+        if (this.dwell) this.clock.clearTimeout(this.dwell.timer);
+        this.dwell = null; await this.api.alarms.clear('dwell-recovery');
+      }
+    } else if (w.focused && !this.dwell) await this.startDwell();
+    await this.save(); await this.schedule();
+  }
+  async removed(tabId, info) {
+    this.protectedIds = this.protectedIds.filter(id => id !== tabId);
+    const s = this.states[info.windowId];
+    if (s) {
+      if (s.previousId === tabId) s.previousId = null;
+      if (s.parkingId === tabId) {
+        delete this.records[s.token]; s.parkingId = null; s.token = null; s.parked = false;
+        s.lastUse = this.clock.now(); await this.saveRecords();
+      }
+    }
+    await this.save(); await this.schedule();
+  }
+  async closed(id) {
+    const s = this.states[id];
+    if (s?.token) delete this.records[s.token];
+    delete this.states[id]; this.tabEpoch.delete(id);
+    await this.saveRecords(); await this.save(); await this.schedule();
+  }
+  async configure(input) {
+    const settings = validateSettings(input);
+    await this.api.storage.local.set({settings});
+    this.signalFocus(this.focus); this.settings = settings;
+    for (const s of Object.values(this.states)) s.retryAt = 0;
+    await this.startDwell(); await this.save(); await this.schedule();
+    return settings;
+  }
+  async message(msg, sender) {
+    if (sender.id !== this.api.runtime.id) throw new Error('Invalid sender.');
+    const page = sender.url?.split(/[?#]/)[0];
+    if (![this.parkingURL, this.api.runtime.getURL('options.html'), this.api.runtime.getURL('popup.html')].includes(page))
+      throw new Error('Unsupported page.');
+    const isParking = page === this.parkingURL;
+    if (isParking) {
+      const tab = await this.getTab(sender.tab?.id);
+      if (!this.token(tab)) throw new Error('Parking tab no longer exists.');
+      if (msg.type === 'restore') { const restored = await this.restore(tab.windowId); await this.schedule(); return {restored}; }
+      if (msg.type === 'parked-info') {
+        const w = await this.getWindow(tab.windowId);
+        return {windowId: tab.windowId, title: this.records[this.token(tab)]?.title || 'Your previous tab',
+          sleeping: w?.tabs.filter(t => this.real(t) && t.discarded).length || 0, enabled: this.settings.enabled,
+          dwellSeconds: this.settings.dwellSeconds};
+      }
+      throw new Error('Unsupported parking action.');
+    }
+    if (msg.type === 'settings') return this.settings;
+    if (msg.type === 'configure') return this.configure(msg.settings);
+    if (msg.type === 'reset') return this.configure({...DEFAULTS});
+    if (msg.type === 'protect') {
+      const tab = await this.getTab(msg.tabId);
+      if (!tab || tab.incognito || !this.real(tab)) throw new Error('Choose a regular tab.');
+      this.protectedIds = this.protectedIds.filter(id => id !== tab.id);
+      if (msg.protected) this.protectedIds.push(tab.id);
+      await this.save(); return {protected: msg.protected};
+    }
+    if (msg.type === 'status') {
+      const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
+      const supported = windows.filter(w => this.supported(w));
+      const current = supported.find(w => w.focused)?.tabs.find(t => t.active && this.real(t));
+      return {enabled: this.settings.enabled,
+        currentTab: current ? {id: current.id, protected: this.protectedIds.includes(current.id)} : null,
+        ...(msg.includeTabs ? {protectedIds: this.protectedIds,
+          tabs: supported.flatMap(w => w.tabs.filter(t => this.real(t)).map(t =>
+            ({id: t.id, windowId: w.id, title: t.title || t.url || 'Tab'})))} : {}),
+        windows: supported.map(w => ({id: w.id, parked: !!w.tabs.find(t => t.active && this.token(t)),
+          sleeping: w.tabs.filter(t => this.real(t) && t.discarded).length}))};
+    }
+    throw new Error('Unknown action.');
+  }
+}

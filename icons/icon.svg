@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 128 128">
+  <title>Window Parker</title>
+  <desc>A blue timer with simple white hands.</desc>
+  <g fill="#2b60c5">
+    <rect x="60" y="16" width="8" height="13" rx="3"/>
+    <rect x="52" y="8" width="24" height="8" rx="4"/>
+    <circle cx="64" cy="73" r="46"/>
+  </g>
+  <path d="M64 46V73L82 84" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

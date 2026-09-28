@@ -1,0 +1,12 @@
+.DS_Store
+work/
+outputs/
+node_modules/
+.env
+.env.*
+*.pem
+*.key
+*.crx
+*.zip
+coverage/
+*.log

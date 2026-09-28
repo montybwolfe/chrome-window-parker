@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome Window Parker",
+  "version": "1.2.0",
+  "minimum_chrome_version": "120",
+  "description": "Let the selected tab in an idle window sleep. Works alongside Chrome Memory Saver; restores when you return.",
+  "permissions": ["tabs", "storage", "alarms", "downloads"],
+  "incognito": "not_allowed",
+  "background": {"service_worker": "background.js", "type": "module"},
+  "options_ui": {"page": "options.html", "open_in_tab": true},
+  "action": {"default_title": "Chrome Window Parker", "default_popup": "popup.html", "default_icon": {"16": "icons/16.png", "32": "icons/32.png"}},
+  "icons": {"16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png"},
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
+  }
+}
