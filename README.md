@@ -68,6 +68,7 @@ Run `npm test` with Node 20+; tests have no package dependencies. `npm run previ
 - [Testing and remaining release checks](TESTING.md)
 - [Compatibility and support](SUPPORT.md)
 - [Chrome Web Store copy and submission checklist](docs/WEB_STORE.md)
+- [Store listing fields and upload assets](store-listing/START-HERE.md)
 - [Changes](CHANGELOG.md)
 
 Report reproducible issues in [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues), without private URLs or browsing data. This project is independent of Google and is not endorsed by Google.

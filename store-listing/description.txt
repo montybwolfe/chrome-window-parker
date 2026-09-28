@@ -1,0 +1,23 @@
+Chrome may keep one selected tab loaded in every window, even while you work elsewhere. Window Parker gives an unused window a lightweight parking tab so the previously selected page can sleep too.
+
+Platform status
+
+Chrome Window Parker has currently only been tested on macOS and is designed primarily for multi-window workflows across macOS Spaces. It uses standard Chrome extension APIs and may work on Windows, Linux, and ChromeOS, but those platforms have not been formally tested; their compatibility is unverified.
+
+How it works
+
+After an adjustable period of inactivity, Window Parker switches an eligible window to its parking page without asking Chrome to move or focus that window. Your real tabs stay in place. Return and remain in the window for a short, adjustable delay to restore the previous tab; brief visits do not wake it. Once a real tab is successfully active, the temporary parking page closes. A later parking cycle creates a new one. You can also select a tab or use Restore tab at any time.
+
+Window Parker complements Chrome Memory Saver rather than replacing it. Only the formerly selected real tab is explicitly discarded; Chrome continues managing ordinary background tabs. Existing sleeping tabs are left alone. The extension does not change Chrome's Memory Saver settings or exclusions.
+
+Defaults are a 15-minute parking delay and a two-second return delay. Pinned tabs and tabs playing audio are protected by default. Add site or individual-tab exclusions and pause automation from the toolbar popup. Sleeping-tab counts describe the current state, including tabs put to sleep by Chrome; they do not claim how much memory this extension saved.
+
+Privacy
+
+Local-only, with no telemetry, analytics, tracking, external servers or remote code. Settings and the previous tab's recovery details stay in your Chrome profile. Tab URLs and titles are used locally and are not sent to the developer. The extension does not inspect page content.
+
+Before using it
+
+Requires Chrome 120 or later. Incognito windows are excluded. Discarding unloads a page and can lose unsaved work. Exclude editing sessions, calls, screen sharing, uploads, silent video and other activities that must stay loaded; these cannot all be detected reliably. An active Chrome download pauses parking. Chrome may delay or decline parking operations, and memory savings vary. Chrome controls startup restoration and window placement. Other desktop platforms remain unverified as stated above.
+
+An independent utility, not affiliated with or endorsed by Google.
