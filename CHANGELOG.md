@@ -1,7 +1,15 @@
+# 1.5.1.2
+
+- Standardize public product branding to Chrome Window Parker.
+- Remove funding controls and code from the installed extension and Store materials; retain optional repository-level funding.
+- Refresh affected Store assets and provide cumulative publishing instructions from v1.5.0.
+- Prepare the README for the future approved Chrome Web Store link while retaining manual installation.
+- Preserve the v1.5.1 parking fixes, permissions, restrictive CSP and local data handling.
+
 # 1.5.1.1
 
 - Add small optional Support controls to the popup footer and the bottom of Settings. The parked page stays unchanged.
-- Add Buy Me a Coffee funding information to GitHub and Store material, with clear third-party privacy wording.
+- Add project funding information to GitHub and Store material, with clear third-party privacy wording.
 - All functionality remains free: no paid tiers, accounts, supporter tracking, new permissions or background network requests.
 - Refresh the affected popup screenshot through the existing lossless 4× pipeline; retain the current visual direction.
 

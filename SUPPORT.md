@@ -2,7 +2,7 @@
 
 Chrome Window Parker is designed for people who keep several Chrome windows open, especially across macOS Spaces. It requires Chrome 120 or later and uses standard extension APIs without native software or macOS-specific code.
 
-Testing has been on macOS. The v1.5.1.1 automated checks and Chrome UI previews do not complete the installed-extension acceptance checklist. Windows, Linux and ChromeOS remain unverified; other Chromium browsers and mobile browsers are also unvalidated. See [TESTING.md](TESTING.md) for evidence and outstanding checks.
+Testing has been on macOS. The v1.5.1.2 automated checks and Chrome UI previews do not complete the installed-extension acceptance checklist. Windows, Linux and ChromeOS remain unverified; other Chromium browsers and mobile browsers are also unvalidated. See [TESTING.md](TESTING.md) for evidence and outstanding checks.
 
 ## If a window does not park
 
@@ -14,7 +14,7 @@ In **Let Chrome decide**, seeing a parking page does not mean Chrome has unloade
 
 Remain focused for the configured return delay, or press **Restore tab**. Automatic return is paused when automation is off. You can always select a real tab yourself. **Clear parked tabs** returns affected windows to real tabs without changing your pause setting.
 
-After an extension reload or update, refresh old extension pages if their context has become invalid. Chrome controls browser session restoration and Space placement; Window Parker cannot reconstruct windows that Chrome did not restore.
+After an extension reload or update, refresh old extension pages if their context has become invalid. Chrome controls browser session restoration and Space placement; Chrome Window Parker cannot reconstruct windows that Chrome did not restore.
 
 ## Reporting a problem
 

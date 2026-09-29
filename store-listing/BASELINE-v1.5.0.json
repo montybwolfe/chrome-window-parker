@@ -1,0 +1,121 @@
+{
+  "baselineTag": "v1.5.0",
+  "baselineCommit": "bc0530b9649b652f158745536603445db3d08696",
+  "finalVersion": "1.5.1.2",
+  "manifestChangedFields": [
+    "version"
+  ],
+  "listingMetadataChangedFields": [
+    "screenshots",
+    "small_promo_tile",
+    "marquee_promo_tile",
+    "version"
+  ],
+  "privacyChangedSections": [
+    "TABS PERMISSION JUSTIFICATION"
+  ],
+  "assets": [
+    {
+      "slot": "Store icon",
+      "before": "store-icon-128.png",
+      "beforeSHA256": "50a6730769833755ba65dae9e905ea23f2c02244da507777a4d8fa09b790dfc7",
+      "after": "store-icon-128.png",
+      "afterSHA256": "2d91e0a26b938c2b2f212361bc444ae75c8f9680145e073eb39be56338cc71cb",
+      "dimensions": "128\u00d7128",
+      "status": "MUST UPDATE"
+    },
+    {
+      "slot": "Screenshot 1",
+      "before": "screenshot-1-settings-1280x800.jpg",
+      "beforeSHA256": "83356e80774245f49f605c6cecf51165e9414d7c4834cd7e92fd464995c6007b",
+      "after": "screenshot-1-settings-1280x800.png",
+      "afterSHA256": "88b720fe826056f9532c8a6d8893f61f4c6795f4da2b12fedd6b08cc0c5c7462",
+      "dimensions": "1280\u00d7800",
+      "status": "MUST UPDATE"
+    },
+    {
+      "slot": "Screenshot 2",
+      "before": "screenshot-2-parked-1280x800.jpg",
+      "beforeSHA256": "0799efa36716c89dfb7805460e2a049d7993d5d3ed826ba12329b2b3cfd40990",
+      "after": "screenshot-2-parked-1280x800.png",
+      "afterSHA256": "e5e2aaab0a1b43e07e7dadf085c77f8834e9e1145bd85a87a6e3757ad6eeb49f",
+      "dimensions": "1280\u00d7800",
+      "status": "MUST UPDATE"
+    },
+    {
+      "slot": "Screenshot 3",
+      "before": "screenshot-3-popup-1280x800.jpg",
+      "beforeSHA256": "1fc413ed3fe364b00d5d2ec8ad5088d8d3228fa927ac71d9a9ee39e683eda2f3",
+      "after": "screenshot-3-popup-1280x800.png",
+      "afterSHA256": "00dc3e62db6794a16f38e0eddd2bf636c04f426775524a13ba85e872f812b655",
+      "dimensions": "1280\u00d7800",
+      "status": "MUST UPDATE"
+    },
+    {
+      "slot": "Small promo",
+      "before": "small-promo-440x280.jpg",
+      "beforeSHA256": "33b0a91af810beb2fdbfb39cc6433c9016ebab0e0c74be56ae815c75db017ef6",
+      "after": "small-promo-440x280.png",
+      "afterSHA256": "f9471b7a90c7ad3a2c37a01d476f1c8511f22ed13ecf4809e9ef01eb09ce3989",
+      "dimensions": "440\u00d7280",
+      "status": "MUST UPDATE"
+    },
+    {
+      "slot": "Marquee",
+      "before": "marquee-promo-1400x560.jpg",
+      "beforeSHA256": "a53cfea6f09039a4d363e9eff9db1255054b628631ddca569aa89d8ea6487a98",
+      "after": "marquee-promo-1400x560.png",
+      "afterSHA256": "68a30b5df660459f4bb0278279ffb365507a56ca720d42ab2efcb57532185f55",
+      "dimensions": "1400\u00d7560",
+      "status": "MUST UPDATE"
+    }
+  ],
+  "textFiles": {
+    "store-listing/description.txt": {
+      "baselineSHA256": "956221c5abfbfe8ae2323ac509940a5b71d9988ff58ad62776e4f3cc785905ee",
+      "finalSHA256": "7836d79b69b47ca4b0a4342d7d4c56b646897c1819563ae298f743449ab2a118"
+    },
+    "store-listing/privacy-fields.txt": {
+      "baselineSHA256": "d41b29b15044bf5076726c32c98895b80a308273255563a295b2e6a0a3d63714",
+      "finalSHA256": "d110c1f6be67c4aea3c86da417444073de6b9b9a1e9247d53d129192ae79acef"
+    },
+    "PRIVACY.md": {
+      "baselineSHA256": "12575fd8fe8796a87ca1964ca1243d41cbc93ee714bb21804f4269aeff436354",
+      "finalSHA256": "6f78dec5c2cd76edfdf5de11300c29b59d3d95e92df47288c916b13a9054b957"
+    }
+  },
+  "unchanged": [
+    "permissions",
+    "CSP",
+    "single purpose",
+    "storage justification",
+    "alarms justification",
+    "downloads justification",
+    "remote code",
+    "data handling explanation",
+    "data-type disclosures",
+    "limited-use certifications",
+    "platform compatibility status"
+  ],
+  "behavior": "Preserves v1.5.1 bulk-discard and Clear corrections; current core files differ from v1.5.1 only in product-name log prefixes.",
+  "runtimeArchives": {
+    "baseline": "chrome-window-parker-v1.5.0.zip",
+    "baselineSHA256": "0fe9f6192b0b4239df257064d9e7ac606fbfd438ce263fe67d390d5465d5dac4",
+    "baselineFiles": 19,
+    "final": "chrome-window-parker-v1.5.1.2.zip",
+    "finalSHA256": "aafedf4f3b89b57baeae7d8664bfe8deffa4f31660470fb4aba9aa6229e6d5e2",
+    "finalFiles": 19,
+    "changedFiles": [
+      "background.js",
+      "engine.js",
+      "manifest.json",
+      "options.html",
+      "options.js",
+      "parked.html",
+      "popup.html"
+    ],
+    "sameFileInventory": true,
+    "baselineArchiveMatchesTag": true,
+    "finalArchiveMatchesSource": true
+  }
+}

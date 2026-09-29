@@ -1,4 +1,3 @@
-import {bindSupport} from './support.js';
 import {request, report} from './ui.js';
 const $ = id => document.getElementById(id);
 const flags = ['enabled', 'discardPinned', 'protectAudio', 'debug'];
@@ -65,5 +64,3 @@ $('individual').addEventListener('toggle', () => { if ($('individual').open) ref
 request('settings').then(s => { fill(s); $('settingsFields').disabled = false; }).catch(error => {
   $('loadError').hidden = false; report(error, 'loadError');
 });
-
-bindSupport(document.getElementById('support'), error => report(error, 'supportStatus'));

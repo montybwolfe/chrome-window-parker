@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Window Parker · Settings</title><link rel="icon" href="icons/parker-timer-32.png"><script src="theme.js"></script><link rel="stylesheet" href="ui.css"><script type="module" src="options.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chrome Window Parker · Settings</title><link rel="icon" href="icons/parker-timer-32.png"><script src="theme.js"></script><link rel="stylesheet" href="ui.css"><script type="module" src="options.js"></script></head>
 <body><main class="settings-page">
-<header class="app-header"><img src="icons/parker-timer-128.png" width="36" height="36" alt=""><div><h1>Window Parker</h1><p class="muted">Settings</p></div></header>
+<header class="app-header"><img src="icons/parker-timer-128.png" width="36" height="36" alt=""><div><h1>Chrome Window Parker</h1><p class="muted">Settings</p></div></header>
 <form id="settings">
 <fieldset id="settingsFields" disabled>
 <label class="check-row enable-row"><input id="enabled" type="checkbox"><span>Enable automatic parking<span class="hint">Park idle windows. Return to your previous tab.</span></span></label>
@@ -20,7 +20,7 @@
 <h2 id="protection-heading">Tab protection</h2>
 <label class="check-row"><input id="discardPinned" type="checkbox"><span>Allow parking when a pinned tab is selected</span></label>
 <label class="check-row"><input id="protectAudio" type="checkbox"><span>Skip windows whose selected tab is playing audio</span></label>
-<div class="field"><label for="exclusions">Sites to exclude</label><textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp" placeholder="mail.google.com&#10;calendar.google.com&#10;https://example.com/work/*"></textarea><p class="hint" id="exclusionHelp">One domain or URL pattern per line; * is a wildcard. Exclusions apply to Window Parker.</p></div>
+<div class="field"><label for="exclusions">Sites to exclude</label><textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp" placeholder="mail.google.com&#10;calendar.google.com&#10;https://example.com/work/*"></textarea><p class="hint" id="exclusionHelp">One domain or URL pattern per line; * is a wildcard. Exclusions apply to Chrome Window Parker.</p></div>
 <details class="safety-note"><summary>Calls, video and unsaved work</summary><p>Exclude these sites or keep their tabs pinned. Chrome doesn’t reliably report screen sharing, Picture-in-Picture or unsaved edits to this extension. Parking pauses during active downloads.</p></details>
 </section>
 
@@ -30,6 +30,5 @@
 </form>
 <p id="loadError" class="error" role="alert" hidden></p>
 <details class="individual-section" id="individual"><summary>Protect individual tabs</summary><p class="hint">Protection lasts for this browser session. Use site exclusions above to keep it after a restart.</p><button class="small" type="button" id="refresh">Refresh list</button><div id="tabs"></div><p id="tabStatus" role="status" aria-live="polite"></p></details>
-<section class="support-section" aria-labelledby="support-heading"><h2 id="support-heading">Support Window Parker</h2><p class="hint">Window Parker is free and open source. If it’s useful to you, you can optionally support its development.</p><button class="text-button" id="support" type="button" aria-label="Buy me a coffee — support Window Parker (opens in a new tab)" title="Opens Buy Me a Coffee in a new tab">Buy me a coffee</button><p id="supportStatus" role="status" aria-live="polite"></p></section>
 <footer class="page-footer">Works alongside Chrome Memory Saver. All data stays on this device.</footer>
 </main></body></html>

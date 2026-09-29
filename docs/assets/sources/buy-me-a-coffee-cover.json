@@ -1,0 +1,16 @@
+{
+  "source": "docs/assets/sources/buy-me-a-coffee-cover.svg",
+  "sourceSHA256": "c84680635d1fecb19bfe0fb44235dfa98bbfa3d971a0ce10b3812e82c8447130",
+  "master": "docs/assets/sources/buy-me-a-coffee-cover-3200x800.png",
+  "masterWidth": 3200,
+  "masterHeight": 800,
+  "masterSHA256": "8b2c473f7e77b9133e629e2b8c7bb2986e45d50111faf6420a393807ba4bd39c",
+  "output": "docs/assets/buy-me-a-coffee-cover-1600x400.png",
+  "width": 1600,
+  "height": 400,
+  "outputSHA256": "6663f25b1081fa2afc62f96e09b1bf365b4a632b295601dbe80f75a245c15bb3",
+  "icon": "icons/parker-timer.svg",
+  "iconSHA256": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+  "renderer": "SVG vector and system text at 2x; one Lanczos3 downsample; RGB sRGB PNG",
+  "safeArea": "Headline and project name between x=260 and x=950; essential icon between x=1088 and x=1216; all essential content within central 70% width and y=130..275."
+}
