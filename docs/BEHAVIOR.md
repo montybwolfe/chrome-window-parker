@@ -17,7 +17,7 @@
 
 The default checks protect audio-playing tabs, pinned tabs, tabs with `autoDiscardable` false or unknown, navigating/loading tabs, discarded tabs, individual exclusions, URL exclusions, and all non-HTTP(S) URLs. Built-in default exclusions cover `meet.google.com`, `zoom.us`, `teams.microsoft.com`, and `music.youtube.com`; this is not a comprehensive list of communication or media sites.
 
-Domain rules match the exact domain plus subdomains (never lookalikes such as `mail.google.com.evil.example`). Full URL globs are anchored, case-sensitive, and support only `*` as a wildcard. Examples:
+Domain rules match the exact domain plus subdomains (never lookalikes such as `mail.google.com.evil.example`). They match standard web ports; include the port for an address such as `localhost:3000`. Full URL globs are anchored, case-sensitive, and support only `*` as a wildcard. Examples:
 
 ```text
 mail.google.com
@@ -112,6 +112,6 @@ Chrome does not offer an atomic “remove this tab only if another tab still exi
 
 The `sleepingMode` setting stores `chrome` or `immediate`; `appearance` stores `auto`, `light` or `dark`. Missing or unrecognized stored enum values fall back to Chrome-managed sleeping and Auto. New malformed settings sent from a page are rejected. Reset persists the defaults. A queued configure/reset signal invalidates in-flight parking before the queue processes the new settings. Changing mode does not retroactively discard or wake tabs in already-parked windows. Updated policy and protection rules apply to future parking cycles; active batches are cancelled before a queued settings change. A focus signal immediately resets the inactivity clock of a window that was genuinely in use, so an older queued sweep cannot park it just after the user leaves.
 
-All three pages load `theme.js` in the head and share CSS color tokens. Auto follows `prefers-color-scheme`; explicit themes override it. Local storage changes update open pages. A revision guard prevents a late initial read from overwriting a newer setting. Content waits for that first read to avoid showing the wrong theme; a read failure falls back to Auto.
+Settings shows appearance as a compact Light / Dark / Auto control in its header; like the other settings, a choice applies when saved. All three pages load `theme.js` in the head and share CSS color tokens. Auto follows `prefers-color-scheme`; explicit themes override it. Local storage changes update open pages. A revision guard prevents a late initial read from overwriting a newer setting. Content waits for that first read to avoid showing the wrong theme; a read failure falls back to Auto.
 
 A parking page can queue a status request just before restoration removes it. The worker validates the sender, then checks the live tab and token. If that page has gone or navigated away, parked-info/restore returns `{gone: true}` without mutation or error logging. Unexpected API failures still reject and reach the worker console. Parking pages stop coalesced refresh timers and tab listeners on teardown and while restoration is in progress; no background polling is used.
