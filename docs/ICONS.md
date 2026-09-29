@@ -1,6 +1,6 @@
 # Icon inventory
 
-The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Runtime PNGs retain their existing independent rasterizations. Store/documentation PNGs now render independently at 4× each target size and receive one Lanczos3 downsample. No low-resolution bitmap is upscaled to make larger artwork.
+The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Runtime PNGs are rasterized independently. Store/documentation PNGs render independently at 4× each target size and receive one Lanczos3 downsample. No low-resolution bitmap is upscaled to make larger artwork.
 
 | Surface | File / declaration |
 | --- | --- |

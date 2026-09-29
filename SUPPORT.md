@@ -2,7 +2,7 @@
 
 Chrome Window Parker is designed for people who keep several Chrome windows open, especially across macOS Spaces. It requires Chrome 120 or later and uses standard extension APIs without native software or macOS-specific code.
 
-Testing has been on macOS. The v1.5.1.3 automated checks and Chrome UI previews do not complete the installed-extension acceptance checklist. Windows, Linux and ChromeOS remain unverified; other Chromium browsers and mobile browsers are also unvalidated. See [TESTING.md](TESTING.md) for evidence and outstanding checks.
+Chrome Window Parker is currently tested on macOS. Windows, Linux and ChromeOS have not yet been formally verified, nor have other Chromium browsers or mobile browsers. For testing changes, see [Testing](TESTING.md).
 
 ## If a window does not park
 

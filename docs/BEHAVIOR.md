@@ -104,7 +104,7 @@ Restoration selects the remembered real tab, or the existing same-window fallbac
 
 Manual real-tab selection also cleans up the parking page. A worker starting after an interrupted restoration removes an inactive leftover when those checks pass. Automatic restoration keeps a parking-only window open. Explicit bulk close creates a blank tab first. A temporary Chrome refusal leaves the page for a later activity/sweep/startup retry; there is no fast polling loop. Automatic restoration gets one fresh fallback attempt when its target disappears during activation. Clear never activates a second target after an activation has succeeded.
 
-Chrome does not offer an atomic “remove this tab only if another tab still exists” call. The final checks minimize races, but cannot guarantee against an unrelated last-instant closure or navigation between that check and Chrome processing removal. Keep that API limitation separate from the guarded, tested normal flow.
+Chrome does not offer an atomic “remove this tab only if another tab still exists” call. The final checks minimize races, but cannot guarantee against an unrelated last-instant closure or navigation between that check and Chrome processing removal.
 
 ## Settings and page lifecycle
 
@@ -112,4 +112,4 @@ The `sleepingMode` setting stores `chrome` or `immediate`; `appearance` stores `
 
 All three pages load `theme.js` in the head and share CSS color tokens. Auto follows `prefers-color-scheme`; explicit themes override it. Local storage changes update open pages. A revision guard prevents a late initial read from overwriting a newer setting. Content waits for that first read to avoid showing the wrong theme; a read failure falls back to Auto.
 
-A parking page can queue a status request just before restoration removes it. The worker validates the sender, then checks the live tab and token. If that page has gone or navigated away, parked-info/restore returns `{gone: true}` without mutation or error logging. Unexpected API failures still reject and reach the worker console. Parking pages stop coalesced refresh timers and tab listeners on teardown and while restoration is in progress; no background polling was added.
+A parking page can queue a status request just before restoration removes it. The worker validates the sender, then checks the live tab and token. If that page has gone or navigated away, parked-info/restore returns `{gone: true}` without mutation or error logging. Unexpected API failures still reject and reach the worker console. Parking pages stop coalesced refresh timers and tab listeners on teardown and while restoration is in progress; no background polling is used.
