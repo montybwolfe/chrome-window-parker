@@ -120,3 +120,11 @@ test('focus signal refreshes last-use before an older queued sweep can park the 
  // A sweep queued before focusChanged may run first, after the synchronous signal.
  await h.p.sweep();assert(!h.p.states[1].parked);assert.equal(h.p.states[1].lastUse,h.clock.now());assert.deepEqual(discarded(h),[]);
 });
+test('a brand-new parking page that has not finished loading still gets its discard batch',async()=>{
+ // Chrome reports a just-created tab with an empty url and its address in pendingUrl until it commits.
+ const h=await setup();h.hooks.create=t=>{if(t.url.includes('/parked.html#')){t.pendingUrl=t.url;t.url='';}};
+ await h.p.sweep();assert(h.p.states[2].parked);assert.deepEqual(discarded(h),[200,201,202]);
+ // Navigating our page away (a different pending address) still stops the batch.
+ const g=await setup();g.hooks.create=t=>{if(t.url.includes('/parked.html#')){t.pendingUrl='https://example.org/elsewhere';}};
+ await g.p.sweep();assert.deepEqual(discarded(g),[]);
+});
