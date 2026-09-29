@@ -1,9 +1,9 @@
 {
   "name": "chrome-window-parker",
-  "version": "1.5.1.4",
+  "version": "1.5.5",
   "private": true,
   "type": "module",
-  "description": "Park idle windows, let Chrome manage tab sleeping, and return to your previous tab when you come back.",
+  "description": "Parks idle Chrome windows so their tabs can sleep, and brings your tab back when you return.",
   "repository": "https://github.com/montybwolfe/chrome-window-parker.git",
   "engines": {
     "node": ">=20"
