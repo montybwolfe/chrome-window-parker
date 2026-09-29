@@ -1,7 +1,0 @@
-{
-  "name": "window-parker-store-assets",
-  "private": true,
-  "type": "module",
-  "scripts": {"start": "node server.mjs"},
-  "dependencies": {"dom-to-image-more": "3.11.0", "sharp": "0.34.5"}
-}

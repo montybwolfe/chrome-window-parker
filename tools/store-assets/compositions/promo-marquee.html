@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+.brand { position: absolute; left: 112px; top: 50%; transform: translateY(-50%); }
+.mark { width: 104px; height: 104px; margin-bottom: 26px; }
+.name { font-size: 58px; } .line { margin-top: 14px; font-size: 26px; }
+.stack { position: absolute; left: 790px; top: 96px; width: 520px; height: 370px; }
+.card { position: absolute; overflow: hidden; border-radius: 12px; background: #fafafa; box-shadow: 0 26px 60px rgba(6, 20, 58, .38); }
+.card .bar { height: 30px; background: #e7eaef; position: relative; }
+.card .bar i { position: absolute; top: 11px; width: 9px; height: 9px; border-radius: 50%; background: #ff5f57; }
+.card .bar i:nth-child(1) { left: 12px; } .card .bar i:nth-child(2) { left: 26px; background: #febc2e; } .card .bar i:nth-child(3) { left: 40px; background: #28c840; }
+.card.back { width: 440px; height: 290px; background: #e9eef8; }
+.card.back .bar { background: #d5deef; }
+.card.b1 { left: 110px; top: -40px; background: #c9d5ee; } .card.b1 .bar { background: #b8c7e6; } .card.b2 { left: 55px; top: -8px; }
+.card.front { left: 0; top: 40px; width: 520px; height: 330px; }
+.card.front img { display: block; width: 560px; margin: -18px 0 0 -20px; }
+.skeleton { position: absolute; left: 0; right: 0; top: 30px; bottom: 0; padding: 28px 30px; }
+.skeleton b { height: 10px; margin-bottom: 12px; }
+</style></head>
+<body>
+<div class="brand">
+<svg class="mark" viewBox="0 0 128 128" aria-hidden="true"><g fill="#fff"><rect x="60" y="16" width="8" height="13" rx="3"/><rect x="52" y="8" width="24" height="8" rx="4"/><circle cx="64" cy="73" r="46"/></g><path d="M64 46V73L82 84" fill="none" stroke="#2152b8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="name">Chrome Window Parker</div><div class="line">Let idle windows rest.</div></div>
+<div class="stack">
+<div class="card back b1"><div class="bar"><i></i><i></i><i></i></div><div class="skeleton"><b class="title"></b><b style="width:90%"></b><b style="width:80%"></b></div></div>
+<div class="card back b2"><div class="bar"><i></i><i></i><i></i></div><div class="skeleton"><b class="title"></b><b style="width:88%"></b><b style="width:70%"></b></div></div>
+<div class="card front"><div class="bar"><i></i><i></i><i></i></div><img src="../../../store-listing/sources/ui/parked-light.png" alt=""></div>
+</div>
+</body></html>

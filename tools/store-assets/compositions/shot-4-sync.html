@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>.window { left: 88px; top: 212px; width: 1104px; height: 720px; } .content > img { width: 1280px; margin-left: -88px; }</style></head>
+<body>
+<div class="caption"><h1>Sync only what you choose</h1><p>Keep chosen settings the same on your other computers with Chrome sync. It's off until you turn it on, one setting at a time.</p></div>
+<div class="window"><div class="frame"><div class="lights"><i></i><i></i><i></i></div>
+<div class="tabs"><span class="tab"><i class="fav"></i><span class="title">Research notes</span></span><span class="tab active"><i class="fav timer"></i><span class="title">Chrome Window Parker · Settings</span></span></div>
+<div class="toolbar"><span class="nav"><i></i><i></i></span><span class="omnibox"><b>Chrome Window Parker</b>&nbsp;&nbsp;chrome-extension://…/options.html</span><span class="action"><img src="../../../icons/parker-timer.svg" alt=""></span></div></div>
+<div class="content"><img id="page" src="../../../store-listing/sources/ui/settings-light.png" alt=""></div></div>
+<script>document.getElementById('page').style.marginTop = `-${new URLSearchParams(location.search).get('top') || 0}px`;</script>
+</body></html>

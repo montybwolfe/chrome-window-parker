@@ -1,43 +1,31 @@
-# Lossless store artwork
+# Store artwork
 
-This development-only tool preserves the existing HTML/CSS compositions. It is excluded from the runtime package and does not access real tabs or installed-extension APIs.
+The Chrome Web Store screenshots, promo tiles, Store icon and the support-page cover are generated here. It's development-only, has no npm dependencies, and never ships in the extension.
 
-## Reproduce
+## Regenerate
 
-Use Node 20+, pnpm and desktop Chrome on macOS (the source typography uses the system font).
-
-```sh
-cd tools/store-assets
-pnpm install --frozen-lockfile --ignore-scripts
-node server.mjs
-```
-
-Open `http://127.0.0.1:8766` in Chrome at 100% page zoom and click **Export all five images**. Wait for the completion message, then run in another terminal:
+Needs Node 20+ and desktop Chrome (on macOS by default; set `CHROME` to another Chrome binary if needed). Run from the repository root:
 
 ```sh
+node tools/store-assets/capture.mjs   # about 3 minutes
+node tools/store-assets/compose.mjs
 node tools/store-assets/verify.mjs
 ```
 
-Run that verification command from the repository root. Stop the server with Ctrl-C. Restart it after changing sources before exporting again. The server binds only to loopback, serves an explicit allowlist, restricts writes to the five named exports, checks request origin and PNG dimensions, and caps upload size.
+**capture.mjs** installs this folder as an extension in a throwaway headless Chrome profile, opens a few windows of made-up pages served from your own machine, and lets them park for real (with a 1-minute delay). It then captures the real parked page, popup and Settings in `store-listing/sources/ui/`. Nothing from your own Chrome profile is used.
 
-The fixture starts from defaults independent of previously saved preview settings. All tab names/counts are synthetic. Settings preserves the existing 1280×800 viewport crop; it intentionally does not shrink the full settings page into an unreadable overview.
+**compose.mjs** renders the designs in `compositions/` around those captures at 2× and halves them, writing opaque PNGs (the Store icon keeps its transparency). It records the SHA-256 of every output and input in `store-listing/sources/assets.json`.
 
-## Rendering
+**verify.mjs** checks sizes and transparency, that each image matches its record, and that nothing it was made from has changed since. It also checks that the captured UI still matches the extension's current pages, so stale screenshots can't slip into a release. `npm test` runs the same checks except that last one.
 
-[dom-to-image-more](https://github.com/IDisposable/dom-to-image-more) 3.11.0 serializes the live styled DOM to SVG foreignObject; Chrome rasterizes that source directly at **4×** through its canvas renderer. This is a DOM-derived UI render, not a native screenshot API capture. Form values/checked state are explicitly preserved. The actual popup iframe is rendered separately at 1440×1264, then composited at 360×316 CSS pixels on the 4× parent canvas. There is no low-resolution popup intermediary.
+## Assets
 
-The exporter substitutes the existing SVG timer master for the page/header bitmaps, only in its served development HTML. Thus even 48px branding uses vector input at 4×; no 128px icon is enlarged. Runtime files and icons are untouched. Native checkbox rendering and platform font antialiasing may vary with Chrome/macOS versions; inspect every regenerated set visually.
-
-| Asset | Lossless master | Final PNG |
+| File | Size | Notes |
 | --- | --- | --- |
-| Settings | 5120×3200 | 1280×800 |
-| Parked page | 5120×3200 | 1280×800 |
-| Popup composition | 5120×3200 | 1280×800 |
-| Small promo | 1760×1120 | 440×280 |
-| Marquee | 5600×2240 | 1400×560 |
-| Store icon | SVG rasterized at 512×512 | 128×128, transparent |
-| Documentation icons | SVG at 1024, 2048, 4096 square | 256, 512, 1024 square |
+| `store-listing/screenshot-1-parked-1280x800.png` … `-5-dark` | 1280×800 | Five screenshots, in Store order |
+| `store-listing/small-promo-440x280.png` | 440×280 | Small promo tile |
+| `store-listing/marquee-promo-1400x560.png` | 1400×560 | Marquee promo tile |
+| `store-listing/store-icon-128.png` | 128×128 | Timer at 96×96 with 16px transparent padding, as the Store asks |
+| `docs/assets/buy-me-a-coffee-cover-1600x400.png` | 1600×400 | Support-page banner |
 
-Every UI composition has one final Lanczos3 downsample, flattened to RGB sRGB PNG. No JPEG input or intermediate is used. PNG compression is lossless. The docs promo is a byte-identical copy of the final small tile. High-resolution masters and per-image source/output hashes are retained under `store-listing/sources/`; they are not upload files.
-
-`verify.mjs` checks exact dimensions/formats, hashes of original inputs and masters, byte-identical reproduction of the final downsample, independent SVG-derived icon exports, and absence of old listing JPEGs. Inspect the finals at 100%, 200%, and a typical store thumbnail size; dimensions alone are not visual QA.
+The browser frame in the screenshots is simplified context. Everything inside it is a real capture of the extension, with made-up tab names.

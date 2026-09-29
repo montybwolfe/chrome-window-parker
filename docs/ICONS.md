@@ -1,20 +1,14 @@
-# Icon inventory
+# Icons
 
-The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Runtime PNGs are rasterized independently. Store/documentation PNGs render independently at 4× each target size and receive one Lanczos3 downsample. No low-resolution bitmap is upscaled to make larger artwork.
+There's one design: the blue timer in [`icons/parker-timer.svg`](../icons/parker-timer.svg), an editable vector (128-unit view box, no fonts, filters or embedded images). It's an original design, not a Chrome or Google mark.
 
-| Surface | File / declaration |
+| Where | File |
 | --- | --- |
-| Chrome extension manager / installation | `manifest.icons`: `icons/parker-timer-16.png`, `icons/parker-timer-32.png`, `icons/parker-timer-48.png`, `icons/parker-timer-128.png`; Chrome selects the appropriate size (normally 48px in the manager) |
-| Toolbar action | `action.default_icon`: `icons/parker-timer-16.png` and `icons/parker-timer-32.png` |
-| Options header | `icons/parker-timer-128.png`, displayed at 36 CSS pixels |
-| Popup header | `icons/parker-timer-128.png`, displayed at 28 CSS pixels |
-| Parked page | `icons/parker-timer-128.png`, displayed at 40 CSS pixels |
-| Options, popup and parked favicons | `icons/parker-timer-32.png` |
-| README | `icons/parker-timer-128.png`, displayed at 64 CSS pixels |
-| High-resolution artwork | `docs/assets/parker-timer-256.png`, `docs/assets/parker-timer-512.png`, `docs/assets/parker-timer-1024.png` |
-| Documentation promotional tile | `docs/assets/promo-440x280.png`, using the same timer |
-| Store ZIP | Only the four runtime timer PNGs; no SVG or marketing art |
+| Extension icons (`manifest.json`) | `icons/parker-timer-16.png`, `-32`, `-48`, `-128` |
+| Toolbar button | `icons/parker-timer-16.png`, `icons/parker-timer-32.png` |
+| Popup, Settings and parked-page headers | `icons/parker-timer-128.png`, shown at 28–40px |
+| Page favicons | `icons/parker-timer-32.png` |
+| Chrome Web Store | `store-listing/store-icon-128.png`: the timer at 96×96 inside 16px of transparent padding |
+| Larger artwork | `docs/assets/parker-timer-256.png`, `-512`, `-1024` |
 
-All current runtime references use this timer. There are no CSS background images, remote favicons or runtime icon replacements. Store listing assets use the SVG master directly in the export-only HTML, including the embedded popup. See [the lossless exporter](../tools/store-assets/README.md).
-
-Page headers use 128px sources for crisp rendering at 28–40 CSS pixels on Retina displays. Automated checks verify all declared PNG dimensions and references. Reload an unpacked extension and refresh its pages to display updated artwork; existing Chrome processes can retain cached icons.
+The runtime icons fill their canvas so the timer stays readable at 16px in the toolbar. Only these four PNGs ship in the extension. The Store artwork is made by [the artwork tools](../tools/store-assets/README.md). After changing icons, reload the unpacked extension; Chrome can keep old icons cached until then.
