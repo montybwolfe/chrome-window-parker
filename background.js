@@ -21,13 +21,15 @@ chrome.windows.onFocusChanged.addListener(id => {
 chrome.windows.onRemoved.addListener(id => enqueue(() => parker.closed(id)));
 chrome.windows.onCreated.addListener(() => enqueue(() => parker.sweep()));
 chrome.tabs.onActivated.addListener(({windowId, tabId}) => {
-  parker.signalTab(windowId);
+  parker.signalTab(windowId, tabId);
   enqueue(() => parker.activated(windowId, tabId));
 });
 chrome.tabs.onRemoved.addListener((id, info) => {
   parker.signalTab(info.windowId); enqueue(() => parker.removed(id, info));
 });
-chrome.tabs.onCreated.addListener(() => enqueue(() => parker.sweep()));
+// A tab created during Clear (the window-preserving blank page) must not
+// trigger parking/discard in an unrelated overdue window.
+chrome.tabs.onCreated.addListener(tab => enqueue(() => parker.sweep(tab.windowId)));
 chrome.tabs.onAttached.addListener((id, info) => {
   parker.signalTab(info.newWindowId); enqueue(() => parker.sweep());
 });
@@ -48,8 +50,12 @@ chrome.alarms.onAlarm.addListener(alarm => enqueue(() => {
   if (alarm.name === 'parking') return parker.sweep();
   if (alarm.name === 'dwell-recovery') return parker.startDwell();
 }));
-chrome.downloads.onCreated.addListener(() => enqueue(() => parker.schedule()));
+chrome.downloads.onCreated.addListener(() => {
+  parker.safetyEpoch++; // Stop a batch even if its last download check just finished.
+  enqueue(() => parker.schedule());
+});
 chrome.downloads.onChanged.addListener(delta => {
+  if (delta.state?.current === 'in_progress') parker.safetyEpoch++;
   if (delta.state) enqueue(() => parker.schedule());
 });
 chrome.runtime.onStartup.addListener(() => enqueue(() => parker.schedule()));

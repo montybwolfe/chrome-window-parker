@@ -4,7 +4,7 @@ const flags = ['enabled', 'discardPinned', 'protectAudio', 'debug'];
 let saving = false;
 function sleepingHelp() {
   $('sleepingHelp').textContent = $('sleepingMode').value === 'immediate' ?
-    'Unload the previous tab as soon as the window is parked.' : 'Chrome decides when background tabs are unloaded.';
+    'Unload eligible tabs as soon as their window is parked.' : 'Chrome decides when background tabs are unloaded.';
 }
 $('sleepingMode').addEventListener('change', sleepingHelp);
 function fill(s) {

@@ -1,8 +1,8 @@
 # Chrome Web Store listing assets
 
-This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.0.
+This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.1.
 
-The extension package itself is separate. Upload **`chrome-window-parker-v1.5.0.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
+The extension package itself is separate. Upload **`chrome-window-parker-v1.5.1.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
 
 ## Product details
 
@@ -45,9 +45,9 @@ Use `privacy-fields.txt` when completing the dashboard's privacy and permission 
 
 Review the Chrome Web Store's current wording before submitting and personally confirm any required certifications.
 
-## v1.5.0 changes
+## v1.5.1 changes
 
-Replace the long description, all three screenshots and both promotional tiles. The blue timer store icon is unchanged. Update the single-purpose, tabs and storage wording in `privacy-fields.txt`; permission scope and local data handling are unchanged, with two new local preferences. Category, language, links, remote-code and purchase answers remain the same.
+Upload the v1.5.1 runtime ZIP, replace the long description, and update TABS PERMISSION JUSTIFICATION in `privacy-fields.txt`. Immediate mode now covers every currently loaded eligible real tab in a newly parked window. The short description, all three screenshots, promotional tiles and store icon are unchanged; no image replacement is needed. Permission scope, privacy practices and other declarations remain the same.
 
 ## Before submitting
 

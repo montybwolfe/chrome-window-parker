@@ -1,3 +1,10 @@
+# 1.5.1
+
+- Correct **Discard immediately** to attempt every currently loaded eligible real tab in a newly parked window. Protected and already-sleeping tabs remain untouched; **Let Chrome decide** still makes no discard requests.
+- Recheck each candidate and stop pending work on focus, settings, downloads or long interruptions. New tabs wait for the next parking cycle; interrupted batches are never replayed after restart.
+- Keep **Clear parked tabs** limited to at most one restored real tab per window, with no new discards, including through its blank-tab creation event. Preserve recent activity when focus changes ahead of queued work.
+- Clarify the affected settings, help and store wording. Appearance, artwork, permissions and privacy practices are unchanged.
+
 # 1.5.0
 
 - **Let Chrome decide** is now the default tab sleeping mode, including upgrades. Parking leaves the previous tab in the background for Chrome Memory Saver to manage, without explicit discard requests.
