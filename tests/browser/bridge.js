@@ -1,5 +1,6 @@
 // Injected only by the local development server. Not part of the extension.
 // Optional synthetic system preference for Auto appearance acceptance checks.
+const assetExport=new URLSearchParams(location.search).has('asset');
 const systemPreference=new URLSearchParams(location.search).get('system');
 if(['light','dark'].includes(systemPreference)){
  const nativeMatchMedia=window.matchMedia.bind(window);
@@ -13,11 +14,11 @@ const pending=new Map();let next=0,resolveReady;
 const ready=new Promise(resolve=>{resolveReady=resolve;});
 worker.addEventListener('message',({data})=>{
  if(data.kind==='ready')resolveReady();
- if(data.kind==='persist'){const old=JSON.parse(localStorage.getItem('parker-browser-test')||'{}');const updated={...old,...data.value};if(JSON.stringify(old)!==JSON.stringify(updated))localStorage.setItem('parker-browser-test',JSON.stringify(updated));if(data.value.settings)emitSettings(data.value.settings);}
+ if(data.kind==='persist'&&!assetExport){const old=JSON.parse(localStorage.getItem('parker-browser-test')||'{}');const updated={...old,...data.value};if(JSON.stringify(old)!==JSON.stringify(updated))localStorage.setItem('parker-browser-test',JSON.stringify(updated));if(data.value.settings)emitSettings(data.value.settings);}
  if(data.kind==='reply'){pending.get(data.id)?.(data.response);pending.delete(data.id);}
 });
 worker.addEventListener('error',error=>{document.body.dataset.workerError=error.message;});
-worker.postMessage({type:'bootstrap',page:location.pathname.split('/').pop(),seed:JSON.parse(localStorage.getItem('parker-browser-test')||'{}')});
+worker.postMessage({type:'bootstrap',page:location.pathname.split('/').pop(),seed:assetExport?{}:JSON.parse(localStorage.getItem('parker-browser-test')||'{}')});
 async function send(message,type='message'){
  await ready;const id=++next;return new Promise(resolve=>{pending.set(id,resolve);worker.postMessage({type,id,message,page:location.pathname.split('/').pop()||'options.html'});});
 }

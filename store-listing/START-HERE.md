@@ -21,13 +21,13 @@ The copy explains the default Let Chrome decide mode and optional Discard immedi
 | Upload slot | File | Dimensions |
 | --- | --- | --- |
 | Store icon | `store-icon-128.png` | 128 × 128 PNG |
-| Screenshot 1 | `screenshot-1-settings-1280x800.jpg` | 1280 × 800 JPEG |
-| Screenshot 2 | `screenshot-2-parked-1280x800.jpg` | 1280 × 800 JPEG |
-| Screenshot 3 | `screenshot-3-popup-1280x800.jpg` | 1280 × 800 JPEG |
-| Small promotional tile | `small-promo-440x280.jpg` | 440 × 280 JPEG |
-| Marquee promotional tile (optional) | `marquee-promo-1400x560.jpg` | 1400 × 560 JPEG |
+| Screenshot 1 | `screenshot-1-settings-1280x800.png` | 1280 × 800 PNG |
+| Screenshot 2 | `screenshot-2-parked-1280x800.png` | 1280 × 800 PNG |
+| Screenshot 3 | `screenshot-3-popup-1280x800.png` | 1280 × 800 PNG |
+| Small promotional tile | `small-promo-440x280.png` | 440 × 280 PNG |
+| Marquee promotional tile (optional) | `marquee-promo-1400x560.png` | 1400 × 560 PNG |
 
-The screenshots show the current interface rendered in Chrome with synthetic test data. The popup screenshot places the actual popup inside a presentation frame. They contain no personal browsing information and do not demonstrate measured memory savings.
+The screenshots show the current interface rendered from HTML/CSS in Chrome at 4× resolution with synthetic test data, then downsampled once to lossless PNG. The popup screenshot places the actual popup inside a presentation frame. They contain no personal browsing information and do not demonstrate measured memory savings.
 
 ## Links
 
@@ -47,7 +47,7 @@ Review the Chrome Web Store's current wording before submitting and personally c
 
 ## v1.5.1 changes
 
-Upload the v1.5.1 runtime ZIP, replace the long description, and update TABS PERMISSION JUSTIFICATION in `privacy-fields.txt`. Immediate mode now covers every currently loaded eligible real tab in a newly parked window. The short description, all three screenshots, promotional tiles and store icon are unchanged; no image replacement is needed. Permission scope, privacy practices and other declarations remain the same.
+Upload the v1.5.1 runtime ZIP, replace the long description, and update TABS PERMISSION JUSTIFICATION in `privacy-fields.txt`. Immediate mode now covers every currently loaded eligible real tab in a newly parked window. The short description is unchanged. The subsequent high-resolution asset pass replaces all three screenshots, both promotional tiles and the store icon with PNGs; upload the exact files in the table above. Permission scope, privacy practices and other declarations remain the same.
 
 ## Before submitting
 
@@ -59,3 +59,7 @@ Upload the v1.5.1 runtime ZIP, replace the long description, and update TABS PER
 6. Save the draft, review it once more, then submit it through the Chrome Web Store Developer Dashboard.
 
 Nothing in this folder submits or publishes the extension automatically.
+
+## High-resolution asset pass
+
+Replace all six uploaded images with the current PNG files. The visual direction is unchanged. Source masters and provenance are retained in `sources/`; upload only the final files listed above. The documentation promo and high-resolution timer exports were also regenerated. Reproduction and QA details: [tools/store-assets](../tools/store-assets/README.md) and [ASSET-QUALITY.md](ASSET-QUALITY.md). No runtime ZIP, version, permission or listing-copy change is required by this artwork-only pass.
