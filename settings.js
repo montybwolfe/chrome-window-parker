@@ -18,22 +18,22 @@ export function validateSettings(input) {
   for (const key of ['enabled', 'discardPinned', 'protectAudio', 'debug']) {
     if (typeof s[key] !== 'boolean') throw new Error(`Invalid ${key}.`);
   }
-  if (!['chrome', 'immediate'].includes(s.sleepingMode)) throw new Error('Choose a tab sleeping mode.');
-  if (!['auto', 'light', 'dark'].includes(s.appearance)) throw new Error('Choose an appearance.');
+  if (!['chrome', 'immediate'].includes(s.sleepingMode)) throw new Error('Choose how tabs sleep.');
+  if (!['auto', 'light', 'dark'].includes(s.appearance)) throw new Error('Choose a theme: light, dark or auto.');
   if (!Number.isFinite(s.delayMinutes) || s.delayMinutes < 1 || s.delayMinutes > 10080)
-    throw new Error('Parking delay must be between 1 minute and 7 days.');
+    throw new Error('The parking delay must be between 1 minute and 7 days.');
   if (!Number.isFinite(s.dwellSeconds) || s.dwellSeconds < 0.5 || s.dwellSeconds > 20)
-    throw new Error('Focus dwell must be between 0.5 and 20 seconds.');
+    throw new Error('The restore delay must be between 0.5 and 20 seconds.');
   if (!Array.isArray(s.exclusions) || s.exclusions.length > 200)
-    throw new Error('Use at most 200 exclusions.');
+    throw new Error('You can exclude up to 200 sites.');
   s.exclusions = [...new Set(s.exclusions.map(line => {
-    if (typeof line !== 'string') throw new Error('Exclusions must be text.');
+    if (typeof line !== 'string') throw new Error('Excluded sites must be text.');
     const rule = line.trim();
-    if (!rule || rule.length > 1000 || /\s/.test(rule)) throw new Error('Invalid exclusion.');
+    if (!rule || rule.length > 1000 || /\s/.test(rule)) throw new Error('Put one site on each line, without spaces.');
     if (!rule.includes('://') && !/^(\*\.)?[a-z0-9.-]+(?::\d+)?$/i.test(rule))
-      throw new Error(`Use a domain or full URL glob: ${rule}`);
+      throw new Error(`Use a domain such as example.com, or a full address: ${rule}`);
     if (rule.includes('://') && !/^(https?|\*):\/\/[^/]+(?:\/.*)?$/i.test(rule))
-      throw new Error(`Use an http(s) URL glob: ${rule}`);
+      throw new Error(`Use an address starting with http:// or https://: ${rule}`);
     return rule;
   }))];
   return Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, s[k]]));

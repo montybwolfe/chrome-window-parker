@@ -18,7 +18,7 @@
 <p class="hint section-note" id="sleepingHelp">Chrome decides when background tabs are unloaded.</p>
 <div class="preference-row"><label for="delayPreset">Park windows after</label><div class="select-wrap"><select id="delayPreset"><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="custom">Custom…</option></select></div></div>
 <div class="preference-row" id="customLabel" hidden><label for="delayMinutes">Custom parking delay</label><div class="unit-control"><input id="delayMinutes" type="number" min="1" max="10080" step="0.5" required><span>minutes</span></div></div>
-<div class="preference-row"><label for="dwellSeconds">Restore after focused for</label><div class="unit-control"><input id="dwellSeconds" type="number" min="0.5" max="20" step="0.5" required><span>seconds</span></div></div>
+<div class="preference-row"><label for="dwellSeconds">Restore after focusing for</label><div class="unit-control"><input id="dwellSeconds" type="number" min="0.5" max="20" step="0.5" required><span>seconds</span></div></div>
 <p class="hint section-note">Passing through a desktop won’t wake its window.</p>
 </section>
 </fieldset>
@@ -42,11 +42,31 @@
 <div class="individual-intro"><p class="hint">Protection lasts for this browser session. Use site exclusions above to keep it after a restart.</p><button class="small" type="button" id="refresh">Refresh list</button></div>
 <div id="tabs" class="tab-list" role="group" aria-label="Open tabs"></div><p id="tabStatus" role="status" aria-live="polite"></p></details>
 </section>
+<section class="settings-section" aria-labelledby="sync-heading">
+<h2 id="sync-heading">Sync</h2>
+<p class="hint" id="syncHelp">Keep chosen settings the same on your other computers. This uses Chrome sync, so it works where you’re signed in to Chrome with sync on. Choose separately on each computer; changes here apply right away.</p>
+<fieldset class="sync-list" id="syncList" aria-describedby="syncHelp" disabled><legend class="visually-hidden">Settings to sync</legend>
+<label class="check-row"><input type="checkbox" data-sync="delayMinutes"><span>Park windows after</span></label>
+<label class="check-row"><input type="checkbox" data-sync="dwellSeconds"><span>Restore delay</span></label>
+<label class="check-row"><input type="checkbox" data-sync="sleepingMode"><span>Tab sleeping</span></label>
+<label class="check-row"><input type="checkbox" data-sync="appearance"><span>Theme</span></label>
+<label class="check-row"><input type="checkbox" data-sync="discardPinned"><span>Pinned tabs</span></label>
+<label class="check-row"><input type="checkbox" data-sync="protectAudio"><span>Audio tabs</span></label>
+<label class="check-row"><input type="checkbox" data-sync="exclusions"><span>Sites to exclude</span></label>
+</fieldset>
+<div class="sync-choice" id="syncChoice" role="group" aria-labelledby="syncChoiceText" hidden><p id="syncChoiceText"></p>
+<div class="actions"><button type="button" id="useSynced"></button><button type="button" id="useLocal"></button><button type="button" class="text-button" id="cancelSync">Cancel</button></div></div>
+<p class="hint section-note">Pausing, protected tabs, debug logging and anything about your windows and tabs stay on this computer.</p>
+<p id="syncStatus" role="status" aria-live="polite"></p>
+</section>
 <fieldset class="settings-fields" disabled>
 <section class="settings-section compact" aria-labelledby="diagnostics-heading"><h2 id="diagnostics-heading">Diagnostics</h2><label class="check-row"><input id="debug" type="checkbox"><span>Enable debug logging</span></label></section>
 <div class="form-footer"><div class="actions"><button class="primary" id="save" type="submit">Save settings</button><button id="reset" type="button">Reset settings</button></div><p id="status" role="status" aria-live="polite"></p></div>
 </fieldset>
 </form>
-<section class="support-section" aria-labelledby="support-heading"><h2 id="support-heading">Support Chrome Window Parker</h2><p class="hint">Chrome Window Parker is free and open source. If it’s useful to you, you can optionally support its development.</p><button class="text-button" id="support" type="button" aria-label="Support Chrome Window Parker on Buy Me a Coffee (opens in a new tab)" title="Opens Buy Me a Coffee in a new tab">Support development</button><p id="supportStatus" role="status" aria-live="polite"></p></section>
-<footer class="page-footer">Works alongside Chrome Memory Saver. All data stays on this device.</footer>
+<section class="support-section" aria-labelledby="support-heading"><h2 id="support-heading">Support</h2>
+<p class="hint">Something not working? Report it on GitHub. Chrome Window Parker is free and open source; if it’s useful to you, you can also support its development.</p>
+<div class="support-links"><button class="text-button bug-link" id="reportBug" type="button" aria-label="Report a bug on GitHub (opens in a new tab)" title="Report a bug on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7.4a3 3 0 0 1 6 0"/><path d="M8 9h8a1 1 0 0 1 1 1v4a5 5 0 0 1-10 0v-4a1 1 0 0 1 1-1Z"/><path d="M12 12v7M7 12.5H4M17 12.5h3M7.5 16.5 5 18.5M16.5 16.5l2.5 2M7.4 10 5 8M16.6 10 19 8M10.2 4.6 9.2 3.2M13.8 4.6l1-1.4"/></svg><span>Report a bug</span></button><button class="text-button" id="support" type="button" aria-label="Support Chrome Window Parker on Buy Me a Coffee (opens in a new tab)" title="Opens Buy Me a Coffee in a new tab">Support development</button></div>
+<p id="supportStatus" role="status" aria-live="polite"></p></section>
+<footer class="page-footer">Works alongside Chrome Memory Saver. Nothing is sent to the developer.</footer>
 </main></body></html>

@@ -20,7 +20,7 @@ test('worker queue retries failed initialization, caches successful init and pre
     const loaded=await send({type:'settings'});assert(loaded.ok);assert.equal(attempts,2);
     assert.equal(errors[0][1],failure);
     const invalid=await send({type:'configure',settings:{delayMinutes:0}});assert.equal(invalid.ok,false);
-    assert.match(invalid.error,/Parking delay/);
+    assert.match(invalid.error,/parking delay/i);
     const saved=await send({type:'configure',settings:{...loaded.data,delayMinutes:30}});assert(saved.ok);assert.equal(h.local.settings.delayMinutes,30);
     const reset=await send({type:'reset'});assert(reset.ok);assert.equal(h.local.settings.delayMinutes,15);
     assert.equal(attempts,2);assert(!errors.some(args=>String(args[1]).includes('Illegal invocation')));
