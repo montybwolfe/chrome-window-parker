@@ -1,0 +1,42 @@
+name: Bug report
+description: Something isn't working the way you expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting this. Please leave out private web addresses, page titles and personal details.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can I reproduce it?
+      placeholder: |
+        1. Open two windows and leave one alone for 15 minutes
+        2. ...
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Chrome Window Parker version, Chrome version and operating system.
+      placeholder: 1.5.5, Chrome 154, macOS 26
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Tab sleeping mode
+      options:
+        - Let Chrome decide
+        - Discard immediately
+        - Not sure
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots or debug logs can help (Settings → Diagnostics). Check them for private information first.

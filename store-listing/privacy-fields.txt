@@ -1,32 +1,32 @@
 SINGLE PURPOSE DESCRIPTION
-Park idle Chrome windows on a lightweight page so Chrome Memory Saver can manage the previously selected tab, then return to that tab when the user comes back. Optional immediate discard requests unloading after eligibility checks.
+Park idle Chrome windows on a lightweight page so Chrome can put their previously selected tab to sleep, and bring that tab back when the user returns. Optionally, ask Chrome to unload a parked window's other tabs straight away.
 
 TABS PERMISSION JUSTIFICATION
-Read tab URLs, titles and state locally to apply exclusions, identify the previously selected tab, create the temporary parking page, restore that tab later, and request discard of every currently loaded eligible real tab in a newly parked window only when the user selects Discard immediately. In the default Let Chrome decide mode, no discard API is called. The Clear parked tabs action restores at most one regular tab per affected window, never initiates discards, and closes only this extension's inactive parking pages after checking a real tab is active. A parking-only window first receives a blank tab to preserve it. It does not read website page contents or transmit browsing information.
+Reads the address, title and state of open tabs, on the user's computer only, to apply site exclusions, remember which tab was selected, add and select the parking page, and select the previous tab again when the user returns. Only in the optional Discard immediately mode does it ask Chrome to unload loaded, eligible tabs in a newly parked window. It does not read page contents and does not send browsing information anywhere.
 
 STORAGE PERMISSION JUSTIFICATION
-Save timing, tab sleeping mode, appearance, site exclusions and other preferences in local extension storage. Store the previous tab's URL, title and position locally for restart recovery, and keep transient window state and individual-tab exclusions in session storage. No Chrome sync storage or external database is used.
+Saves settings and a small recovery record for each parked window (the previous tab's address, title and position) in local extension storage, and temporary window/tab state in session storage. If the user turns on sync for a setting, that setting is also stored in chrome.storage.sync so Chrome can sync it across the user's own computers. Sync is off by default and chosen per setting.
 
 ALARMS PERMISSION JUSTIFICATION
-Schedule inactivity checks and recover interrupted focus-dwell timers while the Manifest V3 service worker is suspended. Alarms avoid continuous background polling.
+Schedules the inactivity checks and recovers the return delay while the Manifest V3 service worker is stopped, instead of polling.
 
 DOWNLOADS PERMISSION JUSTIFICATION
-Check whether any Chrome download is in progress and temporarily pause parking to avoid interrupting it. The API does not reliably identify a download's source tab, so the safety pause applies to all windows. Download metadata is not retained; the extension does not start, open, modify or delete downloads.
+Checks whether any Chrome download is in progress and pauses parking until it finishes, so a download isn't interrupted. Chrome doesn't reliably report a download's source tab, so the pause applies to every window. It never starts, opens, changes or deletes downloads and keeps no download details.
 
 REMOTE CODE
 No, I am not using remote code.
-All JavaScript and other resources are packaged with the extension. Chrome Window Parker has no backend, background network requests, remotely loaded scripts or remote executable configuration. The optional Support action opens a separate third-party website only after user action.
+All code is included in the extension package. There is no server, remote script or remotely loaded configuration.
 
 PRIVACY POLICY URL
 https://github.com/montybwolfe/chrome-window-parker/blob/main/PRIVACY.md
 
+DATA USAGE: WHAT USER DATA IS HANDLED
+Web history: the addresses and titles of open tabs are processed on the user's computer for exclusions and restoring the previous tab. The extension does not have Chrome's history permission and does not read browsing history.
+User activity: window focus, tab selection and navigation timing are used on the user's computer to decide when a window is idle and when the user has returned. Keystrokes, mouse movement and page clicks are not monitored.
+If the user turns on sync for "Sites to exclude", their list of excluded domains and address patterns is stored in Chrome sync storage and synced by Chrome through the user's Google account. The developer never receives it.
+
 DATA HANDLING EXPLANATION
-The extension processes tab URLs, titles, tab/window identifiers, focus/activation state and timing locally for parking, exclusions and restoration. It queries in-progress download metadata only for its safety pause. No user data is sent to the developer or third parties, sold, used for advertising, or used for creditworthiness/lending. There is no telemetry, analytics, account login or tracking service. The optional Support action opens Buy Me a Coffee in a separate tab only after user action, without attaching browsing information. Chrome Window Parker receives no payment details or supporter identity and stores no supporter status.
+All processing happens in the user's browser. Nothing is sent to the developer or third parties, sold, used for advertising, or used for creditworthiness or lending. There is no account, analytics, telemetry or tracking. Optional sync uses Chrome's own chrome.storage.sync, only for settings the user chooses. The Report a bug and Support buttons open GitHub or Buy Me a Coffee in a new tab only when clicked, without attaching any browsing information.
 
-DATA-TYPE DISCLOSURES
-Web history: disclose local tab URLs and titles used for exclusions and recovery. The extension does not read Chrome's historical browsing database.
-User activity: disclose local window focus, tab activation/navigation state and timing used to determine inactivity and a deliberate return. It does not monitor keystrokes, mouse movement or page clicks.
-Local processing still involves browsing information. These categories describe the current code; review the dashboard descriptions when completing its data-use checkboxes.
-
-LIMITED-USE CERTIFICATIONS
-The current code does not sell or transfer user data; does not use it for purposes unrelated to the stated single purpose; and does not use it for creditworthiness or lending. Confirm the dashboard's certifications after reviewing these practices.
+LIMITED USE CERTIFICATIONS
+Certify all three: the extension does not sell or transfer user data to third parties (outside the approved use cases), does not use or transfer it for purposes unrelated to its single purpose, and does not use or transfer it to determine creditworthiness or for lending.

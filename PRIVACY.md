@@ -1,33 +1,30 @@
-# Privacy policy — Chrome Window Parker
+# Privacy policy
 
-Chrome Window Parker runs locally in your Chrome profile. It has no backend, makes no background network requests and sends no browsing information to the developer or third parties. It contains no accounts, analytics, advertising, tracking, telemetry or remote code.
+Chrome Window Parker runs entirely in your browser. There's no Chrome Window Parker account, server, analytics, telemetry, advertising or remote code, and the developer never receives your data.
 
-## Information used on your device
+## What it uses on your computer
 
-The extension reads current tab URLs, titles, identifiers and state to apply exclusions, park idle windows and return to the right tab. Window focus, tab activation/navigation and timing determine inactivity and a deliberate return. It does not read website contents, keystrokes, mouse activity, cookies, credentials, Chrome's browsing-history database or downloaded files.
+- **Your open windows and tabs.** To tell which windows are idle and which tab to bring back, it reads the address, title and state of open tabs, and notices when windows gain focus and tabs change. It doesn't read page contents, keystrokes, cookies or passwords, and it doesn't have Chrome's history permission, so it can't read your browsing history.
+- **Downloads.** It only checks whether a Chrome download is in progress, so it can pause parking. It never starts, opens, changes or deletes downloads, and keeps no download details.
+- **Settings and recovery details.** Your settings, and a small record of each parked window's previous tab (its address, title and position), are kept in Chrome's extension storage on your computer so parking survives a restart. Temporary window and tab state is kept in session storage, which Chrome clears when it closes.
+- **Debug logs.** Debug logging is off by default. When you turn it on, logs stay in Chrome's extension console and use IDs rather than page titles or full addresses.
 
-Local extension storage holds settings, including timing, tab sleeping mode, appearance, exclusions and debug preference. Recovery records contain a random parking token and the previous tab's URL, title, position, duplicate-URL occurrence and update time. Session storage holds temporary window/tab identifiers, activity times, parked state, pending restoration details and individual-tab protection.
+## Optional sync
 
-The downloads API is queried only to check whether a Chrome download is in progress. Download metadata is not retained. The extension does not start, open, modify or delete downloads.
+Sync is off by default. In Settings you can choose, one setting at a time, to keep a setting the same on your other computers: the parking delay, restore delay, tab sleeping mode, theme, pinned and audio tab options, or your site exclusions. Chosen settings are stored in Chrome's own sync storage and travel through your Google account when you're signed in to Chrome with sync on. They never pass through a Chrome Window Parker server, because there isn't one.
 
-Debug logging is off by default. When enabled, operational logs stay in Chrome's extension console and use identifiers and reasons rather than page titles or full URLs. Unexpected API errors remain visible for diagnosis; review logs before sharing them.
+Your sync choices themselves, pausing, protected tabs, debug logging and all window and tab information always stay on the computer where they're set.
 
-## Retention and control
+## Keeping and removing data
 
-Settings and recovery records remain in the local Chrome profile; no Chrome sync storage or cloud database is used. Closing a window or parking page, including normal restoration and Clear parked tabs, removes its recovery record once no live page uses it. Up to 100 abandoned recovery records may remain after crashes, in addition to records for live parking pages.
+A parked window's recovery record is deleted when the window closes or goes back to normal. A limited number of leftovers from crashes may remain. Reset settings restores the defaults and turns sync off on that computer; settings already shared stay in your Chrome sync data for your other computers. Removing the extension deletes its local storage. Synced settings can be cleared with Chrome's own sync controls.
 
-Reset settings restores defaults, including Let Chrome decide and Auto appearance. It does not erase session tab protection or recovery records needed by open parking pages. Individual protection ends with the browser session and may also clear on extension reload/update. Removing the extension removes its extension storage.
+## Links
 
-## Optional support
+The Report a bug and Support buttons open GitHub or Buy Me a Coffee in a new tab, only when you click them. Nothing about your tabs or browsing is sent with them. Those sites have their own privacy policies. Support is optional, unlocks nothing, and Chrome Window Parker receives no payment or supporter details.
 
-The Support controls in the popup and Settings open `https://buymeacoffee.com/montybwolfe` in a separate tab only after deliberate user action. Nothing is fetched or contacted in advance, and no tab URLs, titles or other browsing information are attached. The third-party site and its payment processor operate under their own privacy terms.
+## Chrome Web Store policy
 
-Chrome Window Parker does not process payments, receive payment details or supporter identity, store supporter status, or check whether you contributed. All functionality remains free, with no accounts, paid tiers or entitlements.
+Chrome Window Parker doesn't sell or transfer user data, use it for advertising, or use it to decide creditworthiness or for lending. It uses data only to provide its single purpose, in line with the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/policies#limited-use), including the Limited Use requirements.
 
-## Chrome and websites
-
-In the default mode, Chrome decides whether and when background tabs unload. Optional immediate discard makes an explicit request to Chrome. Neither mode sends browsing information to the developer. Chrome and websites have their own data practices; restoring an unloaded website can cause its normal network requests.
-
-The extension does not sell or transfer user data, use it for advertising, or use it for creditworthiness or lending. Information handled through Chrome APIs is used only for the stated functionality, in accordance with the [Chrome Web Store User Data Policy, including its Limited Use requirements](https://developer.chrome.com/docs/webstore/program-policies/policies#limited-use).
-
-Effective date: 29 September 2026. Maintained by [montybwolfe](https://github.com/montybwolfe). For questions, use the [project issue tracker](https://github.com/montybwolfe/chrome-window-parker/issues), keeping private browsing details out of public posts.
+Effective 30 September 2026. Questions: [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues).
