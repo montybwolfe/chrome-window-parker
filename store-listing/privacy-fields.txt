@@ -15,13 +15,13 @@ Check whether any Chrome download is in progress and temporarily pause parking t
 
 REMOTE CODE
 No, I am not using remote code.
-All JavaScript and other resources are packaged with the extension. There are no external servers, remotely loaded scripts, or remote executable configuration.
+All JavaScript and other resources are packaged with the extension. The extension has no backend, background network requests, remotely loaded scripts, or remote executable configuration. The optional Support action only opens a separate third-party website after user action.
 
 PRIVACY POLICY URL
 https://github.com/montybwolfe/chrome-window-parker/blob/main/PRIVACY.md
 
 DATA HANDLING EXPLANATION
-The extension processes tab URLs, titles, tab/window identifiers, focus/activation state and timing locally for parking, exclusions and restoration. It queries in-progress download metadata only for its safety pause. No user data is sent to the developer or third parties, sold, used for advertising, or used for creditworthiness/lending. There is no telemetry, analytics, account login or tracking service.
+The extension processes tab URLs, titles, tab/window identifiers, focus/activation state and timing locally for parking, exclusions and restoration. It queries in-progress download metadata only for its safety pause. No user data is sent to the developer or third parties, sold, used for advertising, or used for creditworthiness/lending. There is no telemetry, analytics, account login or tracking service. The optional Support action opens Buy Me a Coffee in a separate tab only after user action, without attaching browsing information. Window Parker receives no payment details or supporter identity and stores no supporter status.
 
 DATA-TYPE DISCLOSURES
 Web history: disclose local tab URLs and titles used for exclusions and recovery. The extension does not read Chrome's historical browsing database.

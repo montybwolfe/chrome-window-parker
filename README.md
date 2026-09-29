@@ -10,7 +10,7 @@ Your tabs stay in the same window, with their order, pins and groups intact. Whe
 
 ## Getting started
 
-Download **`chrome-window-parker-v1.5.1.zip`** from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.1). This is the extension package; GitHub's automatic source-code archives contain development files too.
+Download **`chrome-window-parker-v1.5.1.1.zip`** from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.1.1). This is the extension package; GitHub's automatic source-code archives contain development files too.
 
 1. Extract the release ZIP to a permanent folder.
 2. Open `chrome://extensions` and enable **Developer mode**.
@@ -43,7 +43,7 @@ Window Parker never asks Chrome to move or focus a window. Chrome still controls
 
 ## Privacy
 
-Everything runs locally in your Chrome profile. There are no accounts, analytics, ads, telemetry, external servers or remote code. Tab URLs, titles and activity state are used locally for exclusions and restoration. [Read the privacy policy](PRIVACY.md).
+Everything runs locally in your Chrome profile. There are no Window Parker accounts, analytics, ads, telemetry, backend or background network requests. All executable code is packaged locally. Tab URLs, titles and activity state are used locally for exclusions and restoration. [Read the privacy policy](PRIVACY.md).
 
 ## Development and support
 
@@ -58,5 +58,9 @@ npm run preview
 The package is written to `dist/`. The preview uses synthetic data and is separate from an installed extension. [Testing](TESTING.md) explains the checks and their limits; [store submission notes](docs/WEB_STORE.md) identify the upload files.
 
 Report reproducible problems through [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues), with private URLs and titles removed. Changes are recorded in the [changelog](CHANGELOG.md).
+
+## Support development
+
+Chrome Window Parker is free and open source, with all functionality available without payment. If it’s useful to you, you can optionally [buy me a coffee](https://buymeacoffee.com/montybwolfe) to support development. This opens a separate third-party website; contributions unlock nothing and Window Parker receives no payment details or supporter identity.
 
 Released under the [MIT License](LICENSE). This independent project is not affiliated with or endorsed by Google.

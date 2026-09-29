@@ -1,3 +1,4 @@
+import {bindSupport} from './support.js';
 import {request, report, watchTabState} from './ui.js';
 const $ = id => document.getElementById(id);
 let data, current, busy = false, revision = 0;
@@ -44,3 +45,5 @@ $('toggle').addEventListener('click', () => act(async () => {
 $('options').addEventListener('click', () => chrome.runtime.openOptionsPage().catch(report));
 refresh().catch(report);
 watchTabState(refresh);
+
+bindSupport(document.getElementById('support'), error => report(error));
