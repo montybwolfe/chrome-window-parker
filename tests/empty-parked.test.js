@@ -215,3 +215,49 @@ test('paused worker persists a detached transfer before waiting for attachment',
     assert.deepEqual(h.session.runtimeState.detachedTabs,[[100,1]]);assert(h.windows.some(w=>w.id===1));
   });
 });
+
+// The parked window is the only normal Chrome window. Extension-owned pages must
+// not keep it alive, and Chrome's own last-window behavior applies unchanged.
+const others = () => [
+  {id:50,type:'popup',incognito:false,focused:false,state:'normal',tabs:[{id:5000,windowId:50,index:0,active:true,url:'https://example.org/popup',status:'complete'}]},
+  {id:60,type:'normal',incognito:true,focused:false,state:'normal',tabs:[{id:6000,windowId:60,index:0,active:true,url:'https://example.org/private',status:'complete'}]}];
+async function lastWindow(){const h=harness(1,1);h.windows.push(...others());await h.restart();await h.parkAll();assert(h.p.states[1].parked);return h;}
+
+test('last normal window: closing its final real tab removes the shell and lets Chrome close it',async()=>{
+  const h=await lastWindow();await worker(h,async({drain})=>{
+    const before=h.calls.length;await h.api.tabs.remove(100);await drain();
+    assert.deepEqual(h.windows.map(w=>w.id),[50,60],'only the unrelated popup and incognito windows remain');
+    assert(!h.calls.slice(before).some(c=>c[0]==='create'),'no blank tab or replacement window is created');
+  });
+});
+
+test('last normal window: moving its final real tab into a new window closes the old shell',async()=>{
+  const h=await lastWindow();await worker(h,async({drain})=>{
+    const moved=h.tab(100);h.windows[0].tabs=h.windows[0].tabs.filter(t=>t.id!==100);
+    h.api.tabs.onDetached.emit(100,{oldWindowId:1,oldPosition:0});await drain();
+    assert(h.windows.some(w=>w.id===1),'waits for the tab to land');
+    const fresh={id:3,type:'normal',incognito:false,focused:true,state:'normal',tabs:[{...moved,windowId:3,index:0,active:true}]};
+    h.windows.push(fresh);h.api.windows.onCreated.emit(copy(fresh));
+    h.api.tabs.onAttached.emit(100,{newWindowId:3,newPosition:0});await drain();
+    assert.deepEqual(h.windows.map(w=>w.id),[50,60,3]);assert(h.tab(100).active);
+  });
+});
+
+test('last normal window: duplicate pages are all removed, and a later worker cleans a missed shell',async()=>{
+  const h=await lastWindow();const url=h.tab(h.p.states[1].parkingId).url;
+  await h.api.tabs.create({windowId:1,active:false,url});await h.api.tabs.remove(100);await h.p.removed(100,{windowId:1});
+  assert(!h.windows.some(w=>w.id===1));
+  const late=await lastWindow();
+  late.windows[0].tabs=late.windows[0].tabs.filter(t=>t.id!==100); // closed while no worker was running
+  const before=late.calls.length;await late.restart();
+  assert(!late.windows.some(w=>w.id===1));assert(!late.calls.slice(before).some(c=>c[0]==='create'));
+});
+
+test('last normal window: Clear still keeps a parking-only window open with a blank tab',async()=>{
+  const h=harness(1,1);h.windows[0].tabs=[{id:199,windowId:1,index:0,active:true,url:h.api.runtime.getURL('parked.html')+'#orphan-token',status:'complete'}];
+  await worker(h,async({send})=>{
+    const result=await send({type:'close-parked'});assert(result.ok);
+    assert.equal(h.windows.length,1);assert.equal(h.windows[0].tabs.length,1);
+    assert.equal(h.windows[0].tabs[0].url,'about:blank');assert(h.windows[0].tabs[0].active);
+  });
+});
