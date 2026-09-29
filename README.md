@@ -12,26 +12,22 @@ Your tabs stay in the same window, with their order, pins and groups intact. Whe
 
 ### Chrome Web Store
 
-Chrome Web Store listing pending approval. Once published, this will be the recommended route for normal one-click installation of Chrome Window Parker.
+Chrome Web Store listing pending approval.
 
-<!-- CHROME_WEB_STORE_URL: After approval, replace this pending paragraph and comment with
-"Install Chrome Window Parker from the Chrome Web Store." and a link labelled
-"Install from the Chrome Web Store" using the approved listing URL. -->
+<!-- CHROME_WEB_STORE_URL -->
 
 ### Manual installation
 
-For manual or developer installation:
-
-Download the initial public release, **`chrome-window-parker-v1.5.1.3.zip`**, from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.1.3). This is the extension package; GitHub's automatic source-code archives contain development files too.
+Download **`chrome-window-parker-v1.5.1.3.zip`** from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.1.3). This is the extension package; GitHub's automatic source-code archives contain development files too.
 
 1. Extract the release ZIP to a permanent folder.
 2. Open `chrome://extensions` and enable **Developer mode**.
 3. Choose **Load unpacked**, then select the extracted folder containing `manifest.json`.
 4. Leave the defaults in place to start: park after **15 minutes**, restore after **2 seconds**, and **Let Chrome decide** when tabs sleep.
 
-Requires Chrome 120 or later. Testing has been on macOS, with live release checks still outstanding; Windows, Linux and ChromeOS are unverified. See [testing](TESTING.md) and [compatibility](SUPPORT.md).
+Requires Chrome 120 or later. Currently tested on macOS; Windows, Linux and ChromeOS have not yet been formally verified. See [compatibility and support](SUPPORT.md).
 
-## Two ways to handle tab sleeping
+## How tab sleeping works
 
 **Let Chrome decide** is the default, including when upgrading from an older version. Parking makes the previous tab a background tab; Chrome controls whether and when it unloads. Chrome Window Parker makes no discard requests in this mode. Keep Chrome Memory Saver enabled at your preferred level. A parked window can still have loaded tabs, and memory savings vary.
 
@@ -39,7 +35,7 @@ Requires Chrome 120 or later. Testing has been on macOS, with live release check
 
 Both modes leave already-sleeping tabs alone. Changing sleeping mode applies to the next parking cycle; it does not unload or wake tabs in windows already parked. Returning selects only your saved tab, which Chrome reloads if necessary. Chrome Window Parker does not change Chrome's Memory Saver settings or its always-active site list. [About Chrome Memory Saver](https://support.google.com/chrome/answer/12929150?hl=en).
 
-## Make it fit your workflow
+## Settings and protections
 
 Open **Settings** from the toolbar popup to change the parking delay, return delay, sleeping mode or **Auto / Light / Dark** appearance. Auto follows your system theme. Saving an appearance updates every open Chrome Window Parker page.
 
@@ -47,7 +43,7 @@ By default, a window is skipped when its selected tab is pinned, playing audio o
 
 The popup shows **Parked windows** and **Sleeping tabs**, plus controls to protect the current tab and pause automation. **Clear parked tabs** returns affected windows to real tabs and removes their parking pages, even while paused. Clearing restores at most one real tab per affected window and never initiates discards; other loaded or sleeping tabs keep their state. A window with only parking pages receives a blank tab so it stays open.
 
-## A few things to know
+## Important limitations
 
 Parking pauses during active Chrome downloads. Incognito, special browser windows and selected internal pages are excluded. Chrome's APIs cannot reliably identify every call, upload, screen-sharing session, video or unsaved edit. Exclude important sites; use Chrome's always-active site list too if they must stay loaded under Memory Saver.
 
@@ -67,7 +63,7 @@ python3 scripts/package.py
 npm run preview
 ```
 
-The package is written to `dist/`. The preview uses synthetic data and is separate from an installed extension. [Testing](TESTING.md) explains the checks and their limits; [store submission notes](docs/WEB_STORE.md) identify the upload files.
+The package is written to `dist/`. The preview uses synthetic data for UI development. See [Testing](TESTING.md) for automated tests and manual Chrome checks, and [Behavior and recovery](docs/BEHAVIOR.md) for the implementation details.
 
 Report reproducible problems through [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues), with private URLs and titles removed. Changes are recorded in the [changelog](CHANGELOG.md).
 
@@ -75,6 +71,6 @@ Report reproducible problems through [GitHub Issues](https://github.com/montybwo
 
 Chrome Window Parker is free and open source. If you find it useful, you can optionally support its development.
 
-<a href="https://buymeacoffee.com/montybwolfe"><img src="docs/assets/buy-me-a-coffee-blue.png" alt="Buy Me a Coffee" width="217"></a>
+<a href="https://www.buymeacoffee.com/montybwolfe" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-Released under the [MIT License](LICENSE), except for the [official Buy Me a Coffee artwork](docs/assets/BUY-ME-A-COFFEE.md). This independent project is not affiliated with or endorsed by Google.
+Released under the [MIT License](LICENSE). This independent project is not affiliated with or endorsed by Google.
