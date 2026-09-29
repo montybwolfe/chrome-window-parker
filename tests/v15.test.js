@@ -8,10 +8,10 @@ for(const sleepingMode of ['chrome','immediate'])for(const discarded of [false,t
 test(`${sleepingMode}: restores saved tab when Chrome discarded=${discarded}, preserving other tabs`,async()=>{
  const h=harness();h.local.settings={sleepingMode};h.tab(201).discarded=true;await h.restart();
  const before=copy(h.windows[1]);await h.parkAll();assert(h.p.states[2].parked);
- assert.equal(h.calls.filter(c=>c[0]==='discard').length,sleepingMode==='chrome'?0:2);
+ assert.equal(h.calls.filter(c=>c[0]==='discard').length,sleepingMode==='chrome'?0:5);
  assert.deepEqual(h.windows[1].tabs.slice(0,3).map(t=>[t.id,t.url,t.index,t.pinned,t.groupId]),before.tabs.map(t=>[t.id,t.url,t.index,t.pinned,t.groupId]));
  h.tab(200).discarded=discarded;const parking=h.p.states[2].parkingId;
- await h.focus(2);await h.advance(2000);assert(h.tab(200).active);assert(!h.tab(parking));assert(h.tab(201).discarded);assert(!h.tab(202).discarded);
+ await h.focus(2);await h.advance(2000);assert(h.tab(200).active);assert(!h.tab(parking));assert(h.tab(201).discarded);assert.equal(!!h.tab(202).discarded,sleepingMode==='immediate');
 });
 test('new installs, old settings and invalid stored enums use Chrome and Auto; reset persists both',async()=>{
  for(const settings of [undefined,{delayMinutes:30},{sleepingMode:'invalid',appearance:'broken'}]){
@@ -42,7 +42,7 @@ test('stale handling preserves authentication and unexpected API errors',async()
 });
 test('switching sleeping mode does not discard already parked tabs; next cycle uses saved mode',async()=>{
  const h=harness();await h.restart();await h.parkAll();await h.p.configure({...h.p.settings,sleepingMode:'immediate'});await h.p.sweep();assert(!h.calls.some(c=>c[0]==='discard'));
- await h.focus(2);await h.p.restore(2);await h.parkAll();assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]),[200]);
+ await h.focus(2);await h.p.restore(2);await h.parkAll();assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]),[200,201,202]);
 });
 for(const sleepingMode of ['chrome','immediate'])for(const protection of ['individual','site'])test(`${sleepingMode}: selected ${protection} exclusion leaves window alone`,async()=>{
  const h=harness();h.local.settings={sleepingMode};await h.restart();

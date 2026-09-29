@@ -17,11 +17,11 @@ test('domain boundaries and literal URL glob matching',()=>{
   assert(matchesRule('https://example.com/work/a?x=1','https://example.com/work/*'));
   assert(!matchesRule('https://exampleXcom/work/a','https://example.com/work/*'));
 });
-test('park same window, discard only formerly selected tab, preserving layout',async()=>{
+test('park same window, discard eligible real tabs, preserving layout',async()=>{
   const h=harness();h.local.settings={sleepingMode:'immediate'};await h.restart();await h.advance(16*60000);
   const before=copy(h.windows);await h.p.sweep();
   assert(!h.p.states[1].parked);assert(h.p.states[2].parked);
-  const w=h.windows[1];assert(w.tabs[0].discarded);assert(w.tabs.slice(1,3).every(t=>!t.discarded));
+  const w=h.windows[1];assert(w.tabs[0].discarded);assert(w.tabs.slice(1,3).every(t=>t.discarded));
   assert.deepEqual(w.tabs.slice(0,3).map(t=>[t.id,t.url,t.index,t.groupId,t.pinned]),before[1].tabs.map(t=>[t.id,t.url,t.index,t.groupId,t.pinned]));
   for(const key of ['left','top','width','height','state','id','focused'])assert.equal(w[key],before[1][key]);
   assert.deepEqual(h.calls.find(c=>c[0]==='update')[2],{active:true});
@@ -53,7 +53,7 @@ for(const sleepingMode of ['chrome','immediate']) for(const [name,patch] of Obje
   });
   test(`${sleepingMode}: protected background ${name} remains loaded`,async()=>{
     const h=harness();h.local.settings={sleepingMode};Object.assign(h.tab(201),patch);await h.restart();await h.advance(16*60000);await h.p.sweep();
-    assert(h.p.states[2].parked);assert(!h.tab(201).discarded);assert(!h.tab(202).discarded);
+    assert(h.p.states[2].parked);assert(!h.tab(201).discarded);assert.equal(!!h.tab(202).discarded,sleepingMode==='immediate');
   });
 }
 test('explicit pinned opt-in retains pin',async()=>{
@@ -151,8 +151,8 @@ test('safety-setting change during preparation cancels the pending park',async()
   const h=harness();await h.restart();h.hooks.create=()=>{h.p.safetyEpoch++;};await h.advance(16*60000);await h.p.sweep();assert(!h.tab(200).discarded);assert(h.tab(200).active);
 });
 
-test('Chrome refusal leaves all real tabs intact',async()=>{
-  const h=harness();h.local.settings={sleepingMode:'immediate'};await h.restart();h.hooks.discard=tab=>{if(tab.id===200)throw Error('Cannot discard tab with id: 200');};await h.advance(16*60000);await h.p.sweep();assert(!h.tab(200).discarded);assert(!h.tab(201).discarded);assert(h.p.states[2].parked);
+test('Chrome refusal leaves the refused tab loaded and continues safe neighbors',async()=>{
+  const h=harness();h.local.settings={sleepingMode:'immediate'};await h.restart();h.hooks.discard=tab=>{if(tab.id===200)throw Error('Cannot discard tab with id: 200');};await h.advance(16*60000);await h.p.sweep();assert(!h.tab(200).discarded);assert(h.tab(201).discarded);assert(h.tab(202).discarded);assert(h.p.states[2].parked);
 });
 
 test('unauthorized messages and malformed settings cannot mutate state',async()=>{

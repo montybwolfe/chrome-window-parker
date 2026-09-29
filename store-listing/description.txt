@@ -8,9 +8,9 @@ CHOOSE HOW TABS SLEEP
 
 Let Chrome decide is the default. Window Parker makes the previous tab a background tab, then leaves unloading to Chrome. It makes no discard requests in this mode. Keep Memory Saver enabled at your preferred level; Chrome decides whether and when to reclaim memory.
 
-Discard immediately is optional. It asks Chrome to unload the previously selected tab after parking, subject to eligibility checks. Unloading can lose unsaved page state, so use exclusions for important work.
+Discard immediately is optional. When a window is newly parked, it asks Chrome to unload every currently loaded eligible real tab in that window. Protected and ineligible tabs are skipped individually. Unloading can lose unsaved page state, so use exclusions for important work.
 
-Both modes leave already-sleeping tabs and ordinary background tabs alone. Returning selects only your saved tab and Chrome reloads it if needed. Window Parker does not change Memory Saver settings or Chrome's always-active site list.
+Both modes leave already-sleeping tabs alone. A mode change applies to the next parking cycle, without unloading or waking tabs in already-parked windows. Returning selects only your saved tab and Chrome reloads it if needed. Window Parker does not change Memory Saver settings or Chrome's always-active site list.
 
 SET IT UP ONCE
 
@@ -19,7 +19,7 @@ SET IT UP ONCE
 • Skip windows whose selected tab is pinned, playing audio or excluded.
 • Exclude sites or protect individual tabs for the current browser session.
 • Check live parked-window and sleeping-tab counts in the toolbar.
-• Pause automation or clear parking pages across your windows when needed.
+• Pause automation or clear parking pages across your windows when needed. Clear parked tabs returns at most one real tab per window and never initiates discards.
 
 BUILT FOR MULTIPLE WINDOWS
 

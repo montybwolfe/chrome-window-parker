@@ -10,7 +10,7 @@ Your tabs stay in the same window, with their order, pins and groups intact. Whe
 
 ## Getting started
 
-Download **`chrome-window-parker-v1.5.0.zip`** from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.0). This is the extension package; GitHub's automatic source-code archives contain development files too.
+Download **`chrome-window-parker-v1.5.1.zip`** from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.1). This is the extension package; GitHub's automatic source-code archives contain development files too.
 
 1. Extract the release ZIP to a permanent folder.
 2. Open `chrome://extensions` and enable **Developer mode**.
@@ -23,9 +23,9 @@ Requires Chrome 120 or later. Testing has been on macOS, with live release check
 
 **Let Chrome decide** is the default, including when upgrading from an older version. Parking makes the previous tab a background tab; Chrome controls whether and when it unloads. Window Parker makes no discard requests in this mode. Keep Chrome Memory Saver enabled at your preferred level. A parked window can still have loaded tabs, and memory savings vary.
 
-**Discard immediately** asks Chrome to unload the previously selected tab as soon as the window is parked, after the extension's eligibility checks. Choose this only if you want more aggressive sleeping. Unloading can lose unsaved page state.
+**Discard immediately** asks Chrome to unload every currently loaded eligible real tab when its window is newly parked. Already-sleeping, protected and ineligible tabs are skipped individually. Choose this only if you want more aggressive sleeping. Unloading can lose unsaved page state.
 
-Both modes leave already-sleeping tabs and ordinary background tabs alone. Returning selects only your saved tab, which Chrome reloads if necessary. Window Parker does not change Chrome's Memory Saver settings or its always-active site list. [About Chrome Memory Saver](https://support.google.com/chrome/answer/12929150?hl=en).
+Both modes leave already-sleeping tabs alone. Changing sleeping mode applies to the next parking cycle; it does not unload or wake tabs in windows already parked. Returning selects only your saved tab, which Chrome reloads if necessary. Window Parker does not change Chrome's Memory Saver settings or its always-active site list. [About Chrome Memory Saver](https://support.google.com/chrome/answer/12929150?hl=en).
 
 ## Make it fit your workflow
 
@@ -33,7 +33,7 @@ Open **Settings** from the toolbar popup to change the parking delay, return del
 
 By default, a window is skipped when its selected tab is pinned, playing audio or excluded. Add site exclusions for work you want to keep selected, or protect a single tab for the current browser session. Window Parker's exclusions do not control Chrome's own memory decisions.
 
-The popup shows **Parked windows** and **Sleeping tabs**, plus controls to protect the current tab and pause automation. **Clear parked tabs** returns affected windows to real tabs and removes their parking pages, even while paused. A window with only parking pages receives a blank tab so it stays open.
+The popup shows **Parked windows** and **Sleeping tabs**, plus controls to protect the current tab and pause automation. **Clear parked tabs** returns affected windows to real tabs and removes their parking pages, even while paused. Clearing restores at most one real tab per affected window and never initiates discards; other loaded or sleeping tabs keep their state. A window with only parking pages receives a blank tab so it stays open.
 
 ## A few things to know
 

@@ -55,9 +55,9 @@ test('failed persistent settings write does not mutate the live settings', async
 test('Chrome sleeping backgrounds never reload or receive redundant discard calls', async () => {
   const h = harness(2,5);h.local.settings={sleepingMode:'immediate'}; h.tab(201).discarded = true; h.tab(203).discarded = true;
   await h.restart(); await h.advance(16*60000); await h.p.sweep();
-  assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]), [200]);
+  assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]), [200,202,204]);
   assert(h.tab(201).discarded); assert(h.tab(203).discarded);
-  assert(!h.tab(202).discarded); // Chrome retains control of ordinary backgrounds.
+  assert(h.tab(202).discarded); // Immediate mode covers loaded background candidates too.
   const parkingId=h.p.states[2].parkingId;
   await h.focus(2); await h.advance(2000);
   assert(h.tab(200).active); assert(!h.tab(200).discarded);
@@ -73,14 +73,14 @@ test('already sleeping selected tab is left entirely untouched', async () => {
 test('Chrome discards previous tab during parking activation: no second discard', async () => {
   const h = harness();h.local.settings={sleepingMode:'immediate'}; await h.restart(); h.hooks.update = () => { h.tab(200).discarded = true; };
   await h.advance(16*60000); await h.p.sweep();
-  assert.equal(h.calls.filter(c=>c[0]==='discard').length,0); assert(h.tab(200).discarded);
+  assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]),[201,202]); assert(h.tab(200).discarded);
 });
 
 test('Chrome wins final discard race: read authoritative state, no retries or errors', async () => {
   const h = harness();h.local.settings={sleepingMode:'immediate'}; await h.restart();
   h.hooks.discard = tab => { tab.discarded = true; throw new Error('Cannot discard tab with id: '+tab.id); };
   await h.advance(16*60000); await assert.doesNotReject(()=>h.p.sweep());
-  assert(h.tab(200).discarded); assert.equal(h.calls.filter(c=>c[0]==='discard').length,1);
+  assert(h.tab(200).discarded); assert.equal(h.calls.filter(c=>c[0]==='discard').length,3);
   assert.equal(h.calls.filter(c=>c[0]==='update').length,1);
 });
 
@@ -117,8 +117,8 @@ test('sleeping metrics are live state, exclude parking tabs and make no provenan
   h.tab(101).discarded=false;status=await h.p.message({type:'status'},sender);assert.equal(status.windows[0].sleeping,1);
   await h.parkAll();await h.focus(2);await h.advance(2000);
   h.tab(h.p.states[1].parkingId).discarded=true;
-  status=await h.p.message({type:'status'},sender);assert.equal(status.windows[1].sleeping,0);
-  await h.restart();status=await h.p.message({type:'status'},sender);assert.equal(status.windows[0].sleeping,2);
+  status=await h.p.message({type:'status'},sender);assert.equal(status.windows[1].sleeping,2);
+  await h.restart();status=await h.p.message({type:'status'},sender);assert.equal(status.windows[0].sleeping,3);
 });
 
 test('closing sleeping tabs/windows removes them from the next status snapshot', async()=>{

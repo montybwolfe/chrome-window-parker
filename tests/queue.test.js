@@ -97,3 +97,56 @@ test('page teardown cancels pending refresh and removes all tab listeners',async
  try{const {watchTabState}=await import('../ui.js');const stop=watchTabState(async()=>{calls++;});tabs.onActivated.emit({windowId:1});assert.equal(timers.size,1);hide.emit();assert.equal(timers.size,0);assert(Object.values(tabs).every(e=>!e.listeners.size));stop();assert.equal(calls,0);}
  finally{Object.assign(globalThis,previous);}
 });
+
+for(const action of ['none','mode','pause','protect','clear','focus','select','download'])test(`real worker queue: bulk discard with ${action} after first candidate`,async()=>{
+ const h=harness();h.local.settings={sleepingMode:'immediate'};
+ for(const [ns,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))for(const name of names)h.api[ns][name]=event();
+ const old={chrome:globalThis.chrome,now:Date.now,setTimeout:globalThis.setTimeout,clearTimeout:globalThis.clearTimeout,error:console.error};const errors=[];
+ const create=h.api.tabs.create,update=h.api.tabs.update,remove=h.api.tabs.remove;
+ h.api.tabs.create=async props=>{const t=await create(props);h.api.tabs.onCreated.emit(t);return t;};
+ h.api.tabs.update=async(id,props)=>{const t=await update(id,props);if(props.active)h.api.tabs.onActivated.emit({windowId:t.windowId,tabId:id});return t;};
+ h.api.tabs.remove=async id=>{const windowId=h.tab(id).windowId;await remove(id);h.api.tabs.onRemoved.emit(id,{windowId,isWindowClosing:false});};
+ globalThis.chrome=h.api;Date.now=h.clock.now;globalThis.setTimeout=h.clock.setTimeout;globalThis.clearTimeout=h.clock.clearTimeout;console.error=(...a)=>errors.push(a);
+ const send=message=>new Promise(resolve=>h.api.runtime.onMessage.emit(message,{id:'test',url:h.api.runtime.getURL('options.html')},resolve));
+ try{
+  await import(`../background.js?bulk=${action}-${Math.random()}`);await send({type:'settings'});await h.advance(2000);await send({type:'settings'});const settings=(await send({type:'settings'})).data;let pending;
+  h.hooks.discard=async t=>{if(t.id!==200)return;
+   if(action==='mode')pending=send({type:'configure',settings:{...settings,sleepingMode:'chrome'}});
+   if(action==='pause')pending=send({type:'configure',settings:{...settings,enabled:false}});
+   if(action==='protect')pending=send({type:'protect',tabId:201,protected:true});
+   if(action==='clear')pending=send({type:'close-parked'});
+   if(action==='focus'){h.windows.forEach(w=>{w.focused=w.id===2;});h.api.windows.onFocusChanged.emit(2);}
+   if(action==='select')await h.api.tabs.update(201,{active:true});
+   if(action==='download'){h.hooks.downloading=true;h.api.downloads.onCreated.emit({id:1,state:'in_progress'});}
+  };
+  h.jump(16*60000);h.api.alarms.onAlarm.emit({name:'parking'});
+  for(let i=0;i<6;i++)assert((await send({type:'settings'})).ok);
+  if(pending)assert((await pending).ok);
+  assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]),action==='none'?[200,201,202]:[200]);assert.deepEqual(errors,[]);
+  if(action==='clear'){assert(h.tab(200).active);assert(!h.tab(201).discarded);assert(!h.tab(202).discarded);assert.equal(h.windows[1].tabs.length,3);}
+  if(action==='select'){h.jump(3000);h.api.alarms.onAlarm.emit({name:'dwell-recovery'});await send({type:'settings'});assert(h.tab(201).active);assert(h.tab(200).discarded);}
+ }finally{globalThis.chrome=old.chrome;Date.now=old.now;globalThis.setTimeout=old.setTimeout;globalThis.clearTimeout=old.clearTimeout;console.error=old.error;}
+});
+
+test('Clear parking-only window does not trigger discards in another overdue window through its blank-tab event',async()=>{
+ const h=harness(3);h.local.settings={sleepingMode:'immediate'};
+ for(const [ns,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))for(const name of names)h.api[ns][name]=event();
+ const old={chrome:globalThis.chrome,now:Date.now,setTimeout:globalThis.setTimeout,clearTimeout:globalThis.clearTimeout,error:console.error};const errors=[];
+ const create=h.api.tabs.create,update=h.api.tabs.update,remove=h.api.tabs.remove;
+ h.api.tabs.create=async props=>{const t=await create(props);h.api.tabs.onCreated.emit(t);return t;};
+ h.api.tabs.update=async(id,props)=>{const t=await update(id,props);if(props.active)h.api.tabs.onActivated.emit({windowId:t.windowId,tabId:id});return t;};
+ h.api.tabs.remove=async id=>{const windowId=h.tab(id).windowId;await remove(id);h.api.tabs.onRemoved.emit(id,{windowId,isWindowClosing:false});};
+ globalThis.chrome=h.api;Date.now=h.clock.now;globalThis.setTimeout=h.clock.setTimeout;globalThis.clearTimeout=h.clock.clearTimeout;console.error=(...a)=>errors.push(a);
+ const send=message=>new Promise(resolve=>h.api.runtime.onMessage.emit(message,{id:'test',url:h.api.runtime.getURL('options.html')},resolve));
+ try{
+  h.windows[1].tabs=[{id:299,windowId:2,index:0,active:true,url:h.api.runtime.getURL('parked.html')+'#orphan-token',status:'complete'}];
+  await import(`../background.js?clear-orphan=${Math.random()}`);await send({type:'settings'});await h.advance(2000);await send({type:'settings'});
+  h.jump(16*60000);const result=await send({type:'close-parked'});assert(result.ok);assert.equal(result.data.remaining,0);
+  for(let i=0;i<6;i++)assert((await send({type:'settings'})).ok);
+  assert.equal(h.windows.length,3);assert.equal(h.windows[1].tabs.length,1);assert.equal(h.windows[1].tabs[0].url,'about:blank');assert(h.windows[1].tabs[0].active);
+  assert.deepEqual(h.calls.filter(c=>c[0]==='discard'),[]);assert(h.tab(300).active);assert.deepEqual(errors,[]);
+  // The unrelated window can still park when the next ordinary alarm fires.
+  h.api.alarms.onAlarm.emit({name:'parking'});for(let i=0;i<6;i++)await send({type:'settings'});
+  assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]),[300,301,302]);
+ }finally{globalThis.chrome=old.chrome;Date.now=old.now;globalThis.setTimeout=old.setTimeout;globalThis.clearTimeout=old.clearTimeout;console.error=old.error;}
+});

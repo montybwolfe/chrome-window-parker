@@ -8,7 +8,7 @@ export class Parker {
     this.api = api; this.clock = clock; this.dispatch = dispatch;
     this.settings = {...DEFAULTS}; this.states = {}; this.records = {}; this.protectedIds = [];
     this.focus = null; this.epoch = 0; this.safetyEpoch = 0; this.dwell = null; this.focusedState = null;
-    this.tabEpoch = new Map();
+    this.tabEpoch = new Map(); this.selectionEpoch = new Map();
     this.parkingURL = api.runtime.getURL('parked.html');
   }
   log(...args) { if (this.settings.debug) console.debug('[Window Parker]', ...args); }
@@ -90,13 +90,24 @@ export class Parker {
     await this.save(); await this.schedule();
   }
   signalFocus(id) {
+    // Record leaving a genuinely used window before older queued sweeps run.
+    const old = this.states[this.focus];
+    if (id !== this.focus && old?.qualified) {
+      old.lastUse = this.clock.now(); old.retryAt = 0; old.qualified = false;
+    }
     if (this.dwell) this.log('dwell cancel', this.dwell.id);
     this.focus = id; this.epoch++;
     if (this.dwell) this.clock.clearTimeout(this.dwell.timer);
     this.dwell = null;
     return this.epoch;
   }
-  signalTab(windowId) { this.tabEpoch.set(windowId, (this.tabEpoch.get(windowId) || 0) + 1); }
+  signalTab(windowId, activatedId) {
+    this.tabEpoch.set(windowId, (this.tabEpoch.get(windowId) || 0) + 1);
+    // Our own parking-page activation is expected. A real-tab selection cancels
+    // a discard batch even if the parking page becomes active again afterwards.
+    if (activatedId !== undefined && activatedId !== this.states[windowId]?.parkingId)
+      this.selectionEpoch.set(windowId, (this.selectionEpoch.get(windowId) || 0) + 1);
+  }
   async focusChanged(id, at, epoch) {
     const old = this.states[this.focusedState];
     if (old?.qualified) { old.lastUse = at; old.retryAt = 0; old.qualified = false; }
@@ -154,12 +165,13 @@ export class Parker {
       return true; // Fail closed if safety information is unavailable.
     }
   }
-  async sweep() {
+  async sweep(onlyWindowId) {
     if (!this.settings.enabled) return;
     const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
     const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
     for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
     for (const w of windows) {
+      if (onlyWindowId !== undefined && w.id !== onlyWindowId) continue;
       const s = this.adopt(w);
       if (s && !s.parked && s.parkingId) await this.cleanupParking(w.id);
       if (!s || s.parked || w.focused || w.id === this.focus) continue;
@@ -176,7 +188,17 @@ export class Parker {
   }
   async park(id) {
     const epoch = this.epoch, safetyEpoch = this.safetyEpoch, tabEpoch = this.tabEpoch.get(id) || 0;
-    const valid = () => this.settings.enabled && this.epoch === epoch && this.safetyEpoch === safetyEpoch && this.focus !== id;
+    const selectionEpoch = this.selectionEpoch.get(id) || 0;
+    let checkedAt = this.clock.now(), interrupted = false;
+    const valid = () => {
+      const now = this.clock.now(), gap = now - checkedAt; checkedAt = now;
+      // Abandon work after sleep, a clock jump or a slow API interruption. No
+      // snapshot or continuation is persisted for another worker to resume.
+      if (gap < 0 || gap > 5000) interrupted = true;
+      return !interrupted && this.settings.enabled && this.epoch === epoch &&
+        this.safetyEpoch === safetyEpoch && this.focus !== id &&
+        (this.selectionEpoch.get(id) || 0) === selectionEpoch;
+    };
     let w = await this.getWindow(id);
     if (!this.supported(w) || w.focused || !valid() || await this.downloading()) return;
     const active = w.tabs.find(t => t.active), s = this.adopt(w);
@@ -211,27 +233,39 @@ export class Parker {
     s.parked = true; s.qualified = false; await this.save();
     this.log('parked', id, 'previous tab', active.id);
     if (this.settings.sleepingMode !== 'immediate' || !valid()) return;
-    // Memory Saver owns ordinary background tabs. We address only the tab that
-    // could not sleep while selected. Never activate a sleeping tab to inspect it.
-    const freshWindow = await this.getWindow(id);
-    if (!valid() || !freshWindow || freshWindow.focused || freshWindow.tabs.find(t => t.active)?.id !== parking.id) return;
-    if (await this.downloading()) return;
-    const tab = await this.getTab(active.id);
-    if (!valid() || !tab || tab.windowId !== id || tab.active) return;
-    const skip = skipReason(tab, this.settings, this.protectedIds);
-    if (skip) { this.log('skip tab', tab.id, skip); return; }
-    try { await this.api.tabs.discard(tab.id); this.log('discarded previous tab', tab.id); }
-    catch (error) {
-      // Chrome may win the race between our last read and discard(). Its current
-      // state is authoritative; no retries, activation, ownership or reloads.
-      const current = await this.getTab(tab.id);
-      if (!current || current.discarded || current.active || current.windowId !== id) {
-        this.log('discard no longer needed', tab.id); return;
+    await this.discardParkedTabs(id, parking.id, parkingToken, valid);
+  }
+  async discardParkedTabs(id, parkingId, token, valid) {
+    const running = () => valid() && this.settings.sleepingMode === 'immediate';
+    const parked = w => this.supported(w) && !w.focused &&
+      w.tabs.some(t => t.id === parkingId && t.active && this.removable(t) === token);
+    const snapshot = await this.getWindow(id);
+    if (!running() || !parked(snapshot)) return;
+    // Snapshot membership once; tabs created after this point wait for a later
+    // parking cycle. Eligibility and membership are checked again for each ID.
+    const candidates = snapshot.tabs.filter(t => this.real(t)).map(t => t.id);
+    for (const tabId of candidates) {
+      if (!running() || await this.downloading() || !running()) return;
+      const tab = await this.getTab(tabId);
+      if (!running()) return;
+      const w = await this.getWindow(id);
+      if (!running() || !parked(w)) return;
+      const current = w.tabs.find(t => t.id === tabId);
+      if (!tab || tab.windowId !== id || tab.active || !current || current.windowId !== id || current.active) continue;
+      const reason = skipReason(current, this.settings, this.protectedIds);
+      if (reason) { this.log('skip tab', tabId, reason); continue; }
+      try { await this.api.tabs.discard(tabId); this.log('discarded parked tab', tabId); }
+      catch (error) {
+        if (error instanceof TypeError) throw error;
+        const latest = await this.getTab(tabId);
+        // Chrome can discard, move, activate or close a candidate first. Never
+        // retry or wake it. A normal refusal affects only this candidate.
+        if (!latest || latest.discarded || latest.active || latest.windowId !== id ||
+            /Cannot discard tab|No tab with id|Invalid tab ID|Tabs cannot be edited right now/i.test(error.message)) {
+          this.log('discard skipped', tabId, error.message); continue;
+        }
+        throw error;
       }
-      if (/Cannot discard tab/i.test(error.message)) {
-        this.log('Chrome declined discard', tab.id); return;
-      }
-      throw error;
     }
   }
   async restore(id, epoch = this.epoch) {
@@ -312,7 +346,9 @@ export class Parker {
             }
           }
           w = await this.getWindow(initial.id);
-          if (!this.supported(w) || !w.tabs.some(t => t.active && this.real(t))) continue;
+          // Once activation succeeds, do not wake a second target if the first
+          // disappears. Leave cleanup for a later attempt instead.
+          if (!this.supported(w) || !w.tabs.some(t => t.active && this.real(t))) break;
           // Remove one verified page at a time; duplicate parking pages and
           // independent failures must not prevent the other pages being handled.
           for (const parking of w.tabs.filter(t => this.token(t))) {
@@ -399,7 +435,7 @@ export class Parker {
   async closed(id) {
     const s = this.states[id];
     if (s?.token) await this.forgetRecord(s.token);
-    delete this.states[id]; this.tabEpoch.delete(id);
+    delete this.states[id]; this.tabEpoch.delete(id); this.selectionEpoch.delete(id);
     await this.saveRecords(); await this.save(); await this.schedule();
   }
   async configure(input) {
