@@ -116,3 +116,8 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 - About: the website is set to the Chrome Web Store listing and the description to the manifest summary. Topics and other settings are unchanged.
 - Not changed: main, dev, product code, branch protection and agent/codex. This audit-only entry stays on agent/claude so main remains exactly at the tagged commit.
 - Open: the Chrome Web Store upload, listing and privacy updates, and submission are deliberately left to the user.
+
+### 2026-09-30 — Store reviewer instructions within 500 characters
+
+- Changed: `store-listing/test-instructions.txt` is cut from 1,291 to 488 characters (plain ASCII) for the Dashboard's 500-character Test instructions field. It keeps the 1-minute parking setup, what keeps a window awake, and the new sync controls. `tests/assets.test.js` now enforces the limit, counting line breaks as CRLF.
+- Not changed: product code, the release ZIP, and the `v1.5.5` tag and release. This change is on agent/claude only and hasn't been integrated into dev or main.
