@@ -57,7 +57,9 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
   - `c3a5ae3` adds the sync controls, the bug button and full-size text.
   - `3ccacc8` rewrites the public docs and Store text.
   - `2ecdc7a` rebuilds the Store artwork.
-  - This commit bumps the version to 1.5.5 and adds this entry.
+  - `83e6a80` bumps the version to 1.5.5 and adds this entry.
+  - `4b0ce80` redacts the old hostname address from the reconciliation entry.
+  - This commit adds the Store reviewer instructions (`store-listing/test-instructions.txt`) and the release-ZIP check below.
 - Sync design:
   - The local settings object stays authoritative, so everything works offline, signed out or with Chrome sync off.
   - `storage.local.syncPolicy` holds this device's per-setting choices and never syncs. Seven settings can opt in: parking delay, restore delay, sleeping mode, pinned tabs, audio tabs, site exclusions and theme.
@@ -99,6 +101,7 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
     - Empty-window cleanup 12/12 in each mode.
     - Cold and warm departure at 60.5 s and 60.7 s.
     - The discard fix, with no worker errors.
+  - The unzipped release ZIP (SHA-256 `ed4087bd…`) passed 22/22 live checks: the sync event path, the instant theme, both bug links, last-window close, move and Clear, and Discard immediately (4 of 4 tabs). There were no worker errors.
 - Integration (authorized for this release): fast-forward `6817836` and this stack into dev, then fast-forward main to dev. The "Protect main" ruleset allows only fast-forward pushes. No tag, GitHub Release or Store submission. The resulting SHAs are in the handoff report.
 - Not changed: permissions, CSP, host access, the parking model, download safety and Clear semantics. The GitHub About/Website fields and the Chrome Web Store Dashboard are left for the user.
 - Open:
