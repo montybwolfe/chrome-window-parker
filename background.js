@@ -87,11 +87,17 @@ chrome.downloads.onChanged.addListener(delta => {
   if (delta.state?.current === 'in_progress') parker.safetyEpoch++;
   if (delta.state) enqueue(() => parker.schedule());
 });
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync') return;
+  // A synced settings change this device uses cancels in-flight work, like a local one.
+  if (parker.syncRelevant(changes)) parker.safetyEpoch++;
+  enqueue(() => parker.syncChanged(changes));
+});
 chrome.runtime.onStartup.addListener(() => enqueue(() => parker.schedule()));
 chrome.runtime.onInstalled.addListener(() => enqueue(() => parker.schedule()));
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   // Cancel any in-flight parking before queued settings / protection changes.
-  if (sender.id === chrome.runtime.id && ['configure', 'reset', 'protect', 'close-parked'].includes(msg?.type))
+  if (sender.id === chrome.runtime.id && ['configure', 'reset', 'protect', 'close-parked', 'sync-resolve'].includes(msg?.type))
     parker.safetyEpoch++;
   // A Clear request arriving during initialization/cleanup takes priority before
   // its queued handler runs. Release the guard even when initialization fails.
