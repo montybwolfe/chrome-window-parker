@@ -23,6 +23,12 @@ test('all shipped surfaces use the timer assets; raster dimensions match declara
  for(const size of [256,512,1024]){const p=readFileSync(new URL(`docs/assets/parker-timer-${size}.png`,root));assert.equal(p.readUInt32BE(16),size);assert.equal(p.readUInt32BE(20),size);}
 });
 
+test('Store reviewer instructions fit the 500-character Test instructions field',()=>{
+ // Plain ASCII, and still within the limit if every line break is submitted as CRLF.
+ const t=text('store-listing/test-instructions.txt').replace(/\n$/,'');
+ assert(/^[\x20-\x7e\n]*$/.test(t),'plain ASCII');assert(t.length+(t.match(/\n/g)||[]).length<=500,`${t.length} characters`);
+});
+
 test('Store artwork: exact sizes, no alpha outside the icon, and outputs that match their recorded sources',async()=>{
  const {verifyAssets}=await import('../tools/store-assets/verify.mjs');
  assert.deepEqual(verifyAssets({ui:false}),[]);

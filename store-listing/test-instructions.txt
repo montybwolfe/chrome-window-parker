@@ -1,14 +1,6 @@
-No account, sign-in or payment is needed. Everything runs in the browser; there is no server.
-
-To see parking quickly:
-1. Click the extension's toolbar icon, then Settings….
-2. Set "Park windows after" to Custom…, enter 1 minute and click Save settings.
-3. Open a second window with a couple of web pages. Switch back to the first window and keep using it.
-4. After a minute or two, the second window switches to a "Window parked" page. Click into it and stay for 2 seconds, or click Restore tab, and the previous tab comes back.
-5. The toolbar popup shows parked windows and sleeping tabs. Clear parked tabs returns every parked window to its previous tab.
-
-A window doesn't park while its selected tab is pinned, playing audio or on an excluded site (Google Meet, Zoom, Teams and YouTube Music by default), or while a download is in progress.
-
-Optional sync, new in 1.5.5 and off by default: in Settings, under Sync, tick a setting to keep it the same on the user's other computers through Chrome sync (chrome.storage.sync). If a different value is already synced, Settings asks which one to keep. Unticking keeps the value on this computer. Nothing is sent to the developer.
-
-The bug icon (Report a bug) and Support open GitHub Issues and Buy Me a Coffee in a new tab, only when clicked.
+No login needed.
+1. Toolbar icon > Settings: set "Park windows after" to Custom, 1 minute. Save settings.
+2. Open a second window with some pages; return to the first.
+3. Within 2 minutes it shows "Window parked". Focus it for 2 seconds (or click Restore tab): the tab returns.
+Pinned, audible or excluded tabs keep a window awake.
+New: Settings > Sync (off by default). Tick a setting to sync it via Chrome sync; if values differ, you choose which to keep. Nothing goes to the developer.
