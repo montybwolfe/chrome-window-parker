@@ -107,3 +107,12 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 - Open:
   - Not tested: real syncing between two signed-in computers, headful macOS Spaces, real tab-strip drags, Windows and Linux.
   - Codex hasn't reviewed this release (possible 1.5.5.1).
+
+### 2026-09-30 — v1.5.5 GitHub publication
+
+- Tagged: annotated `v1.5.5` (tag object `7c77908`) on `e82b3a4`, the tested release commit and current main. Pushed.
+- Released: a public GitHub Release, "Chrome Window Parker v1.5.5". It isn't a draft or a prerelease and is marked Latest. The notes are the `CHANGELOG.md` 1.5.5 section plus install lines.
+- Assets: `chrome-window-parker-v1.5.5.zip` (37,112 bytes, SHA-256 `ed4087bd…5b98`) and `RELEASE-SHA256.txt`. Before publishing, a clean rebuild of `e82b3a4` matched the tested build. After publishing, anonymous downloads matched it too.
+- About: the website is set to the Chrome Web Store listing and the description to the manifest summary. Topics and other settings are unchanged.
+- Not changed: main, dev, product code, branch protection and agent/codex. This audit-only entry stays on agent/claude so main remains exactly at the tagged commit.
+- Open: the Chrome Web Store upload, listing and privacy updates, and submission are deliberately left to the user.
