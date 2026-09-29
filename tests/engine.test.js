@@ -74,9 +74,9 @@ test('closing parking tab recovers and recreates later',async()=>{
   h.windows[1].tabs=h.windows[1].tabs.filter(t=>t.id!==id);h.tab(200).active=true;h.tab(200).discarded=false;
   await h.p.removed(id,{windowId:2});assert(!h.p.states[2].parked);await h.advance(16*60000);await h.p.sweep();assert(h.p.states[2].parked);assert.notEqual(h.p.states[2].parkingId,id);
 });
-test('closing previous tab restores sensible fallback; empty parking stays safe',async()=>{
+test('closing previous tab restores fallback; a later empty parking shell closes',async()=>{
   const h=harness();await h.restart();await h.parkAll();h.windows[1].tabs=h.windows[1].tabs.filter(t=>t.id!==200);await h.p.removed(200,{windowId:2});await h.focus(2);await h.advance(2000);assert(h.tab(201).active);
-  await h.focus(-1);await h.advance(16*60000);await h.p.sweep();h.windows[1].tabs=h.windows[1].tabs.filter(t=>h.p.token(t));await h.focus(2);await h.advance(2000);assert(h.p.states[2].parked);
+  await h.focus(-1);await h.advance(16*60000);await h.p.sweep();h.windows[1].tabs=h.windows[1].tabs.filter(t=>h.p.token(t));await h.focus(2);await h.advance(2000);assert(!h.p.states[2]);assert(!h.windows.some(w=>w.id===2));
 });
 test('manual tab selection cancels restoration',async()=>{
   const h=harness();await h.restart();await h.parkAll();await h.focus(2);await h.advance(700);await h.api.tabs.update(202,{active:true});await h.p.activated(2,202);await h.advance(3000);assert(h.tab(202).active);assert(!h.p.states[2].parked);
@@ -120,14 +120,14 @@ test('permission, network and destructive API audit',()=>{
   assert.equal(manifest.manifest_version,3);assert.deepEqual(manifest.permissions,['tabs','storage','alarms','downloads']);assert.equal(manifest.host_permissions,undefined);assert.equal(manifest.content_scripts,undefined);
   const code=readdirSync(root).filter(f=>f.endsWith('.js')).map(f=>readFileSync(new URL(f,root),'utf8')).join('\n');
   assert(!/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/.test(code));
-  assert.equal((code.match(/this\.api\.tabs\.remove\(/g)||[]).length,1);
+  assert.equal((code.match(/this\.api\.tabs\.remove\(/g)||[]).length,2); // restoration and verified empty-shell cleanup
   assert(!/this\.api\.windows\.(update|create|remove)|this\.api\.tabs\.(move|group|ungroup)/.test(code));
 });
 
 test('actual worker listeners: self-created page events do not cancel parking; navigation cancels dwell',async()=>{
   const h=harness();h.local.settings={sleepingMode:'immediate'};
   const event=()=>{const listeners=[];return {addListener:fn=>listeners.push(fn),emit:(...args)=>listeners.map(fn=>fn(...args))};};
-  for(const [namespace,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))
+  for(const [namespace,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onMoved','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))
     for(const name of names)h.api[namespace][name]=event();
   const create=h.api.tabs.create, update=h.api.tabs.update;
   h.api.tabs.create=async props=>{const tab=await create(props);h.api.tabs.onCreated.emit(tab);h.api.tabs.onUpdated.emit(tab.id,{url:tab.url,status:'loading'},tab);return tab;};

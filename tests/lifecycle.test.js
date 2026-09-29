@@ -33,11 +33,12 @@ test('closed original tab uses a real fallback before removing the parking page'
   await h.focus(1);await h.advance(2000);assert(h.tab(101).active);assert(!h.tab(id));assert.equal(h.windows.length,1);
 });
 
-test('parking-only window is never closed and cleanup does not invent a replacement tab',async()=>{
-  const {h,id}=await parked(1);await h.api.tabs.remove(100);await h.p.removed(100,{windowId:1});
-  const calls=h.calls.length;await h.focus(1);await h.advance(2000);
-  assert.equal(h.windows.length,1);assert(h.tab(id).active);assert.equal(h.windows[0].tabs.length,1);
-  assert(!h.calls.slice(calls).some(c=>c[0]==='remove'||c[0]==='create'));
+test('natural final real-tab removal closes only the parking shell and its recovery state',async()=>{
+  const {h,id,token}=await parked(1);const calls=h.calls.length;
+  await h.api.tabs.remove(100);await h.p.removed(100,{windowId:1});
+  assert.equal(h.windows.length,0);assert(!h.tab(id));assert(!h.p.states[1]);
+  assert(!h.local.parkingRecords[token]);assert(!h.session.runtimeState.states[1]);
+  assert(!h.calls.slice(calls).some(c=>c[0]==='create'||c[0]==='discard'));
 });
 
 test('manually closed parking page is harmless and a later cycle recreates it',async()=>{

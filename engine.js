@@ -9,6 +9,7 @@ export class Parker {
     this.settings = {...DEFAULTS}; this.states = {}; this.records = {}; this.protectedIds = [];
     this.focus = null; this.epoch = 0; this.safetyEpoch = 0; this.dwell = null; this.focusedState = null;
     this.tabEpoch = new Map(); this.selectionEpoch = new Map();
+    this.shellEpoch = 0; this.detachedTabs = new Map(); this.clearRequests = 0;
     this.parkingURL = api.runtime.getURL('parked.html');
   }
   log(...args) { if (this.settings.debug) console.debug('[Chrome Window Parker]', ...args); }
@@ -35,7 +36,8 @@ export class Parker {
   supported(w) { return w && w.type === 'normal' && !w.incognito; }
   async save() {
     await this.api.storage.session.set({runtimeState: {states: this.states, protectedIds: this.protectedIds,
-      pendingDwell: this.dwell ? {windowId: this.dwell.id, due: this.dwell.due} : null}});
+      pendingDwell: this.dwell ? {windowId: this.dwell.id, due: this.dwell.due} : null,
+      detachedTabs: [...this.detachedTabs]}});
   }
   async saveRecords() {
     // Bound abandoned crash records, retaining those belonging to live windows.
@@ -79,17 +81,36 @@ export class Parker {
     const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
     for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
     for (const w of windows) this.adopt(w);
+    // A worker can stop between detach and attach. Keep unresolved transfers
+    // blocked; discard a saved transfer only after locating the tab in a live
+    // window (or confirming it no longer exists). Fresh event signals win.
+    const transfers = session.runtimeState?.detachedTabs;
+    const savedTransfers = Array.isArray(transfers) ? transfers.filter(pair =>
+      Array.isArray(pair) && pair.length === 2 && pair.every(Number.isInteger) && live.has(String(pair[1]))) : [];
+    const freshTransfers = new Set(this.detachedTabs.keys());
+    this.detachedTabs = new Map([...savedTransfers, ...this.detachedTabs]);
+    for (const [tabId, source] of this.detachedTabs) {
+      if (freshTransfers.has(tabId)) continue;
+      const epoch = this.shellEpoch, tab = await this.getTab(tabId);
+      const owner = tab ? await this.getWindow(tab.windowId) : null;
+      if (this.shellEpoch === epoch && this.detachedTabs.get(tabId) === source &&
+          (!tab || (tab.windowId !== source && owner?.tabs.some(t => t.id === tabId)))) this.detachedTabs.delete(tabId);
+    }
     const ids = new Set(windows.flatMap(w => w.tabs || []).map(t => t.id));
     this.protectedIds = this.protectedIds.filter(id => ids.has(id));
     if (this.focus === null) this.signalFocus(windows.find(w => w.focused)?.id ?? -1);
     // Never trust a persisted partial dwell. A new worker observes a full new dwell.
     this.focusedState = this.focus;
     // Recover an interrupted restoration or clean up an older reusable page.
-    for (const w of windows) await this.cleanupParking(w.id);
+    for (const w of windows) {
+      await this.cleanupParking(w.id);
+      await this.cleanupEmptyParked(w.id);
+    }
     await this.startDwell();
     await this.save(); await this.schedule();
   }
   signalFocus(id) {
+    this.shellEpoch++;
     // Record leaving a genuinely used window before older queued sweeps run.
     const old = this.states[this.focus];
     if (id !== this.focus && old?.qualified) {
@@ -102,6 +123,7 @@ export class Parker {
     return this.epoch;
   }
   signalTab(windowId, activatedId) {
+    this.shellEpoch++;
     this.tabEpoch.set(windowId, (this.tabEpoch.get(windowId) || 0) + 1);
     // Our own parking-page activation is expected. A real-tab selection cancels
     // a discard batch even if the parking page becomes active again afterwards.
@@ -113,7 +135,7 @@ export class Parker {
     if (old?.qualified) { old.lastUse = at; old.retryAt = 0; old.qualified = false; }
     this.focusedState = id;
     this.log('focus', id);
-    if (epoch === this.epoch) await this.startDwell();
+    if (epoch === this.epoch) { await this.startDwell(); await this.cleanupEmptyParked(id); }
     await this.save(); await this.schedule();
   }
   async startDwell() {
@@ -173,6 +195,7 @@ export class Parker {
     for (const w of windows) {
       if (onlyWindowId !== undefined && w.id !== onlyWindowId) continue;
       const s = this.adopt(w);
+      if (s?.parked) await this.cleanupEmptyParked(w.id);
       if (s && !s.parked && s.parkingId) await this.cleanupParking(w.id);
       if (!s || s.parked || w.focused || w.id === this.focus) continue;
       if (this.clock.now() < Math.max(s.lastUse + this.settings.delayMinutes * 60000, s.retryAt || 0)) continue;
@@ -309,6 +332,7 @@ export class Parker {
     if (!windows.some(w => this.supported(w) && w.tabs.some(t => this.token(t) === token))) delete this.records[token];
   }
   async closeParkedTabs() {
+    this.shellEpoch++;
     const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
     const candidates = windows.filter(w => this.supported(w) && w.tabs.some(t => this.token(t)));
     let closed = 0, failed = 0;
@@ -374,7 +398,59 @@ export class Parker {
     await this.saveRecords(); await this.save(); await this.schedule();
     return {closed, remaining: live.filter(w => this.supported(w)).reduce((n,w) => n + w.tabs.filter(t => this.token(t)).length, 0), failed};
   }
+  async cleanupEmptyParked(id) {
+    // Natural last-real-tab cleanup is separate from Clear's window-preserving
+    // path. Never infer ownership from a URL alone: require live parked identity
+    // and a recovery journal for every page. Unknown/orphan tokens fail closed.
+    const s = this.states[id];
+    if (!s?.parked || !s.token || !this.records[s.token] || this.clearRequests) return false;
+    const parkingId = s.parkingId, token = s.token;
+    let limit = Infinity, removed = false;
+    for (let attempt = 0; attempt < limit; attempt++) {
+      const epoch = ++this.shellEpoch, safety = this.safetyEpoch, started = this.clock.now();
+      const valid = () => this.shellEpoch === epoch && this.safetyEpoch === safety &&
+        !this.clearRequests && this.clock.now() >= started && this.clock.now() - started <= 5000 &&
+        ![...this.detachedTabs.values()].includes(id) &&
+        this.states[id] === s && s.parked && s.parkingId === parkingId && s.token === token;
+      const owned = w => this.supported(w) && w.id === id && w.tabs.length > 0 &&
+        w.tabs.every(t => t.windowId === id && this.removable(t) && this.records[this.removable(t)]) &&
+        w.tabs.some(t => t.id === parkingId && t.active && this.removable(t) === token);
+      const w = await this.getWindow(id);
+      if (!valid() || !owned(w)) return removed;
+      if (limit === Infinity) limit = w.tabs.length;
+      // Keep the active identity until last; each removal gets fresh snapshots.
+      const page = w.tabs.find(t => !t.active) || w.tabs[0], pageToken = this.removable(page);
+      const fresh = await this.getWindow(id);
+      if (!valid() || !owned(fresh) || fresh.tabs.length !== w.tabs.length ||
+          !fresh.tabs.every(t => w.tabs.some(old => old.id === t.id && this.removable(old) === this.removable(t))) ||
+          !fresh.tabs.some(t => t.id === page.id && this.removable(t) === pageToken)) return removed;
+      // Chrome has no conditional remove API; a browser change after this final
+      // check can still race the call. Never remove a window or a real tab.
+      try { await this.api.tabs.remove(page.id); }
+      catch (error) {
+        if (/No tab with id|Invalid tab ID|Tabs cannot be edited right now/i.test(error.message)) {
+          this.log('empty parking cleanup deferred', id, error.message); return removed;
+        }
+        throw error;
+      }
+      removed = true;
+      await this.forgetRecord(pageToken); await this.saveRecords();
+      const remaining = await this.getWindow(id);
+      if (!remaining) {
+        if (this.dwell?.id === id) {
+          this.clock.clearTimeout(this.dwell.timer); this.dwell = null;
+          await this.api.alarms.clear('dwell-recovery');
+        }
+        await this.closed(id);
+        return true;
+      }
+      // Do not adopt a newly arrived real tab into this cleanup operation.
+      if (!owned(remaining)) return removed;
+    }
+    return removed;
+  }
   async cleanupParking(id, parkingId) {
+    this.shellEpoch++;
     const epoch = this.epoch, tabEpoch = this.tabEpoch.get(id) || 0;
     const w = await this.getWindow(id);
     if (!this.supported(w)) return false;
@@ -430,12 +506,14 @@ export class Parker {
         s.lastUse = this.clock.now(); await this.saveRecords();
       }
     }
+    if (!info.isWindowClosing) await this.cleanupEmptyParked(info.windowId);
     await this.save(); await this.schedule();
   }
   async closed(id) {
     const s = this.states[id];
     if (s?.token) await this.forgetRecord(s.token);
     delete this.states[id]; this.tabEpoch.delete(id); this.selectionEpoch.delete(id);
+    for (const [tabId, source] of this.detachedTabs) if (source === id) this.detachedTabs.delete(tabId);
     await this.saveRecords(); await this.save(); await this.schedule();
   }
   async configure(input) {

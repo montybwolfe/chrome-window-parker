@@ -1,3 +1,8 @@
+# 1.5.1.4 — Unreleased
+
+- Explains site exclusions with plain domains first, selected versus background tabs, and optional advanced URL patterns.
+- Removes verified parking-only windows when their final real tab is closed or moved away. Clear parked tabs still preserves windows.
+
 # 1.5.1.3 — Initial public release
 
 - Park idle Chrome windows on a lightweight page and restore the previous tab after a deliberate return.

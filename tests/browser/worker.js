@@ -5,7 +5,7 @@ const h=harness(2,3);
 h.tab(201).discarded=true;h.tab(202).discarded=true;
 h.tab(100).title='Example research tab';h.tab(200).title='Project notes';
 function event(){const listeners=[];return {addListener(fn){listeners.push(fn);},emit(...args){for(const fn of listeners)fn(...args);}};}
-for(const [namespace,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))for(const name of names)h.api[namespace][name]=event();
+for(const [namespace,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onMoved','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))for(const name of names)h.api[namespace][name]=event();
 // Correct native-like receiver checks make detached namespace calls fail too.
 for(const owner of [h.api.runtime,h.api.windows,h.api.tabs,h.api.storage.local,h.api.storage.session,h.api.alarms,h.api.downloads])
  for(const [key,method] of Object.entries(owner))if(typeof method==='function')owner[key]=function(...args){if(this!==owner)throw new TypeError(`Illegal invocation: ${key}`);return method.apply(owner,args);};
