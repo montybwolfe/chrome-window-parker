@@ -9,6 +9,9 @@ import zipfile
 root = Path(__file__).resolve().parent.parent
 manifest = json.loads((root / 'manifest.json').read_text())
 assert manifest['manifest_version'] == 3
+assert re.fullmatch(r'(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){0,3}', manifest['version'])
+assert all(int(part) <= 65535 for part in manifest['version'].split('.'))
+assert any(int(part) for part in manifest['version'].split('.'))
 assert manifest['permissions'] == ['tabs', 'storage', 'alarms', 'downloads']
 assert not manifest.get('host_permissions') and not manifest.get('content_scripts')
 assert len(manifest['description']) <= 132
@@ -16,7 +19,7 @@ files = [
     'LICENSE',
     'manifest.json', 'background.js', 'clock.js', 'engine.js', 'settings.js',
     'ui.js', 'theme.js', 'ui.css', 'parked.html', 'parked.js', 'options.html', 'options.js',
-    'popup.html', 'popup.js',
+    'popup.html', 'popup.js', 'support.js',
     'icons/parker-timer-16.png', 'icons/parker-timer-32.png', 'icons/parker-timer-48.png', 'icons/parker-timer-128.png',
 ]
 references = [manifest['background']['service_worker'], manifest['options_ui']['page'],

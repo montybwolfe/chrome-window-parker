@@ -1,8 +1,8 @@
 # Chrome Web Store listing assets
 
-This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.1.
+This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.1.1.
 
-The extension package itself is separate. Upload **`chrome-window-parker-v1.5.1.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
+The extension package itself is separate. Upload **`chrome-window-parker-v1.5.1.1.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
 
 ## Product details
 
@@ -45,9 +45,11 @@ Use `privacy-fields.txt` when completing the dashboard's privacy and permission 
 
 Review the Chrome Web Store's current wording before submitting and personally confirm any required certifications.
 
-## v1.5.1 changes
+## v1.5.1.1 changes
 
-Upload the v1.5.1 runtime ZIP, replace the long description, and update TABS PERMISSION JUSTIFICATION in `privacy-fields.txt`. Immediate mode now covers every currently loaded eligible real tab in a newly parked window. The short description is unchanged. The subsequent high-resolution asset pass replaces all three screenshots, both promotional tiles and the store icon with PNGs; upload the exact files in the table above. Permission scope, privacy practices and other declarations remain the same.
+Upload the v1.5.1.1 runtime ZIP, replace the long description, and replace only `screenshot-3-popup-1280x800.png`. Settings was regenerated from the same 4× pipeline but remains byte-identical: the new bottom Support section is outside the preserved viewport crop. The parked screenshot, both promotional tiles and store icon are also byte-identical to the completed high-resolution asset pass.
+
+Keep **In-app purchases: No**: voluntary external support unlocks nothing and the extension sells no functionality, goods, subscription or entitlement. See [the official-policy review and its precise scope](../docs/SUPPORT_DEVELOPMENT.md). The short description, single purpose, four permission justifications, data categories, remote-code answer and three project URLs remain unchanged. If the dashboard contains the old explanatory paragraphs, refresh only REMOTE CODE and DATA HANDLING EXPLANATION from `privacy-fields.txt` to distinguish deliberate external navigation from background networking.
 
 ## Before submitting
 
@@ -60,6 +62,6 @@ Upload the v1.5.1 runtime ZIP, replace the long description, and update TABS PER
 
 Nothing in this folder submits or publishes the extension automatically.
 
-## High-resolution asset pass
+## Earlier high-resolution asset pass (already completed)
 
-Replace all six uploaded images with the current PNG files. The visual direction is unchanged. Source masters and provenance are retained in `sources/`; upload only the final files listed above. The documentation promo and high-resolution timer exports were also regenerated. Reproduction and QA details: [tools/store-assets](../tools/store-assets/README.md) and [ASSET-QUALITY.md](ASSET-QUALITY.md). No runtime ZIP, version, permission or listing-copy change is required by this artwork-only pass.
+That earlier pass replaced all six uploaded images with PNG files. For v1.5.1.1, only the popup image changes. The visual direction is unchanged. Source masters and provenance are retained in `sources/`; upload only the final files listed above. The documentation promo and high-resolution timer exports were also regenerated. Reproduction and QA details: [tools/store-assets](../tools/store-assets/README.md) and [ASSET-QUALITY.md](ASSET-QUALITY.md). That artwork-only pass required no runtime/version changes; v1.5.1.1 now requires the runtime and copy updates above.

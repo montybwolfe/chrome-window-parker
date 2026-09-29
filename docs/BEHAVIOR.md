@@ -74,7 +74,7 @@ Closed windows and removed parking tabs have their records removed once no live 
 | `alarms` | Persistent inactivity scheduling and dwell recovery. |
 | `downloads` | Conservative global pause while any download is in progress. No downloads are initiated, modified, opened or deleted. |
 
-No host permissions, `<all_urls>`, content scripts, scripting, debugger, tabCapture, offscreen document, native host, external service, analytics, telemetry, external dependencies, remote fonts, remote images or remote code. The CSP prohibits network connections from extension pages. The extension performs no network requests; Chrome naturally requests the original website when you restore a discarded real tab.
+No host permissions, `<all_urls>`, content scripts, scripting, debugger, tabCapture, offscreen document, native host, backend service, analytics, telemetry, external dependencies, remote fonts, remote images or remote code. The CSP prohibits network connections from extension pages. The extension performs no background network requests; Chrome naturally requests the original website when you restore a discarded real tab. Clicking the optional Support button opens a separate third-party website without attaching browsing information. Window Parker receives no payment information or supporter status.
 
 ## Verify memory reduction
 

@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../../',import.meta.url));
-const allowed=new Set(['background.js','clock.js','engine.js','settings.js','ui.js','theme.js','ui.css','popup.html','popup.js','options.html','options.js','parked.html','parked.js','tests/helpers.js',
+const allowed=new Set(['background.js','clock.js','engine.js','settings.js','ui.js','support.js','theme.js','ui.css','popup.html','popup.js','options.html','options.js','parked.html','parked.js','tests/helpers.js',
  'tests/browser/index.html','tests/browser/bridge.js','tests/browser/worker.js','tests/browser/popup-preview.html','tests/browser/promo.html',
  ...[16,32,48,128].map(size=>`icons/parker-timer-${size}.png`)]);
 http.createServer(async(req,res)=>{

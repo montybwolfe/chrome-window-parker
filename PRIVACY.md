@@ -1,6 +1,6 @@
 # Privacy policy — Chrome Window Parker
 
-Chrome Window Parker runs locally in your Chrome profile. It sends no user data to the developer or other servers. It contains no accounts, analytics, advertising, tracking, telemetry or remote code.
+Chrome Window Parker runs locally in your Chrome profile. It has no backend, makes no background network requests and sends no browsing information to the developer or third parties. It contains no accounts, analytics, advertising, tracking, telemetry or remote code.
 
 ## Information used on your device
 
@@ -18,10 +18,16 @@ Settings and recovery records remain in the local Chrome profile; no Chrome sync
 
 Reset settings restores defaults, including Let Chrome decide and Auto appearance. It does not erase session tab protection or recovery records needed by open parking pages. Individual protection ends with the browser session and may also clear on extension reload/update. Removing the extension removes its extension storage.
 
+## Optional support
+
+The Support controls in the popup and Settings open `https://buymeacoffee.com/montybwolfe` in a separate tab only after you deliberately activate them. Nothing is fetched or contacted in advance, and no tab URLs, titles or other browsing information are attached to the link. Buy Me a Coffee and its payment processor operate under their own privacy terms when you visit.
+
+Payments take place entirely on that third-party site. Window Parker receives no payment details or supporter identity, stores no supporter status, and never checks whether you contributed. All functionality remains free, with no accounts, paid tiers or entitlements in Window Parker.
+
 ## Chrome and websites
 
 In the default mode, Chrome decides whether and when background tabs unload. Optional immediate discard makes an explicit request to Chrome. Neither mode sends browsing information to the developer. Chrome and websites have their own data practices; restoring an unloaded website can cause its normal network requests.
 
 The extension does not sell or transfer user data, use it for advertising, or use it for creditworthiness or lending.
 
-Effective date: 28 September 2026. Maintained by [montybwolfe](https://github.com/montybwolfe). For questions, use the [project issue tracker](https://github.com/montybwolfe/chrome-window-parker/issues), keeping private browsing details out of public posts.
+Effective date: 29 September 2026. Maintained by [montybwolfe](https://github.com/montybwolfe). For questions, use the [project issue tracker](https://github.com/montybwolfe/chrome-window-parker/issues), keeping private browsing details out of public posts.

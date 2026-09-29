@@ -15,7 +15,7 @@ export const jobs=[
  {name:'small-promo-440x280',page:'/tests/browser/promo.html',width:440,height:280},
  {name:'marquee-promo-1400x560',page:'/tests/browser/promo.html',width:1400,height:560}
 ];
-const runtime=['background.js','clock.js','engine.js','settings.js','ui.js','theme.js','ui.css','popup.html','popup.js','options.html','options.js','parked.html','parked.js'];
+const runtime=['background.js','clock.js','engine.js','settings.js','ui.js','support.js','theme.js','ui.css','popup.html','popup.js','options.html','options.js','parked.html','parked.js'];
 const fixtures=['tests/helpers.js','tests/browser/bridge.js','tests/browser/worker.js','tests/browser/popup-preview.html','tests/browser/promo.html'];
 const sources=[...runtime,...fixtures,'icons/parker-timer.svg','tools/store-assets/client.js','tools/store-assets/server.mjs','tools/store-assets/package.json','tools/store-assets/pnpm-lock.yaml'];
 const allowed=new Set([...runtime,...fixtures,'icons/parker-timer.svg',...[16,32,48,128].map(s=>`icons/parker-timer-${s}.png`),'tools/store-assets/index.html','tools/store-assets/client.js']);

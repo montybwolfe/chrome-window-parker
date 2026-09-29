@@ -1,5 +1,13 @@
 # High-resolution artwork audit — 29 September 2026
 
+## v1.5.1.1 follow-up
+
+All five compositions were regenerated using the existing 4× lossless pipeline and all 10 final raster assets passed the provenance/dimension/reproduction verifier. Only `screenshot-3-popup-1280x800.png` and its 4× master changed visually, adding the compact Support footer control. Reviewed its final image, 200% popup detail and thumbnail. Settings was regenerated and inspected but remains byte-identical because the new Support section is below its preserved 800px viewport crop. The parked screenshot, small promo, marquee, store icon and documentation icons/promo are byte-identical. No fundraising headline or branding was added. All five provenance records now describe the new runtime inputs.
+
+The original artwork-only audit below is historical; its six-image upload instruction and unchanged v1.5.1 ZIP refer to that earlier pass. For v1.5.1.1, replace only the popup screenshot.
+
+## Original artwork-only pass
+
 This pass preserves the minimalist pale backgrounds, blue timer, type hierarchy, compositions and current UI. It replaces all five JPEG uploads with lossless PNG exports and regenerates the store icon from the original vector master. No old raster was upscaled or recompressed. The four runtime icons, extension code, manifest and v1.5.1 runtime ZIP are unchanged.
 
 ## Upload inventory

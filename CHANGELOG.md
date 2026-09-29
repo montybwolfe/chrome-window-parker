@@ -1,3 +1,10 @@
+# 1.5.1.1
+
+- Add small optional Support controls to the popup footer and the bottom of Settings. The parked page stays unchanged.
+- Add Buy Me a Coffee funding information to GitHub and Store material, with clear third-party privacy wording.
+- All functionality remains free: no paid tiers, accounts, supporter tracking, new permissions or background network requests.
+- Refresh the affected popup screenshot through the existing lossless 4× pipeline; retain the current visual direction.
+
 # 1.5.1
 
 - Correct **Discard immediately** to attempt every currently loaded eligible real tab in a newly parked window. Protected and already-sleeping tabs remain untouched; **Let Chrome decide** still makes no discard requests.
