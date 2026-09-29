@@ -1,6 +1,6 @@
-# Icon inventory — 1.5.0
+# Icon inventory
 
-The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Each PNG is rasterized independently at its target resolution. No low-resolution bitmap is upscaled to make larger artwork.
+The single design is the blue timer in `icons/parker-timer.svg`, an editable 1024px vector master. Runtime PNGs retain their existing independent rasterizations. Store/documentation PNGs now render independently at 4× each target size and receive one Lanczos3 downsample. No low-resolution bitmap is upscaled to make larger artwork.
 
 | Surface | File / declaration |
 | --- | --- |
@@ -15,6 +15,6 @@ The single design is the blue timer in `icons/parker-timer.svg`, an editable 102
 | Documentation promotional tile | `docs/assets/promo-440x280.png`, using the same timer |
 | Store ZIP | Only the four runtime timer PNGs; no SVG or marketing art |
 
-All current runtime references use this timer. There are no CSS background images, remote favicons or runtime icon replacements. Store listing assets use the same design.
+All current runtime references use this timer. There are no CSS background images, remote favicons or runtime icon replacements. Store listing assets use the SVG master directly in the export-only HTML, including the embedded popup. See [the lossless exporter](../tools/store-assets/README.md).
 
 Page headers use 128px sources for crisp rendering at 28–40 CSS pixels on Retina displays. Automated checks verify all declared PNG dimensions and references. Reload an unpacked extension and refresh its pages to display updated artwork; existing Chrome processes can retain cached icons.

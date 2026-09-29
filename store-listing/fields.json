@@ -6,12 +6,12 @@
   "language": "English",
   "store_icon": "store-icon-128.png",
   "screenshots": [
-    "screenshot-1-settings-1280x800.jpg",
-    "screenshot-2-parked-1280x800.jpg",
-    "screenshot-3-popup-1280x800.jpg"
+    "screenshot-1-settings-1280x800.png",
+    "screenshot-2-parked-1280x800.png",
+    "screenshot-3-popup-1280x800.png"
   ],
-  "small_promo_tile": "small-promo-440x280.jpg",
-  "marquee_promo_tile": "marquee-promo-1400x560.jpg",
+  "small_promo_tile": "small-promo-440x280.png",
+  "marquee_promo_tile": "marquee-promo-1400x560.png",
   "promo_video_url": "",
   "official_url": "None (no verified domain supplied)",
   "homepage_url": "https://github.com/montybwolfe/chrome-window-parker",

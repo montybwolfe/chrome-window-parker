@@ -12,7 +12,7 @@ Use the v1.5.1 files in [store-listing](../store-listing/START-HERE.md) to updat
 
 The listing introduces the multi-window workflow first. It explains that **Let Chrome decide** is the default and **Discard immediately** is optional. Screenshots show the final interface with synthetic data; the popup appears in a presentation frame. Promotional art uses the same blue timer and the message “Let idle windows rest.”
 
-Screenshots, promotional tiles and the store icon are unchanged from v1.5.0 and do not need replacement for v1.5.1. The Settings screenshot shows the unchanged Chrome-managed default; the revised helper text appears only when Discard immediately is selected. The screenshot files are 1280 × 800, the small tile is 440 × 280, and the optional marquee is 1400 × 560. These dimensions follow [Chrome's listing guidance](https://developer.chrome.com/docs/webstore/cws-dashboard-listing).
+The high-resolution asset pass following v1.5.1 replaces all three screenshots, both promotional tiles and the store icon with lossless PNG exports. Replace all six uploaded images using the exact filenames in START-HERE.md. The Settings screenshot shows the unchanged Chrome-managed default; the revised helper text appears only when Discard immediately is selected. The screenshot files are 1280 × 800, the small tile is 440 × 280, and the optional marquee is 1400 × 560. These dimensions follow [Chrome's listing guidance](https://developer.chrome.com/docs/webstore/cws-dashboard-listing).
 
 ## Runtime package
 
@@ -38,5 +38,5 @@ Keep platform wording consistent: testing has been on macOS, with installed-exte
 2. Upload the v1.5.1 runtime ZIP to the existing item and verify the version.
 3. Replace the long description from `store-listing/description.txt`.
 4. Replace TABS PERMISSION JUSTIFICATION from `store-listing/privacy-fields.txt`.
-5. Save the draft and review the changed text. Existing screenshots, artwork, summary and other declarations remain applicable.
+5. Save the draft and review the changed text. Replace the six store images with the current PNG exports from START-HERE.md; the summary and other declarations remain applicable.
 6. Submit for Google's review when the draft and live checks are complete.
