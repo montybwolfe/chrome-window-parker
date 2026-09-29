@@ -271,8 +271,11 @@ export class Parker {
   }
   async discardParkedTabs(id, parkingId, token, valid) {
     const running = () => valid() && this.settings.sleepingMode === 'immediate';
+    // Our own parking tab, still selected. A page created moments ago may not
+    // have committed yet (url empty, our address in pendingUrl); that still
+    // counts. Navigating it anywhere else does not.
     const parked = w => this.supported(w) && !w.focused &&
-      w.tabs.some(t => t.id === parkingId && t.active && this.removable(t) === token);
+      w.tabs.some(t => t.id === parkingId && t.active && this.token(t) === token);
     const snapshot = await this.getWindow(id);
     if (!running() || !parked(snapshot)) return;
     // Snapshot membership once; tabs created after this point wait for a later
