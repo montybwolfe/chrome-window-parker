@@ -19,7 +19,7 @@ files = [
     'LICENSE',
     'manifest.json', 'background.js', 'clock.js', 'engine.js', 'settings.js',
     'ui.js', 'theme.js', 'ui.css', 'parked.html', 'parked.js', 'options.html', 'options.js',
-    'popup.html', 'popup.js',
+    'popup.html', 'popup.js', 'support.js',
     'icons/parker-timer-16.png', 'icons/parker-timer-32.png', 'icons/parker-timer-48.png', 'icons/parker-timer-128.png',
 ]
 references = [manifest['background']['service_worker'], manifest['options_ui']['page'],

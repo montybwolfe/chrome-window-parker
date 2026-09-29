@@ -6,4 +6,6 @@ No account, sign-in, payment, credentials or external service is required. Use C
 4. Select Discard immediately, save, and repeat with several loaded eligible real tabs in the idle window. Each eligible tab is considered for unloading; protected/already-sleeping tabs are skipped and Chrome can refuse a discard. Returning or changing settings stops stale remaining work.
 5. Use Clear parked tabs. Parking pages/state should clear, at most one real tab per affected window should be restored, and no new discards should start. Check protection, pause/resume and Auto/Light/Dark; reset Settings afterward.
 
+6. Opening the popup or Settings must not open an external page. Activate each small Support action once: one new normal tab should open to https://buymeacoffee.com/montybwolfe. This is optional and does not change settings or unlock anything. The parked page has no Support action.
+
 UI previews and automated regression tests were run on macOS. Installed-extension acceptance is still outstanding; Windows, Linux and ChromeOS are unverified. See the repository's TESTING.md for the complete live checklist.

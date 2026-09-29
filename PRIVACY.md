@@ -18,10 +18,16 @@ Settings and recovery records remain in the local Chrome profile; no Chrome sync
 
 Reset settings restores defaults, including Let Chrome decide and Auto appearance. It does not erase session tab protection or recovery records needed by open parking pages. Individual protection ends with the browser session and may also clear on extension reload/update. Removing the extension removes its extension storage.
 
+## Optional support
+
+The Support controls in the popup and Settings open `https://buymeacoffee.com/montybwolfe` in a separate tab only after deliberate user action. Nothing is fetched or contacted in advance, and no tab URLs, titles or other browsing information are attached. The third-party site and its payment processor operate under their own privacy terms.
+
+Chrome Window Parker does not process payments, receive payment details or supporter identity, store supporter status, or check whether you contributed. All functionality remains free, with no accounts, paid tiers or entitlements.
+
 ## Chrome and websites
 
 In the default mode, Chrome decides whether and when background tabs unload. Optional immediate discard makes an explicit request to Chrome. Neither mode sends browsing information to the developer. Chrome and websites have their own data practices; restoring an unloaded website can cause its normal network requests.
 
-The extension does not sell or transfer user data, use it for advertising, or use it for creditworthiness or lending.
+The extension does not sell or transfer user data, use it for advertising, or use it for creditworthiness or lending. Information handled through Chrome APIs is used only for the stated functionality, in accordance with the [Chrome Web Store User Data Policy, including its Limited Use requirements](https://developer.chrome.com/docs/webstore/program-policies/policies#limited-use).
 
 Effective date: 29 September 2026. Maintained by [montybwolfe](https://github.com/montybwolfe). For questions, use the [project issue tracker](https://github.com/montybwolfe/chrome-window-parker/issues), keeping private browsing details out of public posts.

@@ -1,10 +1,10 @@
 # Testing
 
-Validation date: 29 September 2026. Version 1.5.1.2.
+Validation date: 29 September 2026. Version 1.5.1.3.
 
 ## Automated coverage
 
-**211 tests pass** with Node 24.19.0. Coverage includes both sleeping modes; settings migration, validation, persistence and reset; loaded and independently discarded restore targets; already-sleeping backgrounds; window/tab preservation; protection checks; worker restart and browser-session recovery; focus, navigation and cleanup races; and Clear parked tabs.
+**221 tests pass** with Node 24.19.0. Coverage includes both sleeping modes; settings migration, validation, persistence and reset; loaded and independently discarded restore targets; already-sleeping backgrounds; window/tab preservation; protection checks; worker restart and browser-session recovery; focus, navigation and cleanup races; and Clear parked tabs.
 
 The bulk-discard cases cover three loaded tabs, mixed Chrome-discarded and loaded tabs, reloaded tabs, every protection rule, moved/closed/new candidates, Chrome races and per-tab refusals. Focus, real-tab selection, policy/protection changes, new downloads and long API gaps cancel remaining work. Interrupted batches are not replayed by replacement workers or fresh browser sessions.
 
@@ -12,11 +12,13 @@ The actual background queue is tested with its own creation/activation/removal e
 
 Appearance tests cover Auto under both system preferences, live system changes, explicit overrides, invalid/missing preferences, cross-page storage changes, initial-read races, read failure and listener removal. Page teardown cancels pending status refreshes. No polling or keepalive loop is introduced.
 
+Ten support regressions cover canonical pointer/keyboard navigation, pending/rapid-repeat and double-click guards, rejection of scripted clicks, recoverable failures, no automatic navigation/storage/network hooks, full product naming, accessible native buttons and unchanged permissions/CSP.
+
 ## Chrome UI checks
 
-The final v1.5.1.2 pass uses actual Chrome on macOS with the real HTML, CSS and JavaScript served through the HTTP preview fixture. The fixture supplies simulated extension APIs and synthetic tabs, not an installed extension. Checks cover full product naming, no fundraising controls, compact popup layout, Settings save/reset, both sleeping-mode explanations, Light/Dark/Auto, parked-page presentation, and preview warning/error logs. Store images are rendered from those current sources at 4× and downsampled once to PNG.
+The final v1.5.1.3 pass uses actual Chrome on macOS with the real HTML, CSS and JavaScript served through the HTTP preview fixture. The fixture supplies simulated extension APIs and synthetic tabs, not an installed extension. Checks cover full product naming, correct restrained Support controls and no funding UI on the parked page, compact popup layout, Settings save/reset, both sleeping-mode explanations, Light/Dark/Auto, parked-page presentation, and preview warning/error logs. Store images are rendered from those current sources at 4× and downsampled once to PNG. Fresh popup/Settings previews showed zero external tabs opened. Settings keyboard activation opened one real normal tab at the canonical support URL. A popup click created one tab, but that tab remained blank in the browser tool and inspection was blocked by its invalid-URL policy; its destination was not verified in this pass. Automated handler tests cover the exact URL and rapid-click guards on both surfaces. The preview uses `window.open` as its tab-creation double, so these checks do not establish native installed-extension navigation.
 
-No installed-extension acceptance is claimed. Chrome internal pages and the installed extension's Errors page/service-worker console are unavailable through the browser tool. Native toolbar behavior, real discard decisions, restore dwell, install/update/restart, permission prompts, macOS Spaces and sleep/wake remain the manual checks below. Code/package audits verify that only local resources ship, the original four permissions and restrictive CSP remain, and all runtime funding code/assets are absent. No installed-extension network trace has been recorded.
+No installed-extension acceptance is claimed. Chrome internal pages and the installed extension's Errors page/service-worker console are unavailable through the browser tool. Native toolbar behavior, real discard decisions, restore dwell, install/update/restart, permission prompts, macOS Spaces and sleep/wake remain the manual checks below. Code/package audits verify that only local resources ship, the original four permissions and restrictive CSP remain, and no remote script/image, payment integration or documentation artwork is packaged. No installed-extension network trace has been recorded.
 
 ## Reproduce checks
 
@@ -30,13 +32,13 @@ npm run preview
 
 The preview serves only its allowlisted files at `http://127.0.0.1:8765`. Add `?system=light` or `?system=dark` to an extension-page preview URL to simulate a system preference for Auto. Runtime files do not include that override or any fixture code.
 
-Packaging checks the explicit 19-file allowlist, module/HTML references, permissions, description length, icon sizes, license, matching versions and ZIP integrity. The package includes `theme.js`. **210 runtime tests also pass against the extracted ZIP**; the source-artwork test requires files intentionally excluded from the package. Release checks compare local and downloaded asset hashes and verify the tag, main branch and published release.
+Packaging checks the explicit 20-file allowlist, module/HTML references, permissions, description length, icon sizes, license, matching versions and ZIP integrity. The package includes `theme.js` and the local `support.js` click handler. **220 runtime tests also pass against the extracted ZIP**; the source-artwork test requires files intentionally excluded from the package. Release checks compare local and downloaded asset hashes and verify the tag, main branch and published release.
 
 ## Live release checklist for testers
 
 Use saved test work in a disposable Chrome profile. Record extension, Chrome and OS versions. Start with a one-minute custom parking delay and two-second return delay, then repeat with the 15-minute default. Close worker DevTools during suspension and sleep/wake tests.
 
-1. Load the extracted v1.5.1.2 runtime ZIP. Check the Errors page and worker console, then close the inspector. Confirm the native toolbar popup and timer icon on light and dark Chrome toolbars.
+1. Load the extracted v1.5.1.3 runtime ZIP. Check the Errors page and worker console, then close the inspector. Confirm the native toolbar popup and timer icon on light and dark Chrome toolbars.
 2. Save each setting, reopen Settings and verify persistence. Test both sleeping modes and Auto/Light/Dark on all three pages. Change the actual system theme while Auto pages are open. Reset and verify Let Chrome decide, Auto, 15 minutes and 2 seconds.
 3. In Let Chrome decide, park an unfocused window. Its saved real tab must remain present; Chrome may keep it loaded or unload it later. Compare with Memory Saver enabled. Do not assume the sleeping-tab count must rise immediately.
 4. In Discard immediately, park a window with three ordinary loaded tabs and verify all three receive discard attempts. Reload one, leave and park again; the reloaded tab must be considered again. Repeat with pinned, audible, excluded, session-protected and already-discarded neighbors. Return mid-batch or change settings: remaining requests must stop. Chrome may refuse individual requests.
@@ -46,8 +48,8 @@ Use saved test work in a disposable Chrome profile. Record extension, Chrome and
 8. Test one-tab and ten-window sessions. Record window positions, sizes, macOS Spaces, tab order, pins and groups. Traverse Spaces 1 → 2 → 3 → 4 briefly, then stop on 4; only that window should return. Parking while another app is frontmost must not focus Chrome or change Spaces.
 9. Test audio, pinned tabs, exclusions, downloads and selected internal pages. Exclude disposable call/capture/video/editing tests explicitly where Chrome lacks a reliable signal. Verify global parking pause during downloads and later resumption.
 10. Test natural worker termination, extension reload, browser restart with session restore, and macOS sleep/wake. Interrupted dwell must restart; interrupted aggressive batches must not resume or replay. Re-enable after disabling with parked windows and confirm live-state recovery. Chrome may reload pages during its own startup; verify Chrome Window Parker does not trigger a mass restore or create replacement windows.
-11. Confirm the popup and Settings display **Chrome Window Parker** without wrapping or truncation. Check every extension surface for absent fundraising controls, and confirm no unexpected external page opens after install/update/restart.
-12. Inspect the extracted package's pages and network activity. Extension pages must load packaged resources only and make no external requests. A restored website can make its normal network requests.
+11. Confirm the popup and Settings display **Chrome Window Parker** without wrapping or truncation. Confirm the popup and Settings Support actions each open exactly one tab at the canonical destination after mouse or keyboard activation; rapid repeats must not multiply tabs. The parked page has no support content. Confirm no unexpected external page opens after install/update/restart.
+12. Inspect the extracted package's pages and network activity. Extension pages must load packaged resources only and make no external requests. A restored website or deliberately opened third-party support page can make its normal network requests.
 
 ## Memory and platform checks
 

@@ -22,7 +22,7 @@ Chrome Web Store listing pending approval. Once published, this will be the reco
 
 For manual or developer installation:
 
-Download **`chrome-window-parker-v1.5.1.2.zip`** from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.1.2). This is the extension package; GitHub's automatic source-code archives contain development files too.
+Download the initial public release, **`chrome-window-parker-v1.5.1.3.zip`**, from [GitHub Releases](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.1.3). This is the extension package; GitHub's automatic source-code archives contain development files too.
 
 1. Extract the release ZIP to a permanent folder.
 2. Open `chrome://extensions` and enable **Developer mode**.
