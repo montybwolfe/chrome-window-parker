@@ -20,7 +20,15 @@
 <h2 id="protection-heading">Tab protection</h2>
 <label class="check-row"><input id="discardPinned" type="checkbox"><span>Allow parking when a pinned tab is selected</span></label>
 <label class="check-row"><input id="protectAudio" type="checkbox"><span>Skip windows whose selected tab is playing audio</span></label>
-<div class="field"><label for="exclusions">Sites to exclude</label><textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp" placeholder="mail.google.com&#10;calendar.google.com&#10;https://example.com/work/*"></textarea><p class="hint" id="exclusionHelp">One domain or URL pattern per line; * is a wildcard. Exclusions apply to Chrome Window Parker.</p></div>
+<div class="field"><label for="exclusions">Sites to exclude</label>
+<p class="hint" id="exclusionHelp">Add sites Chrome Window Parker should avoid disturbing. Enter one domain per line, such as <code>meet.google.com</code>. This covers every page on that site and its subdomains.</p>
+<textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp exclusionBehavior" placeholder="meet.google.com&#10;calendar.google.com"></textarea>
+<div id="exclusionBehavior">
+<p class="hint section-note">If an excluded site is the selected tab, that window will not park. Other windows can still park normally.</p>
+<p class="hint section-note">An excluded background tab does not prevent parking. In Discard immediately mode, Chrome Window Parker skips that tab. Chrome’s own Memory Saver may still unload it.</p>
+</div>
+<details class="safety-note"><summary>Advanced URL patterns</summary><p>To exclude only part of a site, enter a full URL with <code>*</code>, meaning “any text”. For example, <code>https://example.com/work/*</code> covers pages under <code>/work/</code> without excluding the rest of the site.</p></details>
+</div>
 <details class="safety-note"><summary>Calls, video and unsaved work</summary><p>Exclude these sites or keep their tabs pinned. Chrome doesn’t reliably report screen sharing, Picture-in-Picture or unsaved edits to this extension. Parking pauses during active downloads.</p></details>
 </section>
 

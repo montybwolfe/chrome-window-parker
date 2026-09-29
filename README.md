@@ -39,9 +39,11 @@ Both modes leave already-sleeping tabs alone. Changing sleeping mode applies to 
 
 Open **Settings** from the toolbar popup to change the parking delay, return delay, sleeping mode or **Auto / Light / Dark** appearance. Auto follows your system theme. Saving an appearance updates every open Chrome Window Parker page.
 
-By default, a window is skipped when its selected tab is pinned, playing audio or excluded. Add site exclusions for work you want to keep selected, or protect a single tab for the current browser session. Chrome Window Parker's exclusions do not control Chrome's own memory decisions.
+By default, a window is skipped when its selected tab is pinned, playing audio or excluded. Enter a plain domain such as `meet.google.com` to exclude that site and its subdomains, or protect a single tab for the current browser session. An excluded background tab does not block parking; Discard immediately skips that tab. Chrome Window Parker's exclusions do not control Chrome's own memory decisions.
 
-The popup shows **Parked windows** and **Sleeping tabs**, plus controls to protect the current tab and pause automation. **Clear parked tabs** returns affected windows to real tabs and removes their parking pages, even while paused. Clearing restores at most one real tab per affected window and never initiates discards; other loaded or sleeping tabs keep their state. A window with only parking pages receives a blank tab so it stays open.
+The popup shows **Parked windows** and **Sleeping tabs**, plus controls to protect the current tab and pause automation. **Clear parked tabs** returns affected windows to real tabs and removes their parking pages, even while paused. Clearing restores at most one real tab per affected window and never initiates discards; other loaded or sleeping tabs keep their state. When clearing, a window with only parking pages receives a blank tab so it stays open.
+
+If you instead close or move away the last real tab in a parked window, Chrome Window Parker removes its verified temporary parking pages and lets the empty window close naturally. Other windows and tabs stay in place.
 
 ## Important limitations
 

@@ -50,7 +50,8 @@ test('inactive leftovers are actionable and preserve the manually selected real 
 
 test('only parking tabs create one inactive blank tab before removal and keep their window',async()=>{
   const h=await setup(1,1),id=h.p.states[1].parkingId;
-  await h.api.tabs.remove(100);await h.p.removed(100,{windowId:1});const start=h.calls.length;
+  // Clear handles a pre-existing shell before a natural-removal handler runs.
+  await h.api.tabs.remove(100);const start=h.calls.length;
   await h.api.tabs.create({windowId:1,active:false,url:h.tab(id).url});
   h.hooks.remove=()=>{assert(h.windows[0].tabs.some(t=>h.p.real(t)&&t.active));assert(h.windows[0].tabs.length>=2);};
   assert.deepEqual(await close(h),{closed:2,remaining:0,failed:0});

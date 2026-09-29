@@ -42,7 +42,7 @@ select { appearance: none; width: 100%; padding: 0 32px 0 10px; cursor: pointer;
 .field { margin-top: 21px; }
 .field > label { display: block; margin-bottom: 7px; }
 textarea { display: block; width: 100%; min-height: 100px; max-height: 320px; padding: 9px 11px; resize: vertical; font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; }
-.field > .hint { margin-top: 7px; }
+.field > .hint { margin: 7px 0; }
 summary { cursor: pointer; width: fit-content; }
 .safety-note { color: var(--muted); font-size: 12px; margin-top: 12px; }
 .safety-note p { margin: 8px 0 0 14px; max-width: 520px; }
