@@ -1,4 +1,4 @@
-import {DEFAULTS, validateSettings, storedSettings, skipReason} from './settings.js';
+import {DEFAULTS, SYNCABLE, validateSettings, storedSettings, skipReason, syncPolicy, sameValue} from './settings.js';
 import {systemClock} from './clock.js';
 
 // All asynchronous transitions are serialized by background.js. Focus signals
@@ -11,6 +11,7 @@ export class Parker {
     this.tabEpoch = new Map(); this.selectionEpoch = new Map();
     this.shellEpoch = 0; this.detachedTabs = new Map(); this.clearRequests = 0;
     this.loaded = false; this.departedAt = null;
+    this.policy = syncPolicy(); this.syncNotice = null;
     this.parkingURL = api.runtime.getURL('parked.html');
   }
   log(...args) { if (this.settings.debug) console.debug('[Chrome Window Parker]', ...args); }
@@ -64,11 +65,12 @@ export class Parker {
   }
   async init() {
     const [local, session, windows] = await Promise.all([
-      this.api.storage.local.get(['settings', 'parkingRecords']),
+      this.api.storage.local.get(['settings', 'parkingRecords', 'syncPolicy']),
       this.api.storage.session.get('runtimeState'),
       this.api.windows.getAll({populate: true, windowTypes: ['normal']})
     ]);
     try { this.settings = storedSettings(local.settings || {}); } catch { this.settings = {...DEFAULTS, enabled: false}; }
+    this.policy = syncPolicy(local.syncPolicy);
     // Storage can outlive older versions or be partially written. Rebuild invalid
     // entries from live tabs rather than letting them prevent worker startup.
     this.records = Object.fromEntries(Object.entries(local.parkingRecords || {}).filter(([token, r]) =>
@@ -118,6 +120,8 @@ export class Parker {
     }
     await this.startDwell();
     await this.save(); await this.schedule();
+    // Sync is optional: a failure here must never stop the worker starting.
+    try { await this.pullSync(); } catch (error) { console.error('[Chrome Window Parker] sync check', error); }
   }
   signalFocus(id) {
     this.shellEpoch++;
@@ -531,12 +535,136 @@ export class Parker {
     await this.saveRecords(); await this.save(); await this.schedule();
   }
   async configure(input) {
-    const settings = validateSettings(input);
+    const settings = validateSettings(input), previous = this.settings;
     await this.api.storage.local.set({settings});
     this.signalFocus(this.focus); this.settings = settings;
     for (const s of Object.values(this.states)) s.retryAt = 0;
     await this.startDwell(); await this.save(); await this.schedule();
+    await this.pushSync(SYNCABLE.filter(key => !sameValue(settings[key], previous[key])));
     return settings;
+  }
+  async reset() {
+    // Defaults apply to this device only: stop syncing here first, so shared
+    // values (and other devices) are left alone.
+    await this.setPolicy(syncPolicy());
+    return this.configure({...DEFAULTS});
+  }
+  async setAppearance(appearance) {
+    // A header control that applies immediately. Presentation only, so it never
+    // interrupts parking work the way other settings changes do.
+    const settings = validateSettings({...this.settings, appearance});
+    if (sameValue(settings, this.settings)) return settings;
+    await this.applySettings(settings); await this.pushSync(['appearance']);
+    return this.settings;
+  }
+  // Apply settings that did not come from this device's Settings form (sync),
+  // with the same runtime semantics as an equivalent local change.
+  async applySettings(next) {
+    const changed = Object.keys(next).filter(key => !sameValue(next[key], this.settings[key]));
+    if (!changed.length) return;
+    await this.api.storage.local.set({settings: next});
+    if (changed.every(key => key === 'appearance')) { this.settings = next; return; }
+    this.signalFocus(this.focus); this.settings = next;
+    for (const s of Object.values(this.states)) s.retryAt = 0;
+    await this.startDwell(); await this.save(); await this.schedule();
+  }
+
+  // Optional sync. Local settings always stay authoritative for everyday work;
+  // Chrome sync only mirrors the portable settings this device opted into, one
+  // key per setting, so devices that share different subsets never collide.
+  syncReason(error) {
+    const text = String(error?.message || error);
+    return /QUOTA_BYTES/i.test(text) ? 'too-large' : /MAX_WRITE_OPERATIONS/i.test(text) ? 'too-often' : 'unavailable';
+  }
+  async readSync(keys) {
+    try { return await this.api.storage.sync.get(keys); }
+    catch (error) { if (error instanceof TypeError) throw error; this.log('sync read failed', error.message); return null; }
+  }
+  async writeSync(keys) {
+    try { await this.api.storage.sync.set(Object.fromEntries(keys.map(key => [key, this.settings[key]]))); return null; }
+    catch (error) { if (error instanceof TypeError) throw error; this.log('sync write failed', error.message); return this.syncReason(error); }
+  }
+  // A synced value goes through normal validation. Undefined: nothing shared.
+  // Null: malformed, or from a version this one does not understand.
+  validSynced(key, value) {
+    if (value === undefined) return undefined;
+    try { return validateSettings({...this.settings, [key]: value})[key]; } catch { return null; }
+  }
+  async setPolicy(policy) {
+    this.policy = syncPolicy(policy);
+    await this.api.storage.local.set({syncPolicy: this.policy});
+    return {policy: this.policy, settings: this.settings};
+  }
+  // Share local changes to opted-in settings. If Chrome refuses (for example a
+  // very long site list), keep the value here and stop syncing that setting.
+  async pushSync(keys) {
+    keys = keys.filter(key => this.policy[key]);
+    if (!keys.length) return true;
+    const reason = await this.writeSync(keys);
+    if (!reason) return true;
+    this.syncNotice = {keys, reason};
+    await this.setPolicy({...this.policy, ...Object.fromEntries(keys.map(key => [key, false]))});
+    return false;
+  }
+  // Called synchronously by the worker: does a sync change affect this device?
+  syncRelevant(changes) {
+    return !this.loaded || SYNCABLE.some(key => this.policy[key] && changes[key]?.newValue !== undefined &&
+      !sameValue(changes[key].newValue, this.settings[key]));
+  }
+  async syncChanged(changes) {
+    let next = this.settings;
+    for (const key of SYNCABLE) {
+      if (!this.policy[key] || !changes[key]) continue;
+      const value = this.validSynced(key, changes[key].newValue);
+      if (value === null) this.log('ignored invalid synced value', key);
+      else if (value !== undefined) next = {...next, [key]: value};
+    }
+    await this.applySettings(next);
+  }
+  // At startup, apply changes that arrived while no worker was listening, and
+  // share opted-in values that are missing (for example after sync data reset).
+  async pullSync() {
+    const keys = SYNCABLE.filter(key => this.policy[key]);
+    if (!keys.length) return;
+    const values = await this.readSync(keys);
+    if (!values) return;
+    await this.pushSync(keys.filter(key => values[key] === undefined));
+    await this.syncChanged(Object.fromEntries(keys.map(key => [key, {newValue: values[key]}])));
+  }
+  syncKey(key) { if (!SYNCABLE.includes(key)) throw new Error('This setting does not sync.'); }
+  async syncEnable(key) {
+    this.syncKey(key);
+    const values = await this.readSync([key]);
+    if (!values) return {status: 'error', reason: 'unavailable'};
+    const synced = this.validSynced(key, values[key]);
+    if (synced === undefined) {
+      // Nothing shared yet: share this device's value.
+      const reason = await this.writeSync([key]);
+      if (reason) return {status: 'error', reason};
+    } else if (!sameValue(synced, this.settings[key])) {
+      // Never silently overwrite either side. The user chooses; null means the
+      // shared value cannot be used here, so only this device's value is offered.
+      return {status: 'conflict', key, local: this.settings[key], synced};
+    }
+    return {status: 'on', ...await this.setPolicy({...this.policy, [key]: true})};
+  }
+  async syncResolve(key, use) {
+    this.syncKey(key);
+    if (use === 'synced') {
+      const values = await this.readSync([key]), synced = values && this.validSynced(key, values[key]);
+      if (synced === undefined || synced === null)
+        return {status: 'error', reason: !values ? 'unavailable' : synced === null ? 'unusable' : 'changed'};
+      await this.applySettings({...this.settings, [key]: synced});
+    } else if (use === 'local') {
+      const reason = await this.writeSync([key]);
+      if (reason) return {status: 'error', reason};
+    } else throw new Error('Choose which value to keep.');
+    return {status: 'on', ...await this.setPolicy({...this.policy, [key]: true})};
+  }
+  // Keeps the current value here and leaves the shared value for other devices.
+  async syncDisable(key) {
+    this.syncKey(key);
+    return {status: 'off', ...await this.setPolicy({...this.policy, [key]: false})};
   }
   async message(msg, sender) {
     if (!msg || typeof msg.type !== 'string') throw new Error('Invalid message.');
@@ -560,7 +688,15 @@ export class Parker {
     }
     if (msg.type === 'settings') return this.settings;
     if (msg.type === 'configure') return this.configure(msg.settings);
-    if (msg.type === 'reset') return this.configure({...DEFAULTS});
+    if (msg.type === 'appearance') return this.setAppearance(msg.appearance);
+    if (msg.type === 'reset') return this.reset();
+    if (msg.type === 'sync-state') {
+      const notice = this.syncNotice; this.syncNotice = null;
+      return {policy: this.policy, notice};
+    }
+    if (msg.type === 'sync-enable') return this.syncEnable(msg.key);
+    if (msg.type === 'sync-resolve') return this.syncResolve(msg.key, msg.use);
+    if (msg.type === 'sync-disable') return this.syncDisable(msg.key);
     if (msg.type === 'close-parked') return this.closeParkedTabs();
     if (msg.type === 'protect') {
       if (typeof msg.protected !== 'boolean') throw new Error('Invalid tab protection.');

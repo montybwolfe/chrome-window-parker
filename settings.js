@@ -4,6 +4,15 @@ export const DEFAULTS = Object.freeze({
   exclusions: ['meet.google.com', 'zoom.us', 'teams.microsoft.com', 'music.youtube.com']
 });
 
+// Portable preferences that may sync, each opted in separately on each device.
+// Pausing, debug logging and all window/tab state always stay on this device.
+export const SYNCABLE = Object.freeze(['delayMinutes', 'dwellSeconds', 'sleepingMode', 'discardPinned',
+  'protectAudio', 'exclusions', 'appearance']);
+export function syncPolicy(input) {
+  return Object.fromEntries(SYNCABLE.map(key => [key, input?.[key] === true]));
+}
+export const sameValue = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
 export function validateSettings(input) {
   const s = {...DEFAULTS, ...input};
   for (const key of ['enabled', 'discardPinned', 'protectAudio', 'debug']) {
