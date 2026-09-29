@@ -6,11 +6,11 @@ Your tabs stay in the same window, with their order, pins and groups intact. Ret
 
 CHOOSE HOW TABS SLEEP
 
-Let Chrome decide is the default. Window Parker makes the previous tab a background tab, then leaves unloading to Chrome. It makes no discard requests in this mode. Keep Memory Saver enabled at your preferred level; Chrome decides whether and when to reclaim memory.
+Let Chrome decide is the default. Chrome Window Parker makes the previous tab a background tab, then leaves unloading to Chrome. It makes no discard requests in this mode. Keep Memory Saver enabled at your preferred level; Chrome decides whether and when to reclaim memory.
 
 Discard immediately is optional. When a window is newly parked, it asks Chrome to unload every currently loaded eligible real tab in that window. Protected and ineligible tabs are skipped individually. Unloading can lose unsaved page state, so use exclusions for important work.
 
-Both modes leave already-sleeping tabs alone. A mode change applies to the next parking cycle, without unloading or waking tabs in already-parked windows. Returning selects only your saved tab and Chrome reloads it if needed. Window Parker does not change Memory Saver settings or Chrome's always-active site list.
+Both modes leave already-sleeping tabs alone. A mode change applies to the next parking cycle, without unloading or waking tabs in already-parked windows. Returning selects only your saved tab and Chrome reloads it if needed. Chrome Window Parker does not change Memory Saver settings or Chrome's always-active site list.
 
 SET IT UP ONCE
 
@@ -19,7 +19,7 @@ SET IT UP ONCE
 • Skip windows whose selected tab is pinned, playing audio or excluded.
 • Exclude sites or protect individual tabs for the current browser session.
 • Check live parked-window and sleeping-tab counts in the toolbar.
-• Pause automation or clear parking pages across your windows when needed. Clear parked tabs returns at most one real tab per window and never initiates discards.
+• Pause automation or clear parking pages across your windows when needed. Clear parked tabs removes temporary parking pages/state, restores at most one appropriate real tab per affected window and never initiates discards.
 
 BUILT FOR MULTIPLE WINDOWS
 
@@ -33,12 +33,6 @@ GOOD TO KNOW
 
 Parking pauses during active Chrome downloads. Chrome cannot reliably expose every call, upload, screen-sharing session, video or unsaved edit to this extension. Exclude important sites; use Chrome's always-active site list too if they must remain loaded under Memory Saver.
 
-Window Parker does not move or focus windows. Chrome controls session restoration and window placement. Memory savings depend on your pages and Chrome's decisions; no fixed reduction is promised.
-
-FREE AND OPEN SOURCE
-
-Window Parker is free and open source. All functionality is available without payment. If it’s useful to you, you can optionally support development through Buy Me a Coffee: https://buymeacoffee.com/montybwolfe
-
-Support opens a separate third-party website. Contributions unlock nothing, and Window Parker receives no payment details or supporter identity.
+Chrome Window Parker does not move or focus windows. Chrome controls session restoration and window placement. Memory savings depend on your pages and Chrome's decisions; no fixed reduction is promised.
 
 Chrome Window Parker is an independent project, not affiliated with or endorsed by Google.

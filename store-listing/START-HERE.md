@@ -1,8 +1,8 @@
 # Chrome Web Store listing assets
 
-This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.1.1.
+This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.1.2.
 
-The extension package itself is separate. Upload **`chrome-window-parker-v1.5.1.1.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
+The extension package itself is separate. Upload **`chrome-window-parker-v1.5.1.2.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
 
 ## Product details
 
@@ -45,23 +45,12 @@ Use `privacy-fields.txt` when completing the dashboard's privacy and permission 
 
 Review the Chrome Web Store's current wording before submitting and personally confirm any required certifications.
 
-## v1.5.1.1 changes
+## Publish v1.5.1.2 from your v1.5.0 dashboard
 
-Upload the v1.5.1.1 runtime ZIP, replace the long description, and replace only `screenshot-3-popup-1280x800.png`. Settings was regenerated from the same 4× pipeline but remains byte-identical: the new bottom Support section is outside the preserved viewport crop. The parked screenshot, both promotional tiles and store icon are also byte-identical to the completed high-resolution asset pass.
+Use [PUBLISH-v1.5.1.2.md](PUBLISH-v1.5.1.2.md) for the complete cumulative checklist and exact text to paste. Replace the package, long description, tabs-permission justification, three screenshots, both promotional tiles and store icon. The package supplies the version automatically.
 
-Keep **In-app purchases: No**: voluntary external support unlocks nothing and the extension sells no functionality, goods, subscription or entitlement. See [the official-policy review and its precise scope](../docs/SUPPORT_DEVELOPMENT.md). The short description, single purpose, four permission justifications, data categories, remote-code answer and three project URLs remain unchanged. If the dashboard contains the old explanatory paragraphs, refresh only REMOTE CODE and DATA HANDLING EXPLANATION from `privacy-fields.txt` to distinguish deliberate external navigation from background networking.
+The Store screenshots and promo files use the full product name **Chrome Window Parker** wherever the product is named. Ordinary status text such as “Window parked” is intentional. No fundraising content appears in the installed extension or these assets.
 
-## Before submitting
+Complete the live checks in [TESTING.md](../TESTING.md), review the uploaded images at native size, verify the existing project/privacy/support URLs and certifications, then save and submit when ready. Nothing here submits or publishes the extension automatically.
 
-1. Complete the relevant live checks in [TESTING.md](../TESTING.md).
-2. Confirm the icon and screenshots look correct in the Web Store preview.
-3. Upload the prepared runtime ZIP, not GitHub's source-code ZIP.
-4. Confirm the privacy policy and support links are publicly accessible.
-5. Keep the listing's platform wording accurate: macOS tested; other desktop platforms unverified.
-6. Save the draft, review it once more, then submit it through the Chrome Web Store Developer Dashboard.
-
-Nothing in this folder submits or publishes the extension automatically.
-
-## Earlier high-resolution asset pass (already completed)
-
-That earlier pass replaced all six uploaded images with PNG files. For v1.5.1.1, only the popup image changes. The visual direction is unchanged. Source masters and provenance are retained in `sources/`; upload only the final files listed above. The documentation promo and high-resolution timer exports were also regenerated. Reproduction and QA details: [tools/store-assets](../tools/store-assets/README.md) and [ASSET-QUALITY.md](ASSET-QUALITY.md). That artwork-only pass required no runtime/version changes; v1.5.1.1 now requires the runtime and copy updates above.
+Source masters and provenance are retained in `sources/`; upload only the final files in the table above. Reproduction details: [tools/store-assets](../tools/store-assets/README.md) and [ASSET-QUALITY.md](ASSET-QUALITY.md).

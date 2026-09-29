@@ -7,3 +7,5 @@ PNG exports were rasterized from that source at each target size, rather than re
 The timer is an original geometric design, not a Chrome logo or a Google affiliation mark. Current store screenshots and promotional images are in `store-listing/`. Screenshots render the real interface with synthetic fixture data; they contain no personal browsing information.
 
 The reproducible export pipeline is in [tools/store-assets](../../tools/store-assets/README.md). It replaces the old JPEG store exports without changing their design.
+
+The repository-only [support-page artwork](BUY-ME-A-COFFEE.md) has separate source/provenance and is excluded from Store exports and the runtime package.

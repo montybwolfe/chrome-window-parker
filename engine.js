@@ -11,7 +11,7 @@ export class Parker {
     this.tabEpoch = new Map(); this.selectionEpoch = new Map();
     this.parkingURL = api.runtime.getURL('parked.html');
   }
-  log(...args) { if (this.settings.debug) console.debug('[Window Parker]', ...args); }
+  log(...args) { if (this.settings.debug) console.debug('[Chrome Window Parker]', ...args); }
   async getWindow(id) {
     try { return await this.api.windows.get(id, {populate: true}); }
     catch (error) { if (/No window with id|Invalid window ID/i.test(error.message)) return null; throw error; }
@@ -353,7 +353,7 @@ export class Parker {
           // independent failures must not prevent the other pages being handled.
           for (const parking of w.tabs.filter(t => this.token(t))) {
             try { if (await this.cleanupParking(w.id, parking.id)) closed++; }
-            catch (error) { failed++; console.error('[Window Parker] parking cleanup', error); }
+            catch (error) { failed++; console.error('[Chrome Window Parker] parking cleanup', error); }
           }
           break;
         }
@@ -361,7 +361,7 @@ export class Parker {
         if (state) { state.lastUse = this.clock.now(); state.retryAt = 0; }
       } catch (error) {
         if (!/No (tab|window) with id|Invalid (tab|window) ID/i.test(error.message)) {
-          failed++; console.error('[Window Parker] window cleanup', error);
+          failed++; console.error('[Chrome Window Parker] window cleanup', error);
         }
       }
     }

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 128 128">
-  <title>Window Parker</title>
+  <title>Chrome Window Parker</title>
   <desc>A blue timer with simple white hands.</desc>
   <g fill="#2b60c5">
     <rect x="60" y="16" width="8" height="13" rx="3"/>

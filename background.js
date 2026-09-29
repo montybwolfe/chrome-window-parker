@@ -10,7 +10,7 @@ function enqueue(work) {
   });
   // Keep the queue usable after a failure, while preserving the originating stack.
   // Return `next` so message callers still receive failure instead of false success.
-  queue = next.catch(error => console.error('[Window Parker]', error));
+  queue = next.catch(error => console.error('[Chrome Window Parker]', error));
   return next;
 }
 // Register synchronously, before initialization or any await.

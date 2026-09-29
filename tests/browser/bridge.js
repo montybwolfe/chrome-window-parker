@@ -23,6 +23,6 @@ async function send(message,type='message'){
  await ready;const id=++next;return new Promise(resolve=>{pending.set(id,resolve);worker.postMessage({type,id,message,page:location.pathname.split('/').pop()||'options.html'});});
 }
 const uiEvents=Object.fromEntries(['onUpdated','onCreated','onRemoved','onActivated','onAttached','onDetached'].map(name=>[name,{addListener(){}}]));
-window.chrome={runtime:{sendMessage:message=>send(message),openOptionsPage:async()=>{location.href='/options.html';}},tabs:{...uiEvents,create:async props=>{window.open(props.url,'_blank','noopener,noreferrer');document.body.dataset.externalTabsOpened=String(Number(document.body.dataset.externalTabsOpened||0)+1);return {id:90001};}},storage:{local:{get:async()=>{const response=await send({},'storage-get');if(!response.ok)throw Error(response.error);return response.data;}},onChanged:{addListener:fn=>storageListeners.add(fn),removeListener:fn=>storageListeners.delete(fn)}}};
+window.chrome={runtime:{sendMessage:message=>send(message),openOptionsPage:async()=>{location.href='/options.html';}},tabs:uiEvents,storage:{local:{get:async()=>{const response=await send({},'storage-get');if(!response.ok)throw Error(response.error);return response.data;}},onChanged:{addListener:fn=>storageListeners.add(fn),removeListener:fn=>storageListeners.delete(fn)}}};
 const repro=document.getElementById('repro');
 if(repro)repro.addEventListener('click',async()=>{const response=await send({},'repro');document.getElementById('result').textContent=response.ok?response.data:response.error;});
