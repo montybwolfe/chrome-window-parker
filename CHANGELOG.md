@@ -1,17 +1,20 @@
-# 1.5.1.4 — Unreleased
+# Changelog
 
-- Explains site exclusions with plain domains first, selected versus background tabs, and optional advanced URL patterns.
-- Removes verified parking-only windows when their final real tab is closed or moved away. Clear parked tabs still preserves windows.
-- Fixes a window occasionally parking soon after you left it, when Chrome had paused the extension's background worker while you were using that window.
-- Reorganizes Settings: individual tab protection now sits with the other tab protections in its own scrollable list, followed by Diagnostics and Save.
-- Replaces the Appearance menu with a compact Light / Dark / Auto control, and makes Settings text and spacing slightly larger and clearer.
+## 1.5.5
 
-# 1.5.1.3 — Initial public release
+- **Optional sync.** Choose which settings stay the same on your other computers, using Chrome sync. It's off by default and chosen per setting on each computer. Pausing, protected tabs and window details never sync.
+- **Report a bug** from the popup or Settings.
+- **Tidier Settings.** A compact light/dark/auto theme switch that applies straight away, clearer help for excluded sites, and a scrolling list for protecting individual tabs.
+- **Readable text.** Popup and parked-page text is no longer shrunk by Chrome's default extension styling.
+- **No leftover windows.** If you close or move away the last real tab in a parked window, its parking page now closes too, so the empty window goes away. Clear parked tabs still keeps windows open.
+- **Fixed** a window occasionally parking soon after you'd been using it, when Chrome had paused the extension in the background.
+- **Fixed** Discard immediately sometimes leaving a newly parked window's tabs loaded, when its parking page was still opening.
 
-- Park idle Chrome windows on a lightweight page and restore the previous tab after a deliberate return.
-- Work alongside Chrome Memory Saver: Let Chrome decide by default, or request unloading of every eligible loaded real tab with Discard immediately.
-- Protect important sites/tabs, pause automatic parking and clear parking pages without new discards or mass-waking background tabs.
-- Use Auto, Light or Dark appearance across the popup, Settings and parked page.
-- Keep browsing information local, with no accounts, analytics, backend or remote executable code.
-- Offer small optional Support actions; all functionality remains free and contributions unlock nothing.
-- Provide manual installation now, with Chrome Web Store installation pending approval.
+## 1.5.1.3
+
+First public release.
+
+- Parks idle windows on a lightweight page and brings back your previous tab when you return.
+- Works with Chrome Memory Saver, or unloads a parked window's tabs straight away.
+- Site exclusions, per-tab protection, pause, and Clear parked tabs.
+- Light, dark and automatic appearance.

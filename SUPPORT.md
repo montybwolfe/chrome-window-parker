@@ -1,25 +1,27 @@
-# Compatibility and support
+# Help
 
-Chrome Window Parker is designed for people who keep several Chrome windows open, especially across macOS Spaces. It requires Chrome 120 or later and uses standard extension APIs without native software or macOS-specific code.
+**Found a bug?** Please [open an issue on GitHub](https://github.com/montybwolfe/chrome-window-parker/issues). Include your Chrome version, operating system and sleeping mode, what you expected and what happened. Leave out private addresses, titles and personal details.
 
-Chrome Window Parker is currently tested on macOS. Windows, Linux and ChromeOS have not yet been formally verified, nor have other Chromium browsers or mobile browsers. For testing changes, see [Testing](TESTING.md).
+## Common questions
 
-## If a window does not park
+**A window doesn't park.** It has to stay unfocused for the whole parking delay, and its selected tab can't be pinned, playing audio, on an excluded site, still loading, or a Chrome page. Any download in progress pauses parking in every window. Chrome can also run the check a little late.
 
-Check that automation is enabled, the window has been unfocused for the selected delay, and its selected tab is eligible. Pinned, audible, excluded, loading and internal tabs can prevent parking. An active Chrome download pauses parking across all windows. Chrome may deliver alarms late.
+**The parked tab is still loaded.** In Let Chrome decide mode, Chrome's Memory Saver decides when to unload background tabs; parking only makes that possible. Discard immediately unloads them straight away.
 
-In **Let Chrome decide**, seeing a parking page does not mean Chrome has unloaded the previous tab. Memory Saver makes that decision. **Discard immediately** requests unloading of every currently loaded eligible real tab in a newly parked window. Protected tabs are skipped independently, and Chrome can refuse a request. Changing modes takes effect on the next parking cycle.
+**A window didn't come back.** Stay in it for the return delay (2 seconds by default), or click Restore tab. If automatic parking is paused, windows don't restore by themselves, but you can always click a tab.
 
-## If a window does not return
+**What does Clear parked tabs do?** It returns every parked window to a normal tab and removes the parking pages. It doesn't unload or reload anything else.
 
-Remain focused for the configured return delay, or press **Restore tab**. Automatic return is paused when automation is off. You can always select a real tab yourself. **Clear parked tabs** returns affected windows to real tabs without changing your pause setting.
+**Chrome warns about browsing history and downloads.** Those are Chrome's standard descriptions of the permissions. See [the README](README.md#privacy) for what they're used for.
 
-After an extension reload or update, refresh old extension pages if their context has become invalid. Chrome controls browser session restoration and Space placement; Chrome Window Parker cannot reconstruct windows that Chrome did not restore.
+**Chrome says it's "not trusted by Enhanced Safe Browsing".** Chrome shows this for extensions from newer developers when Enhanced protection is on. Google says new developers usually take a few months to become trusted.
 
-## Reporting a problem
+## Debug logs
 
-Open a [GitHub Issue](https://github.com/montybwolfe/chrome-window-parker/issues) with extension, Chrome and OS versions; sleeping mode and Memory Saver setting; reproduction steps; and expected versus observed behavior. Remove private URLs, titles and personal data from screenshots or logs.
+Turn on debug logging in Settings, save, then open `chrome://extensions`, find Chrome Window Parker and click **service worker** to see its console. Close that console before testing sleep or restarts, because keeping it open changes how Chrome runs the extension.
 
-For diagnostics, enable debug logging in Settings, save, then inspect the service worker from `chrome://extensions`. Enable verbose console output. Close worker DevTools before testing suspension or sleep/wake, because an attached inspector changes worker lifetime. Unexpected errors remain visible even with debug logging off.
+## Compatibility
 
-Optional [support for development](https://buymeacoffee.com/montybwolfe) is separate from technical support. All features remain free; please continue to report bugs and request help through GitHub Issues.
+Chrome 120 or newer. Tested on macOS; Windows, Linux and ChromeOS should work but haven't been tested properly yet.
+
+Support for development is optional and separate from help: everything is free, and bug reports are always welcome.
