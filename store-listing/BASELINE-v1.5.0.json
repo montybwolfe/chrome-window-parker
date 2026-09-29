@@ -1,7 +1,7 @@
 {
-  "baselineTag": "v1.5.0",
+  "baselineTag": "v1.5.0 (comparison uses preserved commit, independent of tag availability)",
   "baselineCommit": "bc0530b9649b652f158745536603445db3d08696",
-  "finalVersion": "1.5.1.2",
+  "finalVersion": "1.5.1.3",
   "manifestChangedFields": [
     "version"
   ],
@@ -12,7 +12,9 @@
     "version"
   ],
   "privacyChangedSections": [
-    "TABS PERMISSION JUSTIFICATION"
+    "TABS PERMISSION JUSTIFICATION",
+    "REMOTE CODE",
+    "DATA HANDLING EXPLANATION"
   ],
   "assets": [
     {
@@ -47,7 +49,7 @@
       "before": "screenshot-3-popup-1280x800.jpg",
       "beforeSHA256": "1fc413ed3fe364b00d5d2ec8ad5088d8d3228fa927ac71d9a9ee39e683eda2f3",
       "after": "screenshot-3-popup-1280x800.png",
-      "afterSHA256": "00dc3e62db6794a16f38e0eddd2bf636c04f426775524a13ba85e872f812b655",
+      "afterSHA256": "4df21b1d20d6eec72354c15b3bf80d15cf22ee52615bdc9501ad10bde0bb9066",
       "dimensions": "1280\u00d7800",
       "status": "MUST UPDATE"
     },
@@ -73,15 +75,15 @@
   "textFiles": {
     "store-listing/description.txt": {
       "baselineSHA256": "956221c5abfbfe8ae2323ac509940a5b71d9988ff58ad62776e4f3cc785905ee",
-      "finalSHA256": "7836d79b69b47ca4b0a4342d7d4c56b646897c1819563ae298f743449ab2a118"
+      "finalSHA256": "a7e671297d92ba9825bd5e9a5a208449a1ad17cb52cebda10e204d3de6b2f1cc"
     },
     "store-listing/privacy-fields.txt": {
       "baselineSHA256": "d41b29b15044bf5076726c32c98895b80a308273255563a295b2e6a0a3d63714",
-      "finalSHA256": "d110c1f6be67c4aea3c86da417444073de6b9b9a1e9247d53d129192ae79acef"
+      "finalSHA256": "d952a98cd8c202960d5a30f97c58be4bfc53a947fd9f12e9aa97e6b674bb6781"
     },
     "PRIVACY.md": {
       "baselineSHA256": "12575fd8fe8796a87ca1964ca1243d41cbc93ee714bb21804f4269aeff436354",
-      "finalSHA256": "6f78dec5c2cd76edfdf5de11300c29b59d3d95e92df47288c916b13a9054b957"
+      "finalSHA256": "4b2e3c168c55265f927aeaad286680642a1de849e5c35bd362fb84b62dc489ee"
     }
   },
   "unchanged": [
@@ -91,20 +93,19 @@
     "storage justification",
     "alarms justification",
     "downloads justification",
-    "remote code",
-    "data handling explanation",
+    "remote-code No declaration",
     "data-type disclosures",
     "limited-use certifications",
     "platform compatibility status"
   ],
-  "behavior": "Preserves v1.5.1 bulk-discard and Clear corrections; current core files differ from v1.5.1 only in product-name log prefixes.",
+  "behavior": "Default mode has zero explicit discard calls. Immediate mode considers every loaded eligible real tab. Clear starts no discards and restores at most one real tab per affected window.",
   "runtimeArchives": {
     "baseline": "chrome-window-parker-v1.5.0.zip",
     "baselineSHA256": "0fe9f6192b0b4239df257064d9e7ac606fbfd438ce263fe67d390d5465d5dac4",
     "baselineFiles": 19,
-    "final": "chrome-window-parker-v1.5.1.2.zip",
-    "finalSHA256": "aafedf4f3b89b57baeae7d8664bfe8deffa4f31660470fb4aba9aa6229e6d5e2",
-    "finalFiles": 19,
+    "final": "chrome-window-parker-v1.5.1.3.zip",
+    "finalSHA256": "160464ff9c7745bff566e1e60f279ee293b783e0c145d2f7ae16434236f2e0a7",
+    "finalFiles": 20,
     "changedFiles": [
       "background.js",
       "engine.js",
@@ -112,10 +113,16 @@
       "options.html",
       "options.js",
       "parked.html",
-      "popup.html"
+      "popup.html",
+      "popup.js",
+      "support.js",
+      "ui.css"
     ],
-    "sameFileInventory": true,
-    "baselineArchiveMatchesTag": true,
+    "addedFiles": [
+      "support.js"
+    ],
+    "baselineArchiveMatchesCommit": true,
     "finalArchiveMatchesSource": true
-  }
+  },
+  "comparisonPreservedBeforeTagDeletion": true
 }

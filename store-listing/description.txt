@@ -35,4 +35,10 @@ Parking pauses during active Chrome downloads. Chrome cannot reliably expose eve
 
 Chrome Window Parker does not move or focus windows. Chrome controls session restoration and window placement. Memory savings depend on your pages and Chrome's decisions; no fixed reduction is promised.
 
+FREE AND OPEN SOURCE
+
+Chrome Window Parker is free and open source. All functionality is available without payment. If it’s useful to you, you can optionally support development: https://buymeacoffee.com/montybwolfe
+
+Support opens a separate third-party website. Contributions unlock nothing, and Chrome Window Parker receives no payment details or supporter identity.
+
 Chrome Window Parker is an independent project, not affiliated with or endorsed by Google.

@@ -4,7 +4,7 @@
 
 https://cdn.buymeacoffee.com/buttons/v2/default-blue.png
 
-It belongs to Buy Me a Coffee and is not relicensed under this repository's MIT license. It is used only in the README to link to the project's support page; it is excluded from the extension runtime ZIP. The installed extension contains no funding interface, image or widget.
+It belongs to Buy Me a Coffee and is not relicensed under this repository's MIT license. It is used only in the README to link to the project's support page; it is excluded from the extension runtime ZIP. The extension uses plain secondary Support actions, never this image or a remote widget.
 
 The official [brand kit](https://buymeacoffee.com/brand) supplies downloadable graphics for promoting a creator page. The official [button integration guide](https://help.buymeacoffee.com/en/articles/3336564-monetising-medium-with-buy-me-a-coffee) specifically instructs creators to download the assets, upload the button image and link it to their page. Those published instructions support this use. The general [terms](https://buymeacoffee.com/terms) retain Buy Me a Coffee's intellectual-property rights; no broad redistribution or relicensing rights are claimed.
 

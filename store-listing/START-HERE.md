@@ -1,8 +1,8 @@
 # Chrome Web Store listing assets
 
-This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.1.2.
+This folder contains the text and graphics prepared for the Chrome Web Store listing for version 1.5.1.3.
 
-The extension package itself is separate. Upload **`chrome-window-parker-v1.5.1.2.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
+The extension package itself is separate. Upload **`chrome-window-parker-v1.5.1.3.zip`** from the matching GitHub Release (or the equivalent package generated in `dist/`). Do not upload this asset folder, the store-listing asset ZIP, or GitHub's automatically generated source archive as the extension package.
 
 ## Product details
 
@@ -45,11 +45,11 @@ Use `privacy-fields.txt` when completing the dashboard's privacy and permission 
 
 Review the Chrome Web Store's current wording before submitting and personally confirm any required certifications.
 
-## Publish v1.5.1.2 from your v1.5.0 dashboard
+## Publish v1.5.1.3 from your v1.5.0 dashboard
 
-Use [PUBLISH-v1.5.1.2.md](PUBLISH-v1.5.1.2.md) for the complete cumulative checklist and exact text to paste. Replace the package, long description, tabs-permission justification, three screenshots, both promotional tiles and store icon. The package supplies the version automatically.
+Use [PUBLISH-v1.5.1.3.md](PUBLISH-v1.5.1.3.md) for the complete cumulative checklist and exact text to paste. Replace the package, long description, tabs-permission justification, three screenshots, both promotional tiles and store icon. The package supplies the version automatically.
 
-The Store screenshots and promo files use the full product name **Chrome Window Parker** wherever the product is named. Ordinary status text such as “Window parked” is intentional. No fundraising content appears in the installed extension or these assets.
+The Store screenshots and promo files use the full product name **Chrome Window Parker** wherever the product is named. Ordinary status text such as “Window parked” is intentional. The popup has a small Support text action and Settings has a secondary Support development action. The parked page has none. Store promotional artwork keeps the product as its main message; no branded funding graphics are embedded.
 
 Complete the live checks in [TESTING.md](../TESTING.md), review the uploaded images at native size, verify the existing project/privacy/support URLs and certifications, then save and submit when ready. Nothing here submits or publishes the extension automatically.
 
