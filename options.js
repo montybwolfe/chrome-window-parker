@@ -1,9 +1,13 @@
-import {bindSupport} from './support.js';
+import {bindIssues, bindSupport} from './support.js';
 import {request, report} from './ui.js';
 const $ = id => document.getElementById(id);
 const flags = ['enabled', 'discardPinned', 'protectAudio', 'debug'];
 const themes = [...document.querySelectorAll('input[name=appearance]')];
-let saving = false;
+const syncBoxes = [...document.querySelectorAll('input[data-sync]')];
+const syncNames = {delayMinutes: 'Park windows after', dwellSeconds: 'Restore delay', sleepingMode: 'Tab sleeping',
+  appearance: 'Theme', discardPinned: 'Pinned tabs', protectAudio: 'Audio tabs', exclusions: 'Sites to exclude'};
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+let saving = false, saved = null, conflict = null;
 // Settings unlock together. Individual-tab protection applies immediately and
 // stays usable even if settings cannot be loaded.
 function locked(value) { for (const group of document.querySelectorAll('.settings-fields')) group.disabled = value; }
@@ -12,22 +16,35 @@ function sleepingHelp() {
     'Unload eligible tabs as soon as their window is parked.' : 'Chrome decides when background tabs are unloaded.';
 }
 $('sleepingMode').addEventListener('change', sleepingHelp);
-function fill(s) {
-  for (const key of flags) $(key).checked = s[key];
-  $('delayMinutes').value = s.delayMinutes; $('dwellSeconds').value = s.dwellSeconds;
-  $('delayPreset').value = [5,10,15,30,60].includes(s.delayMinutes) ? String(s.delayMinutes) : 'custom';
-  $('customLabel').hidden = $('delayPreset').value !== 'custom';
-  $('exclusions').value = s.exclusions.join('\n');
-  $('sleepingMode').value = s.sleepingMode; sleepingHelp();
-  for (const input of themes) input.checked = input.value === s.appearance;
+// One field at a time, so a change from another page or computer only updates
+// fields you haven't edited.
+function formValue(key) {
+  if (flags.includes(key)) return $(key).checked;
+  if (key === 'delayMinutes' || key === 'dwellSeconds') return Number($(key).value);
+  if (key === 'exclusions') return $('exclusions').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (key === 'appearance') return themes.find(input => input.checked)?.value;
+  return $(key).value;
 }
-function status(text) { $('status').classList.remove('error'); $('status').textContent = text; }
+function show(key, value) {
+  if (flags.includes(key)) $(key).checked = value;
+  else if (key === 'delayMinutes') {
+    $('delayMinutes').value = value;
+    $('delayPreset').value = [5,10,15,30,60].includes(value) ? String(value) : 'custom';
+    $('customLabel').hidden = $('delayPreset').value !== 'custom';
+  } else if (key === 'exclusions') $('exclusions').value = value.join('\n');
+  else if (key === 'appearance') for (const input of themes) input.checked = input.value === value;
+  else { $(key).value = value; if (key === 'sleepingMode') sleepingHelp(); }
+}
+function fill(s) { for (const key of Object.keys(s)) show(key, s[key]); saved = s; }
+function status(text, target = 'status') { $(target).classList.remove('error'); $(target).textContent = text; }
 async function save(operation, success) {
   if (saving) return;
   saving = true; locked(true); status('Saving…');
   try { fill(await operation()); status(success); }
   catch (error) { report(error); }
   finally { saving = false; locked(false); }
+  // A save can switch sync off for a setting Chrome refused; say so, separately.
+  await refreshSync().catch(error => report(error, 'syncStatus'));
 }
 $('delayPreset').addEventListener('change', () => {
   $('customLabel').hidden = $('delayPreset').value !== 'custom';
@@ -35,14 +52,96 @@ $('delayPreset').addEventListener('change', () => {
 });
 $('settings').addEventListener('submit', event => {
   event.preventDefault();
-  const settings = Object.fromEntries(flags.map(k => [k, $(k).checked]));
-  settings.sleepingMode = $('sleepingMode').value; settings.appearance = themes.find(input => input.checked)?.value;
-  settings.delayMinutes = Number($('delayMinutes').value);
-  settings.dwellSeconds = Number($('dwellSeconds').value);
-  settings.exclusions = $('exclusions').value.split('\n').map(s => s.trim()).filter(Boolean);
+  // The theme control saves itself; everything else here is saved together.
+  const settings = Object.fromEntries(Object.keys(saved).map(key => [key, key === 'appearance' ? saved.appearance : formValue(key)]));
   save(() => request('configure', {settings}), 'Settings saved.');
 });
-$('reset').addEventListener('click', () => save(() => request('reset'), 'Defaults restored. Tab exclusions are unchanged.'));
+$('reset').addEventListener('click', () => save(() => request('reset'), 'Defaults restored. Sync is now off on this computer.'));
+for (const input of themes) input.addEventListener('change', async () => {
+  if (!input.checked || !saved) return;
+  try { saved = {...saved, appearance: (await request('appearance', {appearance: input.value})).appearance}; }
+  catch (error) { show('appearance', saved.appearance); report(error); }
+});
+// Another Settings page, the popup or a synced computer changed something.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !saved) return;
+  const next = changes.settings?.newValue;
+  if (next) {
+    for (const key of Object.keys(next))
+      if (!same(next[key], saved[key]) && same(formValue(key), saved[key])) show(key, next[key]);
+    saved = next;
+  }
+  if (changes.syncPolicy?.newValue && !conflict) renderSync(changes.syncPolicy.newValue);
+});
+
+// Sync choices apply right away and belong to this computer only.
+function describe(key, value) {
+  if (value === null) return 'a value this version can’t use';
+  if (key === 'delayMinutes') return value === 1 ? '1 minute' : value === 60 ? '1 hour' : `${value} minutes`;
+  if (key === 'dwellSeconds') return value === 1 ? '1 second' : `${value} seconds`;
+  if (key === 'sleepingMode') return value === 'immediate' ? 'Discard immediately' : 'Let Chrome decide';
+  if (key === 'appearance') return {auto: 'Auto', light: 'Light', dark: 'Dark'}[value];
+  if (key === 'exclusions') return value.length === 1 ? '1 site' : `${value.length} sites`;
+  return value ? 'on' : 'off';
+}
+function reason(key, code) {
+  const name = syncNames[key];
+  return {'too-large': `${name} is too long to sync, so it stays on this computer.`,
+    'too-often': 'Chrome is limiting sync changes right now. Try again in a minute.',
+    unusable: `The synced ${name} setting can’t be used by this version.`,
+    changed: `The synced ${name} setting just changed. Try again.`}[code] ||
+    'Chrome sync storage isn’t available right now. Try again later.';
+}
+function renderSync(policy) { for (const box of syncBoxes) box.checked = policy[box.dataset.sync] === true; }
+function syncLocked(value) { $('syncList').disabled = value || !saved; }
+async function refreshSync() {
+  const {policy, notice} = await request('sync-state');
+  if (!conflict) renderSync(policy);
+  if (notice) { status(notice.keys.map(key => reason(key, notice.reason)).join(' '), 'syncStatus'); $('syncStatus').classList.add('error'); }
+}
+function closeConflict() { conflict = null; $('syncChoice').hidden = true; syncLocked(false); }
+function askConflict(result) {
+  conflict = result; const name = syncNames[result.key];
+  $('syncChoiceText').textContent = result.synced === null ?
+    `The synced ${name} setting can’t be used by this version. Share this computer’s value instead?` :
+    `${name} is ${describe(result.key, result.local)} here and ${describe(result.key, result.synced)} in sync. Which should all your computers use?`;
+  $('useSynced').hidden = result.synced === null;
+  $('useSynced').textContent = `Use synced: ${describe(result.key, result.synced)}`;
+  $('useLocal').textContent = `Use this computer’s: ${describe(result.key, result.local)}`;
+  $('syncChoice').hidden = false; status('', 'syncStatus');
+  (result.synced === null ? $('useLocal') : $('useSynced')).focus();
+}
+function finish(key, result) {
+  if (result.status === 'error') throw new Error(reason(key, result.reason));
+  renderSync(result.policy);
+  for (const k of Object.keys(result.settings)) if (!same(result.settings[k], saved[k]) && same(formValue(k), saved[k])) show(k, result.settings[k]);
+  saved = result.settings;
+  status(result.status === 'on' ? `${syncNames[key]} now syncs.` : `${syncNames[key]} now stays on this computer.`, 'syncStatus');
+}
+for (const box of syncBoxes) box.addEventListener('change', async () => {
+  const key = box.dataset.sync;
+  syncLocked(true);
+  try {
+    const result = await request(box.checked ? 'sync-enable' : 'sync-disable', {key});
+    if (result.status === 'conflict') { askConflict(result); return; }
+    finish(key, result);
+  } catch (error) { box.checked = !box.checked; report(error, 'syncStatus'); }
+  finally { if (!conflict) syncLocked(false); }
+});
+async function resolve(use) {
+  const {key} = conflict, box = syncBoxes.find(b => b.dataset.sync === key);
+  for (const id of ['useSynced', 'useLocal', 'cancelSync']) $(id).disabled = true;
+  try { const result = await request('sync-resolve', {key, use}); closeConflict(); finish(key, result); }
+  catch (error) { closeConflict(); box.checked = false; report(error, 'syncStatus'); }
+  finally { for (const id of ['useSynced', 'useLocal', 'cancelSync']) $(id).disabled = false; box.focus(); }
+}
+$('useSynced').addEventListener('click', () => resolve('synced'));
+$('useLocal').addEventListener('click', () => resolve('local'));
+$('cancelSync').addEventListener('click', () => {
+  const box = syncBoxes.find(b => b.dataset.sync === conflict.key);
+  box.checked = false; closeConflict(); status('Nothing changed.', 'syncStatus'); box.focus();
+});
+
 async function refresh() {
   $('refresh').disabled = true;
   try {
@@ -56,7 +155,7 @@ async function refresh() {
       text.append(title, windowLabel); label.title = tab.title;
       box.addEventListener('change', async () => {
         box.disabled = true;
-        try { await request('protect', {tabId: tab.id, protected: box.checked}); $('tabStatus').classList.remove('error'); $('tabStatus').textContent = 'Tab protection updated.'; }
+        try { await request('protect', {tabId: tab.id, protected: box.checked}); status('Tab protection updated.', 'tabStatus'); }
         catch (error) { box.checked = !box.checked; report(error, 'tabStatus'); }
         finally { box.disabled = false; }
       });
@@ -68,11 +167,13 @@ async function refresh() {
 }
 $('refresh').addEventListener('click', refresh);
 $('individual').addEventListener('toggle', () => { if ($('individual').open) refresh(); });
-// The list sits inside the form, but protection applies immediately: Enter on a
-// tab checkbox must not implicitly submit (save) the settings form.
-$('tabs').addEventListener('keydown', event => { if (event.key === 'Enter') event.preventDefault(); });
-request('settings').then(s => { fill(s); locked(false); }).catch(error => {
-  $('loadError').hidden = false; report(error, 'loadError');
-});
+// These lists sit inside the form but apply immediately: Enter on one of their
+// checkboxes must not implicitly submit (save) the settings form.
+for (const id of ['tabs', 'syncList']) $(id).addEventListener('keydown', event => { if (event.key === 'Enter') event.preventDefault(); });
+request('settings').then(async s => {
+  fill(s); locked(false); syncLocked(false);
+  try { await refreshSync(); } catch (error) { report(error, 'syncStatus'); }
+}).catch(error => { $('loadError').hidden = false; report(error, 'loadError'); });
 
 bindSupport(document.getElementById('support'), error => report(error, 'supportStatus'));
+bindIssues($('reportBug'), error => report(error, 'supportStatus'));

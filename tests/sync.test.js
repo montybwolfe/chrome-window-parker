@@ -178,5 +178,5 @@ test('the header theme applies immediately without interrupting parking work', a
   assert.equal(h.sync.appearance, 'light', 'shared when theme sync is on');
   await h.p.syncChanged({appearance: {newValue: 'auto'}});
   assert.equal(h.p.settings.appearance, 'auto'); assert.equal(h.p.epoch, epoch, 'a synced theme is presentation only');
-  await assert.rejects(() => h.p.message({type: 'appearance', appearance: 'sepia'}, sender), /appearance/);
+  await assert.rejects(() => h.p.message({type: 'appearance', appearance: 'sepia'}, sender), /Choose a theme/);
 });

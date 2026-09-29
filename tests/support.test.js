@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {bindSupport, SUPPORT_URL} from '../support.js';
+import {bindIssues, bindSupport, ISSUES_URL, SUPPORT_URL} from '../support.js';
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
-function setup(t,create=async()=>({id:1})){
+function setup(t,create=async()=>({id:1}),bind=bindSupport){
  let click,now=1000;const calls=[],errors=[];
  const old=globalThis.chrome;globalThis.chrome={tabs:{create:async props=>{calls.push(props);return create(props);}}};
  t.after(()=>{globalThis.chrome=old;});t.mock.method(performance,'now',()=>now);
  const button={disabled:false,addEventListener:(name,fn)=>{assert.equal(name,'click');click=fn;}};
- bindSupport(button,error=>errors.push(error));
+ bind(button,error=>errors.push(error));
  return {button,calls,errors,click:(event={})=>click({isTrusted:true,detail:1,...event}),advance:ms=>{now+=ms;}};
 }
 test('support module import and binding perform no navigation, request or storage access',t=>{
@@ -44,6 +44,15 @@ test('both surfaces bind native accessible secondary buttons; parked page and wo
  for(const name of ['popup','options']) { assert.match(read(name+'.html'),/<h1>Chrome Window Parker<\/h1>/); assert(!/(?<!Chrome )Window Parker/.test(read(name+'.html'))); }assert(read('options.html').indexOf('support-section')>read('options.html').indexOf('individual-section'));
  for(const file of ['parked.html','parked.js','background.js','engine.js'])assert(!read(file).includes('support.js')&&!read(file).includes('buymeacoffee'));
  assert.match(read('ui.css'),/:focus-visible/);assert.match(read('ui.css'),/\.popup-links \{ display: flex/);
+});
+for(const [input,detail] of [['mouse',1],['keyboard',0]])test(`deliberate ${input} bug report opens exactly the GitHub Issues page, with nothing attached`,async t=>{
+ const h=setup(t,undefined,bindIssues);await h.click({detail,url:'https://attacker.invalid'});
+ assert.equal(ISSUES_URL,'https://github.com/montybwolfe/chrome-window-parker/issues');
+ assert.deepEqual(h.calls,[{url:ISSUES_URL,active:true}]);assert.deepEqual(h.errors,[]);
+ await h.click({isTrusted:false});h.advance(50);await h.click();assert.equal(h.calls.length,1,'no scripted or rapid repeats');
+ for(const name of ['popup','options']){
+  assert.match(read(name+'.js'),/bindIssues\(\$\('reportBug'\)/);assert(!read(name+'.html').includes(ISSUES_URL));
+ }
 });
 test('permission list and restrictive CSP remain unchanged; no external resources or payment integration',()=>{
  const m=JSON.parse(read('manifest.json'));assert.deepEqual(m.permissions,['tabs','storage','alarms','downloads']);assert.equal(m.host_permissions,undefined);assert.equal(m.content_scripts,undefined);

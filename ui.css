@@ -8,7 +8,9 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; }
+/* Chrome's built-in stylesheet for extension pages shrinks body text to 75%;
+   inherit the intended 13px instead. */
+body { margin: 0; font: inherit; }
 h1, h2, p { margin: 0; }
 h1 { font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: -.45px; }
 h2 { font-size: 13px; font-weight: 600; margin-bottom: 16px; }
@@ -64,8 +66,9 @@ button.small { min-height: 29px; font-size: 12px; padding: 3px 10px; }
 .settings-page button { min-height: 34px; padding: 6px 14px; }
 .settings-page button.small { min-height: 30px; padding: 4px 12px; font-size: 13px; }
 .form-footer { padding-top: 6px; }
-#status, #tabStatus { min-height: 18px; margin-top: 9px; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-#status.error, #tabStatus.error, .error { color: var(--error); }
+#status, #tabStatus, #syncStatus { min-height: 18px; margin-top: 9px; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.settings-page :is(#status, #tabStatus, #syncStatus) { font-size: 13px; }
+#status.error, #tabStatus.error, #syncStatus.error, .error { color: var(--error); }
 #loadError { margin: 12px 0; }
 .individual-section { margin-top: 18px; }
 .individual-section > summary { font-weight: 500; }
@@ -82,12 +85,19 @@ button.small { min-height: 29px; font-size: 12px; padding: 3px 10px; }
 .tab-row .hint { font-size: 12px; margin-top: 1px; }
 .individual-section #tabStatus { margin-left: 14px; }
 .individual-section #tabStatus:empty { min-height: 0; margin-top: 0; }
+.sync-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin-top: 12px; }
+.sync-list .check-row { margin: 7px 0; }
+.sync-choice { margin: 12px 0 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--control); }
+.sync-choice p { margin-bottom: 10px; }
+.sync-choice .text-button { padding: 0 6px; min-height: 34px; font-size: 13px; }
+#syncStatus:empty { min-height: 0; margin-top: 0; }
 .page-footer { margin-top: 24px; color: var(--muted); font-size: 12px; }
 .parking-body { min-height: 100vh; display: grid; place-items: center; padding: 32px 24px; }
 .parked { width: min(100%, 440px); text-align: center; margin-top: -6vh; }
 .parked-icon { display: block; margin: 0 auto 14px; }
-.parked h1 { font-size: 20px; }
-.previous-title { font-size: 14px; line-height: 1.5; font-weight: 500; margin: 14px 0 18px; overflow-wrap: anywhere; }
+.parked h1 { font-size: 22px; }
+.previous-title { font-size: 15px; line-height: 1.5; font-weight: 500; margin: 14px 0 18px; overflow-wrap: anywhere; }
+.parked .hint { font-size: 13px; }
 .parked #detail { margin-top: 18px; }
 .quiet-note { margin-top: 5px; }
 /* An intrinsic width avoids depending on Chrome's initial popup viewport. */
@@ -109,6 +119,7 @@ button.text-button { padding: 2px 0 2px 8px; border: 0; min-height: 28px; backgr
   .settings-page { margin-top: 22px; padding: 0 20px; }
   .preference-row { grid-template-columns: 1fr 180px; gap: 12px; }
   .individual-intro, .tab-list, .individual-section #tabStatus { margin-left: 0; }
+  .sync-list { grid-template-columns: 1fr; }
   .unit-control { gap: 7px; }
   .unit-control input { width: 73px; }
 }
@@ -123,9 +134,17 @@ button.text-button { padding: 2px 0 2px 8px; border: 0; min-height: 28px; backgr
 
 .popup-links { display: flex; align-items: center; gap: 12px; }
 .popup-links .text-button { padding-left: 0; }
+/* Small icon-only control (Report a bug in the popup). */
+button.icon-button { display: inline-grid; place-items: center; width: 28px; height: 28px; min-height: 28px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--muted); }
+button.icon-button:hover { color: var(--text); background: var(--button); }
+.icon-button svg { width: 17px; height: 17px; }
+.popup-links .icon-button { margin-right: -4px; }
 .support-section { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 24px; }
 .support-section h2 { margin-bottom: 8px; }
-.support-section .text-button { padding-left: 0; margin-top: 5px; }
+.support-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; margin-top: 6px; }
+.support-section .text-button { padding-left: 0; font-size: 13px; }
+.bug-link { display: inline-flex; align-items: center; gap: 6px; }
+.bug-link svg { flex: none; width: 16px; height: 16px; }
 #supportStatus:empty { display: none; }
 #supportStatus { margin-top: 8px; font-size: 12px; }
 
