@@ -2,9 +2,15 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chrome Window Parker · Settings</title><link rel="icon" href="icons/parker-timer-32.png"><script src="theme.js"></script><link rel="stylesheet" href="ui.css"><script type="module" src="options.js"></script></head>
 <body><main class="settings-page">
-<header class="app-header"><img src="icons/parker-timer-128.png" width="36" height="36" alt=""><div><h1>Chrome Window Parker</h1><p class="muted">Settings</p></div></header>
+<header class="app-header"><img src="icons/parker-timer-128.png" width="40" height="40" alt=""><div><h1>Chrome Window Parker</h1><p class="muted">Settings</p></div>
+<fieldset class="theme-switch settings-fields" disabled><legend class="visually-hidden">Theme</legend>
+<label class="theme-option" title="Light theme"><input type="radio" name="appearance" value="light" aria-label="Light theme"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg></label>
+<label class="theme-option" title="Dark theme"><input type="radio" name="appearance" value="dark" aria-label="Dark theme"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M19.5 14.6A7.8 7.8 0 0 1 9.4 4.5a7.8 7.8 0 1 0 10.1 10.1Z"/></svg></label>
+<label class="theme-option" title="Auto theme: follows your system"><input type="radio" name="appearance" value="auto" aria-label="Auto theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.8a8.2 8.2 0 0 1 0 16.4Z" fill="currentColor"/></svg></label>
+</fieldset></header>
+<p id="loadError" class="error" role="alert" hidden></p>
 <form id="settings">
-<fieldset id="settingsFields" disabled>
+<fieldset class="settings-fields" disabled>
 <label class="check-row enable-row"><input id="enabled" type="checkbox"><span>Enable automatic parking<span class="hint">Park idle windows. Return to your previous tab.</span></span></label>
 <section class="settings-section" aria-labelledby="timing-heading">
 <h2 id="timing-heading">Parking</h2>
@@ -15,29 +21,32 @@
 <div class="preference-row"><label for="dwellSeconds">Restore after focused for</label><div class="unit-control"><input id="dwellSeconds" type="number" min="0.5" max="20" step="0.5" required><span>seconds</span></div></div>
 <p class="hint section-note">Passing through a desktop won’t wake its window.</p>
 </section>
-<section class="settings-section" aria-labelledby="appearance-heading"><h2 id="appearance-heading">Appearance</h2><div class="preference-row"><label for="appearance">Theme</label><div class="select-wrap"><select id="appearance"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></section>
+</fieldset>
 <section class="settings-section" aria-labelledby="protection-heading">
 <h2 id="protection-heading">Tab protection</h2>
+<fieldset class="settings-fields" disabled>
 <label class="check-row"><input id="discardPinned" type="checkbox"><span>Allow parking when a pinned tab is selected</span></label>
 <label class="check-row"><input id="protectAudio" type="checkbox"><span>Skip windows whose selected tab is playing audio</span></label>
 <div class="field"><label for="exclusions">Sites to exclude</label>
-<p class="hint" id="exclusionHelp">Add sites Chrome Window Parker should avoid disturbing. Enter one domain per line, such as <code>meet.google.com</code>. This covers every page on that site and its subdomains.</p>
+<p class="hint" id="exclusionHelp">Add sites Chrome Window Parker should avoid disturbing. Enter one domain per line, such as <code>meet.google.com</code>. This covers every page on that domain and its subdomains.</p>
 <textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp exclusionBehavior" placeholder="meet.google.com&#10;calendar.google.com"></textarea>
 <div id="exclusionBehavior">
 <p class="hint section-note">If an excluded site is the selected tab, that window will not park. Other windows can still park normally.</p>
 <p class="hint section-note">An excluded background tab does not prevent parking. In Discard immediately mode, Chrome Window Parker skips that tab. Chrome’s own Memory Saver may still unload it.</p>
 </div>
-<details class="safety-note"><summary>Advanced URL patterns</summary><p>To exclude only part of a site, enter a full URL with <code>*</code>, meaning “any text”. For example, <code>https://example.com/work/*</code> covers pages under <code>/work/</code> without excluding the rest of the site.</p></details>
+<details class="safety-note"><summary>Advanced URL patterns</summary><p>To exclude only part of a site, enter a full URL with <code>*</code>, meaning “any text”. For example, <code>https://example.com/work/*</code> covers pages under <code>/work/</code> without excluding the rest of the site. For an address with a port, such as <code>localhost:3000</code>, include the port.</p></details>
 </div>
 <details class="safety-note"><summary>Calls, video and unsaved work</summary><p>Exclude these sites or keep their tabs pinned. Chrome doesn’t reliably report screen sharing, Picture-in-Picture or unsaved edits to this extension. Parking pauses during active downloads.</p></details>
+</fieldset>
+<details class="individual-section" id="individual"><summary>Protect individual tabs</summary>
+<div class="individual-intro"><p class="hint">Protection lasts for this browser session. Use site exclusions above to keep it after a restart.</p><button class="small" type="button" id="refresh">Refresh list</button></div>
+<div id="tabs" class="tab-list" role="group" aria-label="Open tabs"></div><p id="tabStatus" role="status" aria-live="polite"></p></details>
 </section>
-
+<fieldset class="settings-fields" disabled>
 <section class="settings-section compact" aria-labelledby="diagnostics-heading"><h2 id="diagnostics-heading">Diagnostics</h2><label class="check-row"><input id="debug" type="checkbox"><span>Enable debug logging</span></label></section>
 <div class="form-footer"><div class="actions"><button class="primary" id="save" type="submit">Save settings</button><button id="reset" type="button">Reset settings</button></div><p id="status" role="status" aria-live="polite"></p></div>
 </fieldset>
 </form>
-<p id="loadError" class="error" role="alert" hidden></p>
-<details class="individual-section" id="individual"><summary>Protect individual tabs</summary><p class="hint">Protection lasts for this browser session. Use site exclusions above to keep it after a restart.</p><button class="small" type="button" id="refresh">Refresh list</button><div id="tabs"></div><p id="tabStatus" role="status" aria-live="polite"></p></details>
 <section class="support-section" aria-labelledby="support-heading"><h2 id="support-heading">Support Chrome Window Parker</h2><p class="hint">Chrome Window Parker is free and open source. If it’s useful to you, you can optionally support its development.</p><button class="text-button" id="support" type="button" aria-label="Support Chrome Window Parker on Buy Me a Coffee (opens in a new tab)" title="Opens Buy Me a Coffee in a new tab">Support development</button><p id="supportStatus" role="status" aria-live="polite"></p></section>
 <footer class="page-footer">Works alongside Chrome Memory Saver. All data stays on this device.</footer>
 </main></body></html>
