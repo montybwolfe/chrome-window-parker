@@ -6,9 +6,11 @@
   "language": "English",
   "store_icon": "store-icon-128.png",
   "screenshots": [
-    "screenshot-1-settings-1280x800.png",
-    "screenshot-2-parked-1280x800.png",
-    "screenshot-3-popup-1280x800.png"
+    "screenshot-1-parked-1280x800.png",
+    "screenshot-2-popup-1280x800.png",
+    "screenshot-3-settings-1280x800.png",
+    "screenshot-4-sync-1280x800.png",
+    "screenshot-5-dark-1280x800.png"
   ],
   "small_promo_tile": "small-promo-440x280.png",
   "marquee_promo_tile": "marquee-promo-1400x560.png",
@@ -20,5 +22,7 @@
   "mature_content": false,
   "in_app_purchases": false,
   "version": "1.5.1.3",
-  "remote_code": false
+  "remote_code": false,
+  "store_url": "https://chromewebstore.google.com/detail/chrome-window-parker/agdejolopcplaedpollnlgpboldnfbfi",
+  "item_id": "agdejolopcplaedpollnlgpboldnfbfi"
 }

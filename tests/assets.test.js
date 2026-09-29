@@ -22,3 +22,8 @@ test('all shipped surfaces use the timer assets; raster dimensions match declara
  assert(!/<image|filter|https?:\/\/(?!www.w3.org)/.test(text('icons/parker-timer.svg')));
  for(const size of [256,512,1024]){const p=readFileSync(new URL(`docs/assets/parker-timer-${size}.png`,root));assert.equal(p.readUInt32BE(16),size);assert.equal(p.readUInt32BE(20),size);}
 });
+
+test('Store artwork: exact sizes, no alpha outside the icon, and outputs that match their recorded sources',async()=>{
+ const {verifyAssets}=await import('../tools/store-assets/verify.mjs');
+ assert.deepEqual(verifyAssets({ui:false}),[]);
+});

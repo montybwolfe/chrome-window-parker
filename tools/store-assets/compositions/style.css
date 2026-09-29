@@ -1,0 +1,56 @@
+/* Store artwork. The browser frame is simplified context; everything inside it
+   is a real capture of the extension (store-listing/sources/ui). */
+:root { --blue: #2152b8; --ink: #0d1f4a; --soft: rgba(255, 255, 255, .8); --faint: rgba(255, 255, 255, .14);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; margin: 0; }
+body { width: 100vw; height: 100vh; overflow: hidden; background: var(--blue); color: #fff; position: relative; }
+.caption { position: absolute; left: 88px; top: 66px; }
+.caption h1 { font-size: 40px; line-height: 1.15; font-weight: 650; letter-spacing: -.6px; }
+.caption p { margin-top: 12px; max-width: 760px; font-size: 20px; line-height: 1.45; color: var(--soft); }
+
+.window { position: absolute; overflow: hidden; border-radius: 12px; background: #fafafa;
+  box-shadow: 0 34px 80px rgba(6, 20, 58, .38), 0 0 0 1px rgba(6, 20, 58, .16); }
+.frame { position: relative; height: 80px; background: #e7eaef; }
+.lights { position: absolute; left: 18px; top: 15px; display: flex; gap: 8px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+.tabs { position: absolute; left: 92px; right: 12px; top: 6px; height: 36px; display: flex; gap: 2px; }
+.tab { display: flex; align-items: center; gap: 8px; width: 186px; padding: 0 14px; border-radius: 10px 10px 0 0;
+  color: #414756; font-size: 12.5px; white-space: nowrap; overflow: hidden; }
+.tab.active { background: #fff; color: #1d2130; }
+/* Like Chrome: long titles fade out at the tab's edge; short ones are untouched. */
+.tab .title { flex: 1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
+.fav { flex: none; width: 15px; height: 15px; border-radius: 4px; background: #c4cddd; }
+.fav.timer { background: url(../../../icons/parker-timer.svg) center / contain no-repeat; border-radius: 0; }
+.toolbar { position: absolute; left: 0; right: 0; top: 42px; height: 38px; display: flex; align-items: center; gap: 14px;
+  padding: 0 16px; background: #fff; border-bottom: 1px solid #e2e5ea; }
+.nav { display: flex; gap: 12px; } .nav i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #b6bdc9; }
+.omnibox { flex: 1; height: 28px; display: flex; align-items: center; padding: 0 14px; border-radius: 14px;
+  background: #eef1f5; color: #6a7182; font-size: 12.5px; }
+.action { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; }
+.action.open { background: #dbe5f8; }
+.action img { width: 16px; height: 16px; }
+.content { position: relative; overflow: hidden; }
+.content > img { display: block; }
+
+.dark .window { background: #202124; }
+.dark .frame { background: #2e3035; }
+.dark .tab { color: #b9bcc4; } .dark .tab.active { background: #202124; color: #e7e8eb; }
+.dark .fav { background: #50535b; }
+.dark .toolbar { background: #202124; border-color: #383b40; }
+.dark .nav i { border-color: #6b6f78; } .dark .omnibox { background: #35373d; color: #a6aab2; }
+.dark .action.open { background: #3a4a6b; }
+
+/* The real popup, shown as it opens from the toolbar button. */
+.popup { position: absolute; overflow: hidden; border-radius: 12px; box-shadow: 0 18px 48px rgba(6, 20, 58, .32), 0 0 0 1px rgba(6, 20, 58, .14); }
+.popup img { display: block; width: 360px; }
+.skeleton { position: absolute; inset: 0; padding: 56px 72px; }
+.skeleton b { display: block; height: 14px; margin: 0 0 16px; border-radius: 7px; background: #e6e9ee; }
+.skeleton b.title { height: 26px; width: 42%; margin-bottom: 30px; background: #d9dee6; }
+.dark .skeleton b { background: #2c2e33; } .dark .skeleton b.title { background: #34363c; }
+
+/* Brand pieces for the promo tiles and cover. */
+.mark { flex: none; }
+.name { font-weight: 700; letter-spacing: -.02em; line-height: 1.05; }
+.line { color: var(--soft); }
+.ghost { position: absolute; border: 2px solid var(--faint); border-radius: 14px; }

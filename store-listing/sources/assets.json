@@ -1,0 +1,139 @@
+{
+  "renderedWith": "Chrome/154.0.8037.58",
+  "assets": [
+    {
+      "file": "store-listing/screenshot-1-parked-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "alpha": false,
+      "sha256": "c2687f35522f0d1f99c997686f736770e304f98f2f2f82d172b18cfba6de039b",
+      "inputs": {
+        "tools/store-assets/compositions/shot-1-parked.html": "c9fa436afaca80b3b7e1e5e289c736439673604fbbeb2e0c227b38f717ac2bcd",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
+        "store-listing/sources/ui/parked-light.png": "75a01b130a074c37cef8df613bc08de26816b0c45cfeada38a2e97dccb1c5310"
+      }
+    },
+    {
+      "file": "store-listing/screenshot-2-popup-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "alpha": false,
+      "sha256": "a6b328375dae872380b982f1ed0596c475098aa23c4c1f50080997e8838b5d10",
+      "inputs": {
+        "tools/store-assets/compositions/shot-2-popup.html": "9d83b1c94e4d0439afa24f8504d6688b896aabf9ee92fb4bb46c953834ea6ba0",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
+        "store-listing/sources/ui/popup-light.png": "1ba12033026e227e38180f67eb79cf41eb3eb170ffb8bcadebba92e8073679e9"
+      }
+    },
+    {
+      "file": "store-listing/screenshot-3-settings-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "alpha": false,
+      "sha256": "d19e052acbd397c172635d27684b0d2354bf9b5a6a4d610981ee2fbdaa33b5f5",
+      "inputs": {
+        "tools/store-assets/compositions/shot-3-settings.html": "08fdb3ac573f2b1e8ff37f057bab3b2730c80cfcf97818cb5587eff1e133933e",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
+        "store-listing/sources/ui/settings-light.png": "f7fb31e280abf8759cb4b4ffbca7e252b5d2a3f1daf6dedc2f1c15221c9ac16a"
+      }
+    },
+    {
+      "file": "store-listing/screenshot-4-sync-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "alpha": false,
+      "sha256": "a1e00adb8dfc8a54a747e190b4c0352869e898a89c0a6da42e9bd8319799be0c",
+      "inputs": {
+        "tools/store-assets/compositions/shot-4-sync.html": "f0c3f95f33b014581fdf61d8e096a7d408183dd17552e3113800a6ddfd3abcd9",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
+        "store-listing/sources/ui/settings-light.png": "f7fb31e280abf8759cb4b4ffbca7e252b5d2a3f1daf6dedc2f1c15221c9ac16a",
+        "store-listing/sources/ui/capture.json": "c99a39a42b9971a4d67f594064eea1e83f58eb613b391dfe3793c1797b48e4bf"
+      }
+    },
+    {
+      "file": "store-listing/screenshot-5-dark-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "alpha": false,
+      "sha256": "bb8a84ebfad85afa6fbbf1fad1af6f067da661e2e0aa7b8ba79cf8e9564cad2d",
+      "inputs": {
+        "tools/store-assets/compositions/shot-5-dark.html": "9efe9930b5b675f2b1ea86794f41e5ea3587ee620897ccd6794ee635a950948c",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
+        "store-listing/sources/ui/parked-dark.png": "eae3d01f588cf7af7de9670d81385fc48028b589fd21897fa3fe71d0b423da78",
+        "store-listing/sources/ui/popup-dark.png": "88656fc1c096e772eef14fbdb63456b80cf159c67c62fc6fb49d70734eb91f58"
+      }
+    },
+    {
+      "file": "store-listing/small-promo-440x280.png",
+      "width": 440,
+      "height": 280,
+      "alpha": false,
+      "sha256": "a02cb92c2484fc8ba92a5b9d437af355789bd54f04b7974018a3f3141bbfc1c9",
+      "inputs": {
+        "tools/store-assets/compositions/promo-small.html": "ead64d8efe0caeef4cbb736e53b24d541359ca7ccaa5d272c1f38d9de853fca8",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d"
+      }
+    },
+    {
+      "file": "store-listing/marquee-promo-1400x560.png",
+      "width": 1400,
+      "height": 560,
+      "alpha": false,
+      "sha256": "7694d2ec05cf5b008823c888613551215ee586fcbd7d7ccf0b49644d93221ad0",
+      "inputs": {
+        "tools/store-assets/compositions/promo-marquee.html": "597183c3140d11502cea4a8033989bebdce69b287ede9b02c27488d6a8f590df",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
+        "store-listing/sources/ui/parked-light.png": "75a01b130a074c37cef8df613bc08de26816b0c45cfeada38a2e97dccb1c5310"
+      }
+    },
+    {
+      "file": "store-listing/store-icon-128.png",
+      "width": 128,
+      "height": 128,
+      "alpha": true,
+      "sha256": "818f87e16c4f64a943f549cb2cd12fda77ea6a9afda05355436c496eb98cafca",
+      "inputs": {
+        "tools/store-assets/compositions/icon.html": "8cef402eed8ca5014ae042a59944110c7c0e123b6f9dfb53dd696a5f8113ecdc",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d"
+      }
+    },
+    {
+      "file": "docs/assets/buy-me-a-coffee-cover-1600x400.png",
+      "width": 1600,
+      "height": 400,
+      "alpha": false,
+      "sha256": "7f09e68756102c7541691a8802e4a96a49e8ff5a2e6e28e4614275a14e9e1f01",
+      "inputs": {
+        "tools/store-assets/compositions/cover.html": "010b6ed2466c5717e5ddb0f5b41412ab87408b5fafc54ac45d4ca913a336b96a",
+        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
+        "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
+        "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d"
+      }
+    }
+  ]
+}

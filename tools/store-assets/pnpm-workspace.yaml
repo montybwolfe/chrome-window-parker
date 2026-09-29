@@ -1,3 +1,0 @@
-# Sharp uses the pinned prebuilt platform package; no install scripts are needed.
-allowBuilds:
-  sharp: false
