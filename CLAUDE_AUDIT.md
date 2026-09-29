@@ -46,3 +46,61 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 - Protection: main is protected by the active ruleset "Protect main". It targets the default branch and blocks deletion and non-fast-forward updates, with no bypass actors, no classic protection, and no required reviews or status checks. The v1.5.5 promotion must therefore be a fast-forward; main `92a61a9` is an ancestor of dev.
 - Not changed: main, agent/codex (local `5b94296`, one behind its origin), CODEX_AUDIT.md, branch protection, remotes and product files. This audit-only commit stays off dev.
 - Open: none. This resolves the previous entry's unpushed state.
+
+### 2026-09-30 — v1.5.5: optional sync, last-window hardening, bug reports, public refresh
+
+- Base: `dev @ 10c2de4` (complete v1.5.1.4) plus the resolved audit commit `6817836`; this stack builds on `6817836`, which is carried into dev as its prerequisite.
+- Candidate, in order:
+  - `ec5da02` fixes the Discard immediately race.
+  - `2bca192` adds optional per-setting sync.
+  - `6f4a2dd` adds the last-window tests.
+  - `c3a5ae3` adds the sync controls, the bug button and full-size text.
+  - `3ccacc8` rewrites the public docs and Store text.
+  - `2ecdc7a` rebuilds the Store artwork.
+  - This commit bumps the version to 1.5.5 and adds this entry.
+- Sync design:
+  - The local settings object stays authoritative, so everything works offline, signed out or with Chrome sync off.
+  - `storage.local.syncPolicy` holds this device's per-setting choices and never syncs. Seven settings can opt in: parking delay, restore delay, sleeping mode, pinned tabs, audio tabs, site exclusions and theme.
+  - Chosen values are mirrored in `storage.sync`, one key per setting.
+- Sync behaviour:
+  - Everything is off by default, so upgrading uploads nothing.
+  - Turning a setting on shares this device's value if nothing is shared yet, and turns on straight away if the shared value matches. If they differ, Settings asks which to keep. If the shared value fails validation, only this device's value is offered.
+  - Turning a setting off keeps the local value and leaves the shared one alone.
+  - Remote changes are validated, then applied with the same runtime path as a local change (a theme-only change doesn't interrupt parking). A relevant change bumps `safetyEpoch` synchronously.
+  - Startup re-applies missed changes and re-shares missing values. A sync failure never blocks startup.
+  - If Chrome refuses a write (for example a site list over 8 KB), the value stays local, that setting's sync turns off, and Settings explains why.
+  - Reset restores defaults and turns sync off on this device only.
+  - Pausing, debug logging, protected tabs and all runtime or recovery state never sync.
+- Last normal window: worker-level tests cover closing the tab, moving it into a new window, duplicate parking pages, a worker that starts afterwards, popup and incognito windows present, and Clear keeping its window. Live: the window closes naturally, with no blank tab and no quit.
+- Found and fixed (my own review):
+  - Discard immediately skipped the entire batch when a newly created parking page hadn't committed yet (empty `url`, our address in `pendingUrl`). It reproduced live, with 0 of 4 tabs discarded, and in a unit test. The still-parked check now matches our own tab by token.
+  - Popup and parked-page text was at 75% size (`body { font: inherit }`); the parked-page hierarchy is slightly larger.
+  - The header theme now applies immediately.
+  - Enter on a sync or tab-list checkbox no longer saves Settings.
+  - Validation messages use plain wording.
+  - A sync-status error no longer hides "Settings saved."
+- Bug reporting: a small inline SVG bug button (icon-only in the popup, icon plus label in Settings). It opens only `https://github.com/montybwolfe/chrome-window-parker/issues`, on a trusted click, with nothing attached. Added a GitHub issue form.
+- Public copy:
+  - Rewritten: README (801→466 words), Store description (547→298), BEHAVIOR (2881→1734), PRIVACY (now covers sync), SUPPORT, CHANGELOG, TESTING, the store-listing text and the docs READMEs.
+  - Stale "pending approval" wording removed.
+  - Live listing verified (`…/detail/chrome-window-parker/agdejolopcplaedpollnlgpboldnfbfi`, listing v1.5.1.3) and linked first in the README.
+  - Added plain explanations of the permission warnings and a Help note on Enhanced Safe Browsing, following Google's "a few months" wording.
+- Marketing:
+  - New dependency-free `tools/store-assets` pipeline: it installs this build in a disposable headless profile with synthetic tabs, parks windows for real, and captures the UI. It then composes the artwork and verifies it against SHA-256 records.
+  - New set: 5 screenshots (parked, popup, Settings, Sync, dark), both promo tiles, the Store icon (timer kept, now 96px artwork with 16px padding) and the Buy Me a Coffee cover.
+  - Removed the dom-to-image/sharp tool, the 4× masters and stale records.
+- Verified:
+  - `npm test` passes on a clean export of each commit: 278, 296, 300, 307, 307, 308 and 308 tests. The artwork verifier passes, including its UI check.
+  - Package: 20 runtime files, v1.5.5, permissions and CSP unchanged.
+  - Live, in headless Chrome 154:
+    - Sync event path: seed, apply, ignore, invalid value, conflict, disable, reset.
+    - Instant theme, and both bug links (scripted clicks ignored).
+    - Last-window close, move and Clear.
+    - Empty-window cleanup 12/12 in each mode.
+    - Cold and warm departure at 60.5 s and 60.7 s.
+    - The discard fix, with no worker errors.
+- Integration (authorized for this release): fast-forward `6817836` and this stack into dev, then fast-forward main to dev. The "Protect main" ruleset allows only fast-forward pushes. No tag, GitHub Release or Store submission. The resulting SHAs are in the handoff report.
+- Not changed: permissions, CSP, host access, the parking model, download safety and Clear semantics. The GitHub About/Website fields and the Chrome Web Store Dashboard are left for the user.
+- Open:
+  - Not tested: real syncing between two signed-in computers, headful macOS Spaces, real tab-strip drags, Windows and Linux.
+  - Codex hasn't reviewed this release (possible 1.5.5.1).
