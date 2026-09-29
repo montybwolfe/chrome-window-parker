@@ -2,6 +2,7 @@
 
 - Explains site exclusions with plain domains first, selected versus background tabs, and optional advanced URL patterns.
 - Removes verified parking-only windows when their final real tab is closed or moved away. Clear parked tabs still preserves windows.
+- Fixes a window occasionally parking soon after you left it, when Chrome had paused the extension's background worker while you were using that window.
 
 # 1.5.1.3 — Initial public release
 

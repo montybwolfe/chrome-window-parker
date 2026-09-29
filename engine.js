@@ -10,6 +10,7 @@ export class Parker {
     this.focus = null; this.epoch = 0; this.safetyEpoch = 0; this.dwell = null; this.focusedState = null;
     this.tabEpoch = new Map(); this.selectionEpoch = new Map();
     this.shellEpoch = 0; this.detachedTabs = new Map(); this.clearRequests = 0;
+    this.loaded = false; this.departedAt = null;
     this.parkingURL = api.runtime.getURL('parked.html');
   }
   log(...args) { if (this.settings.debug) console.debug('[Chrome Window Parker]', ...args); }
@@ -81,6 +82,18 @@ export class Parker {
     const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
     for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
     for (const w of windows) this.adopt(w);
+    // A focus event that wakes this worker is signalled before persisted state
+    // loads, so signalFocus() cannot record leaving a genuinely used window.
+    // Resolve focus before the next await: a window still qualified while
+    // another has focus was left since the last save, at the first focus change
+    // this worker saw (or now). Brief visits never qualify, so remain non-use.
+    this.loaded = true;
+    if (this.focus === null) this.signalFocus(windows.find(w => w.focused)?.id ?? -1);
+    for (const [id, s] of Object.entries(this.states)) if (s.qualified && Number(id) !== this.focus) {
+      s.lastUse = this.departedAt ?? this.clock.now(); s.retryAt = 0; s.qualified = false;
+    }
+    // Never trust a persisted partial dwell. A new worker observes a full new dwell.
+    this.focusedState = this.focus;
     // A worker can stop between detach and attach. Keep unresolved transfers
     // blocked; discard a saved transfer only after locating the tab in a live
     // window (or confirming it no longer exists). Fresh event signals win.
@@ -98,9 +111,6 @@ export class Parker {
     }
     const ids = new Set(windows.flatMap(w => w.tabs || []).map(t => t.id));
     this.protectedIds = this.protectedIds.filter(id => ids.has(id));
-    if (this.focus === null) this.signalFocus(windows.find(w => w.focused)?.id ?? -1);
-    // Never trust a persisted partial dwell. A new worker observes a full new dwell.
-    this.focusedState = this.focus;
     // Recover an interrupted restoration or clean up an older reusable page.
     for (const w of windows) {
       await this.cleanupParking(w.id);
@@ -111,6 +121,7 @@ export class Parker {
   }
   signalFocus(id) {
     this.shellEpoch++;
+    if (!this.loaded) this.departedAt ??= this.clock.now(); // See init().
     // Record leaving a genuinely used window before older queued sweeps run.
     const old = this.states[this.focus];
     if (id !== this.focus && old?.qualified) {

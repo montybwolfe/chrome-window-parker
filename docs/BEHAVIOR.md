@@ -2,7 +2,7 @@
 
 ## How it behaves
 
-- A focused window is never parked. Sustained focus counts as use; leaving a window after that updates its inactivity clock. Brief visits below the dwell threshold do not postpone parking or wake parked real tabs.
+- A focused window is never parked. Sustained focus counts as use; leaving a window after that updates its inactivity clock, including when that focus change is what wakes a stopped service worker. Brief visits below the dwell threshold do not postpone parking or wake parked real tabs.
 - Selecting a real tab or navigating an active tab counts as meaningful activity. No mouse/keyboard monitoring or page-content inspection is used. A selected real tab reloads naturally under Chrome.
 - Parking creates an unpinned, ungrouped tab at the end when needed. After restoration confirms a real tab is active, the extension removes its own inactive parking page. A later cycle creates a new one. Existing tabs keep their relative order, URLs, pinned state and groups. There are no calls to move, close, resize, focus, merge or recreate windows, nor to move or close real tabs.
 - If the active real tab is protected, the entire window is skipped and retried after at least a minute. It is not hidden behind a parking page. Chrome Window Parker does not activate or discard protected background tabs. Chrome manages their memory independently.
