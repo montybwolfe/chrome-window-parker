@@ -6,6 +6,7 @@
 - **Clean up for excluded sites** replaces Sort A–Z. It sorts the list and removes duplicates, such as a site added twice or with different capitals, without changing which pages are excluded.
 - **Settings shows the installed version**, quietly, in its top corner.
 - **Fixed** a protected tab losing its protection when Chrome unloaded it to save memory. Chrome gives an unloaded tab a new ID; protection now follows the tab.
+- **Fixed** a closed parked window's recovery record (its tab's address and title) staying in the extension's storage when the window closed while the extension was idle. It's deleted as soon as the window closes, as the privacy policy says.
 - **Safer Settings.** Restore defaults asks before replacing your settings, and Clean up can be undone.
 - **Small fixes.** Protect this tab is offered only on web pages, the only tabs that park; the parking page reads more naturally; text boxes have clearer edges, and screen readers hear their units; and a very long site address gets a clear message.
 

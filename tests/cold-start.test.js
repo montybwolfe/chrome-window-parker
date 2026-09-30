@@ -159,3 +159,40 @@ test(`${when} worker: the remembered tab follows its new ID beside another copy 
     assert(!parked(1)); assert(h.tab(997).active, 'the tab that was selected comes back, not the other copy');
   }, {warm: when === 'warm'});
 });
+
+// PRIVACY.md: a parked window's recovery record (its tab's address and title)
+// is deleted when the window closes. People usually close parked windows long
+// after parking, while the worker is stopped; the close events then wake it.
+test('cold worker: closing a parked window deletes its recovery record', async () => {
+  const h = harness(2, 3); await h.restart(); await h.parkAll();
+  const closing = h.p.states[2].token, other = h.p.states[1].token;
+  assert(h.local.parkingRecords[closing] && h.local.parkingRecords[other]);
+  const gone = h.windows.splice(1, 1)[0]; // Chrome closed it while no worker ran
+  await coldWorker(h, async ({release, drain}) => {
+    for (const t of gone.tabs) h.api.tabs.onRemoved.emit(t.id, {windowId: 2, isWindowClosing: true});
+    h.api.windows.onRemoved.emit(2); release(); await drain();
+    assert(!h.local.parkingRecords[closing], 'the closed window\'s record is gone');
+    assert(h.local.parkingRecords[other], 'the other window keeps its record');
+    assert(!h.session.runtimeState.states[2]);
+  });
+});
+
+test('after a browser restart, records for windows Chrome may still restore are kept', async () => {
+  const h = harness(2, 3); await h.restart(); await h.parkAll();
+  const token = h.p.states[2].token; h.windows.splice(1, 1); // not (yet) restored
+  await h.restart(true); // a browser restart: no session state
+  assert(h.local.parkingRecords[token], 'kept, in case Chrome restores the window later');
+});
+
+test('warm worker: a closing window still listed while its tabs close loses its record once it is gone', async () => {
+  const h = harness(2, 3); await h.restart(); await h.parkAll();
+  const closing = h.p.states[2].token, other = h.p.states[1].token;
+  await coldWorker(h, async ({drain}) => {
+    // Chrome reports each tab closing while the window still lists them...
+    for (const t of h.windows[1].tabs) h.api.tabs.onRemoved.emit(t.id, {windowId: 2, isWindowClosing: true});
+    await drain();
+    // ...then the window is gone.
+    h.windows.splice(1, 1); h.api.windows.onRemoved.emit(2); await drain();
+    assert(!h.local.parkingRecords[closing], 'deleted when the window closes'); assert(h.local.parkingRecords[other]);
+  }, {warm: true});
+});

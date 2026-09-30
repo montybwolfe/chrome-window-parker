@@ -18,7 +18,7 @@ Your sync choices themselves, a note of which settings you've changed on that co
 
 ## Keeping and removing data
 
-A parked window's recovery record is deleted when the window closes or goes back to normal. A limited number of leftovers from crashes may remain. Restore defaults restores the defaults and turns sync off on that computer; settings already shared stay in your Chrome sync data for your other computers. Removing the extension deletes its local storage. Synced settings can be cleared with Chrome's own sync controls.
+A parked window's recovery record is deleted when the window closes or goes back to normal. If Chrome closes while windows are parked, their records stay so the windows can be found again when Chrome reopens them; at most 100 such leftovers are kept, and Clear parked tabs removes them. Restore defaults restores the defaults and turns sync off on that computer; settings already shared stay in your Chrome sync data for your other computers. Removing the extension deletes its local storage. Synced settings can be cleared with Chrome's own sync controls.
 
 ## Links
 
