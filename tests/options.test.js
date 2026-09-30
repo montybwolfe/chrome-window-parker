@@ -529,3 +529,7 @@ test('text boxes and menus have edges with at least 3:1 contrast, in light and d
   }
   assert.match(css,/input\[type=number\], select, textarea \{[^}]*border: 1px solid var\(--field-border\)/);
 });
+
+test('in High Contrast (forced colours) the chosen theme is still marked, in system colours',()=>{
+  assert.match(css,/@media \(forced-colors: active\) \{ \.theme-option:has\(input:checked\) \{ forced-color-adjust: none; background: Highlight; color: HighlightText; \} \}/);
+});
