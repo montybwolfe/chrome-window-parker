@@ -64,6 +64,7 @@ chrome.tabs.onMoved.addListener((id, info) => {
 chrome.tabs.onReplaced.addListener((addedId, removedId) => {
   const source = parker.detachedTabs.get(removedId);
   if (source !== undefined) { parker.detachedTabs.delete(removedId); parker.detachedTabs.set(addedId, source); }
+  parker.replaced(addedId, removedId);
   parker.shellEpoch++; enqueue(async () => { await parker.save(); await parker.sweep(); });
 });
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
