@@ -230,6 +230,51 @@ test(`moved-page cleanup is conservative: ${variant}`, async () => {
   });
 });
 
+test('a moved page closed before its cleanup: the source is reconciled and the journal dropped', async () => {
+  const h = await setup(); let dragging = true;
+  h.hooks.remove = () => { if (dragging) throw Error(REFUSED); };
+  const page = pageOf(h, 1), token = h.p.states[1].token, tabs = shape(h.windows[0].tabs.filter(t => t.id !== page.id));
+  await worker(h, async ({drain}) => {
+    const before = h.calls.length;
+    move(h, page.id, 9, {focus: true}); await drain();
+    // Something else closes it first (the user, or another extension); Chrome then closes the window.
+    h.windows.splice(h.windows.findIndex(w => w.id === 9), 1);
+    h.api.tabs.onRemoved.emit(page.id, {windowId: 9, isWindowClosing: true}); h.api.windows.onRemoved.emit(9);
+    dragging = false; await drain();
+    assert.deepEqual(shape(h.windows[0].tabs), tabs); assert.equal(state(h, 1).parked, false);
+    assert(!h.local.parkingRecords[token], 'journal dropped'); assert(!(token in h.session.runtimeState.owners));
+    assert(!h.calls.slice(before).some(c => c[0] === 'create'), 'no blank tab and no new parking page');
+  });
+});
+
+test('a moved page that vanishes just as it is removed is harmless', async () => {
+  const h = await setup(), page = pageOf(h, 1), token = h.p.states[1].token;
+  h.hooks.remove = id => {
+    if (id !== page.id) return;
+    // Closed by someone else a moment before our call lands.
+    h.windows.splice(h.windows.findIndex(w => w.id === 9), 1);
+    h.api.tabs.onRemoved.emit(id, {windowId: 9, isWindowClosing: true}); h.api.windows.onRemoved.emit(9);
+    throw Error('No tab with id: ' + id);
+  };
+  await worker(h, async ({drain}) => {
+    move(h, page.id, 9, {focus: true}); await drain();
+    assert(!h.windows.some(w => w.id === 9)); assert.equal(h.windows[0].tabs.length, 3);
+    assert(!h.local.parkingRecords[token]); assert.equal(state(h, 1).parked, false);
+  });
+});
+
+test('a moved page that has not finished loading is removed once it commits', async () => {
+  const h = await setup(), page = pageOf(h, 1);
+  await worker(h, async ({drain}) => {
+    const t = h.tab(page.id); t.pendingUrl = t.url; t.url = ''; t.status = 'loading';
+    move(h, page.id, 3, {selected: false}); await drain();
+    assert(h.tab(page.id), 'an uncommitted page is never removed');
+    t.url = t.pendingUrl; delete t.pendingUrl; t.status = 'complete';
+    h.api.tabs.onUpdated.emit(page.id, {status: 'complete'}, copy(t)); await drain();
+    assert(!h.tab(page.id)); assert.deepEqual(h.windows.find(w => w.id === 3).tabs.map(x => x.id), [300, 301, 302]);
+  });
+});
+
 test('paused parking still removes a moved page', async () => {
   const h = await setup(); h.local.settings = {...h.local.settings, enabled: false};
   await worker(h, async ({drain}) => {
