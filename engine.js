@@ -619,6 +619,11 @@ export class Parker {
         s.lastUse = this.clock.now(); await this.saveRecords();
       }
     }
+    // A parking page that left its window and then closed (before its cleanup)
+    // no longer belongs to any window's state: drop its journal too.
+    const orphans = Object.keys(this.owners).filter(token => !Object.values(this.states).some(st => st.token === token));
+    for (const token of orphans) await this.forgetRecord(token);
+    if (orphans.length) await this.saveRecords();
     if (!info.isWindowClosing) await this.cleanupEmptyParked(info.windowId);
     await this.save(); await this.schedule();
   }
