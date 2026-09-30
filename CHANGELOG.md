@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.5.3
+
+- **Easier sync on a new computer.** Turning sync on uses your synced settings for anything you haven't changed on this computer, without asking.
+- **Sync everything, a group, or one setting**, in a tidier list: Sync all settings, then Parking and Tab protection, each with its settings beneath. If settings you've changed here differ from your synced ones, one question covers them all, with a choice for each.
+- **Restore defaults** replaces Reset settings. Sync turns off on this computer and starts afresh, and your other computers keep their settings.
+- **Tidier excluded sites.** Paste a site's home address to add the whole site, and Sort A–Z puts the list in order. The built-in sites now start in that order, and the help is plainer.
+- **A cleaner popup.** Report a bug, Buy me a coffee and Settings are small icons. Settings keeps the labelled links.
+- **Settings sections have small icons**, and keyboard focus stays on Save settings, Restore defaults and Refresh list while they work.
+- **A sharper toolbar icon** on standard and 150% displays.
+
 ## 1.5.5.2
 
 - **Fixed** a parking page dragged out of its window staying open as a window of its own. A parking page now only belongs to the window it was made for: moved anywhere else, it's removed. The window it came from keeps its tabs and isn't parked again straight away.

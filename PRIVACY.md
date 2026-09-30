@@ -11,13 +11,13 @@ Chrome Window Parker runs entirely in your browser. There's no Chrome Window Par
 
 ## Optional sync
 
-Sync is off by default. In Settings you can choose, one setting at a time, to keep a setting the same on your other computers: the parking delay, restore delay, tab sleeping mode, theme, pinned and audio tab options, or your site exclusions. Chosen settings are stored in Chrome's own sync storage and travel through your Google account when you're signed in to Chrome with sync on. They never pass through a Chrome Window Parker server, because there isn't one.
+Sync is off by default. In Settings you can choose which settings stay the same on your other computers, one at a time or in groups: the parking delay, restore delay, tab sleeping mode, theme, pinned and audio tab options, or your site exclusions. Chosen settings are stored in Chrome's own sync storage and travel through your Google account when you're signed in to Chrome with sync on. They never pass through a Chrome Window Parker server, because there isn't one.
 
-Your sync choices themselves, pausing, protected tabs, debug logging and all window and tab information always stay on the computer where they're set.
+Your sync choices themselves, a note of which settings you've changed on that computer, pausing, protected tabs, debug logging and all window and tab information always stay on the computer where they're set.
 
 ## Keeping and removing data
 
-A parked window's recovery record is deleted when the window closes or goes back to normal. A limited number of leftovers from crashes may remain. Reset settings restores the defaults and turns sync off on that computer; settings already shared stay in your Chrome sync data for your other computers. Removing the extension deletes its local storage. Synced settings can be cleared with Chrome's own sync controls.
+A parked window's recovery record is deleted when the window closes or goes back to normal. A limited number of leftovers from crashes may remain. Restore defaults restores the defaults and turns sync off on that computer; settings already shared stay in your Chrome sync data for your other computers. Removing the extension deletes its local storage. Synced settings can be cleared with Chrome's own sync controls.
 
 ## Links
 
