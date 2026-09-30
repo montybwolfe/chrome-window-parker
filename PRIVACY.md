@@ -26,6 +26,6 @@ The Report a bug and Buy me a coffee buttons open GitHub or Buy Me a Coffee in a
 
 ## Chrome Web Store policy
 
-Chrome Window Parker doesn't sell or transfer user data, use it for advertising, or use it to decide creditworthiness or for lending. It uses data only to provide its single purpose, in line with the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/policies#limited-use), including the Limited Use requirements.
+Chrome Window Parker doesn't sell or transfer user data, use it for advertising, or use it to decide creditworthiness or for lending. It uses data only to provide its single purpose, in line with the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/policies#limited_use), including the Limited Use requirements.
 
-Effective 30 September 2026. Questions: [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues).
+Effective 1 October 2026. Questions: [GitHub Issues](https://github.com/montybwolfe/chrome-window-parker/issues).
