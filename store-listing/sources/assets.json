@@ -6,14 +6,14 @@
       "width": 1280,
       "height": 800,
       "alpha": false,
-      "sha256": "c2687f35522f0d1f99c997686f736770e304f98f2f2f82d172b18cfba6de039b",
+      "sha256": "1d37708e816c9e248affdd932dfa059ea0d5e508dcfe87076b254c7743cf3d46",
       "inputs": {
-        "tools/store-assets/compositions/shot-1-parked.html": "c9fa436afaca80b3b7e1e5e289c736439673604fbbeb2e0c227b38f717ac2bcd",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/shot-1-parked.html": "3cf89f84c263bdc575f9b9093c68b54b4bca22b3061f52ab37f65ff25fbee2fc",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
-        "store-listing/sources/ui/parked-light.png": "75a01b130a074c37cef8df613bc08de26816b0c45cfeada38a2e97dccb1c5310"
+        "store-listing/sources/ui/parked-light.png": "bb0186d1fa7bbcfefad29d10aa0f825f6f3f76f0f326a54dfe212716c6d4eadc"
       }
     },
     {
@@ -24,7 +24,7 @@
       "sha256": "cf355a00d8722d961a9a679a05974a9b88a38fbfef2dc275112ac4007be5df83",
       "inputs": {
         "tools/store-assets/compositions/shot-2-popup.html": "9d83b1c94e4d0439afa24f8504d6688b896aabf9ee92fb4bb46c953834ea6ba0",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
@@ -39,11 +39,11 @@
       "sha256": "6e5b3722b30073e5f2667b1cf00825a26629ae6534d2c75d25d5797be07b12e7",
       "inputs": {
         "tools/store-assets/compositions/shot-3-settings.html": "08fdb3ac573f2b1e8ff37f057bab3b2730c80cfcf97818cb5587eff1e133933e",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
-        "store-listing/sources/ui/settings-light.png": "e9d5c86bba2ab63561e2ef9ceafc1a521aa552377f78ca78a184d83fbb2be22e"
+        "store-listing/sources/ui/settings-light.png": "74e33f7ebb43228a4f5b0f2e675bed9300a74c5b9f1d036c501688577649db84"
       }
     },
     {
@@ -54,12 +54,12 @@
       "sha256": "e47ecdb0a7b6db9529a0cfa7f1c2b45fde0825801b9a2a800b6f9d8ede64559e",
       "inputs": {
         "tools/store-assets/compositions/shot-4-sync.html": "fda99589d8c0240f0adce0d4f2d9801eb501ee03e6508640da76ce8d294519ca",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
-        "store-listing/sources/ui/settings-light.png": "e9d5c86bba2ab63561e2ef9ceafc1a521aa552377f78ca78a184d83fbb2be22e",
-        "store-listing/sources/ui/capture.json": "b2fd375d6d54dac7f22cc6474c097fcb8b6afccb65d469f4c5bac4db5e4778bd"
+        "store-listing/sources/ui/settings-light.png": "74e33f7ebb43228a4f5b0f2e675bed9300a74c5b9f1d036c501688577649db84",
+        "store-listing/sources/ui/capture.json": "98cf0a7e3c2ceef70b5f3a079aec187fa5373ce21161eb98c76b45498f9e83f6"
       }
     },
     {
@@ -67,14 +67,14 @@
       "width": 1280,
       "height": 800,
       "alpha": false,
-      "sha256": "fb8a4cfe3f24e2c17f432e92350366b011a40288f7fc742b39ef3ea1e766d292",
+      "sha256": "c410cae6c8fdac7dba68d99e4acf0c6e6e966c6d58144ee1b6cd9032bd9620a2",
       "inputs": {
-        "tools/store-assets/compositions/shot-5-dark.html": "9efe9930b5b675f2b1ea86794f41e5ea3587ee620897ccd6794ee635a950948c",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/shot-5-dark.html": "f3e417fbe9485e70d69d4cbf61785f340e3068fe06743977e1c8921dac25b53f",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
-        "store-listing/sources/ui/parked-dark.png": "eae3d01f588cf7af7de9670d81385fc48028b589fd21897fa3fe71d0b423da78",
+        "store-listing/sources/ui/parked-dark.png": "00d64ef86a785ef5c639bee0b3c1ddac71b5f06bdc2c92ebe24af7e8e2217566",
         "store-listing/sources/ui/popup-dark.png": "5b3d9a28ae397ef48fd595f536a0dd5fd9dec8128b4ee66201baee52d6f1d790"
       }
     },
@@ -86,7 +86,7 @@
       "sha256": "a02cb92c2484fc8ba92a5b9d437af355789bd54f04b7974018a3f3141bbfc1c9",
       "inputs": {
         "tools/store-assets/compositions/promo-small.html": "ead64d8efe0caeef4cbb736e53b24d541359ca7ccaa5d272c1f38d9de853fca8",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d"
@@ -97,14 +97,14 @@
       "width": 1400,
       "height": 560,
       "alpha": false,
-      "sha256": "7694d2ec05cf5b008823c888613551215ee586fcbd7d7ccf0b49644d93221ad0",
+      "sha256": "a912766253088569b88e12ac143cc5ee776e06dee3153a96282a4f654ecfbc01",
       "inputs": {
         "tools/store-assets/compositions/promo-marquee.html": "597183c3140d11502cea4a8033989bebdce69b287ede9b02c27488d6a8f590df",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
-        "store-listing/sources/ui/parked-light.png": "75a01b130a074c37cef8df613bc08de26816b0c45cfeada38a2e97dccb1c5310"
+        "store-listing/sources/ui/parked-light.png": "bb0186d1fa7bbcfefad29d10aa0f825f6f3f76f0f326a54dfe212716c6d4eadc"
       }
     },
     {
@@ -115,7 +115,7 @@
       "sha256": "818f87e16c4f64a943f549cb2cd12fda77ea6a9afda05355436c496eb98cafca",
       "inputs": {
         "tools/store-assets/compositions/icon.html": "8cef402eed8ca5014ae042a59944110c7c0e123b6f9dfb53dd696a5f8113ecdc",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d"
@@ -129,7 +129,7 @@
       "sha256": "7f09e68756102c7541691a8802e4a96a49e8ff5a2e6e28e4614275a14e9e1f01",
       "inputs": {
         "tools/store-assets/compositions/cover.html": "010b6ed2466c5717e5ddb0f5b41412ab87408b5fafc54ac45d4ca913a336b96a",
-        "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
+        "tools/store-assets/compositions/style.css": "3901c04bd02ded3923055020ebdc93951c7ddd97a09e55fcd895e5cb5bec9766",
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d"

@@ -22,6 +22,9 @@ body { width: 100vw; height: 100vh; overflow: hidden; background: var(--blue); c
 .tab .title { flex: 1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
 .fav { flex: none; width: 15px; height: 15px; border-radius: 4px; background: #c4cddd; }
 .fav.timer { background: url(../../../icons/parker-timer.svg) center / contain no-repeat; border-radius: 0; }
+/* The made-up sites' icons, as served by capture.mjs (ICONS). */
+.tabs .fav.notes { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e3a23b'/%3E%3Cpath d='M9 11h14M9 16h14M9 21h9' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; border-radius: 0; }
+.tabs .fav.roadmap { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f9471'/%3E%3Cpath d='M8 11h9M12 16h12M8 21h7' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; border-radius: 0; }
 .toolbar { position: absolute; left: 0; right: 0; top: 42px; height: 38px; display: flex; align-items: center; gap: 14px;
   padding: 0 16px; background: #fff; border-bottom: 1px solid #e2e5ea; }
 .nav { display: flex; gap: 12px; } .nav i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #b6bdc9; }

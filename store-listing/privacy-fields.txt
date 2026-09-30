@@ -10,6 +10,9 @@ Saves settings and a small recovery record for each parked window (the previous 
 ALARMS PERMISSION JUSTIFICATION
 Schedules the inactivity checks and recovers the return delay while the Manifest V3 service worker is stopped, instead of polling.
 
+FAVICON PERMISSION JUSTIFICATION
+Shows the previously selected tab's site icon on the parking page, next to its title, so the user can recognise a parked window. The icon is read from Chrome's own local copy of site icons through the extension's _favicon address; nothing is downloaded or sent anywhere.
+
 DOWNLOADS PERMISSION JUSTIFICATION
 Checks whether any Chrome download is in progress and pauses parking until it finishes, so a download isn't interrupted. Chrome doesn't reliably report a download's source tab, so the pause applies to every window. It never starts, opens, changes or deletes downloads and keeps no download details.
 
@@ -21,7 +24,7 @@ PRIVACY POLICY URL
 https://github.com/montybwolfe/chrome-window-parker/blob/main/PRIVACY.md
 
 DATA USAGE: WHAT USER DATA IS HANDLED
-Web history: the addresses and titles of open tabs are processed on the user's computer for exclusions and restoring the previous tab. The extension does not have Chrome's history permission and does not read browsing history.
+Web history: the addresses and titles of open tabs are processed on the user's computer for exclusions, restoring the previous tab and showing its title and icon on the parking page. The extension does not have Chrome's history permission and does not read browsing history.
 User activity: window focus, tab selection and navigation timing are used on the user's computer to decide when a window is idle and when the user has returned. Keystrokes, mouse movement and page clicks are not monitored.
 If the user turns on sync for "Sites to exclude", their list of excluded domains and address patterns is stored in Chrome sync storage and synced by Chrome through the user's Google account. The developer never receives it.
 

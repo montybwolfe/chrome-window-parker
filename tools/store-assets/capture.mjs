@@ -17,13 +17,21 @@ export const WINDOWS = [
   ['Product roadmap', 'Design review', 'Weekly report'],
   ['Reading list', 'Recipe: lemon pasta']];
 
+// Plain made-up site icons for the first page of each window, the one the
+// parking page shows. compositions/style.css draws the same icons in the frame.
+export const ICONS = {
+  notes: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#e3a23b"/><path d="M9 11h14M9 16h14M9 21h9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>',
+  roadmap: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#2f9471"/><path d="M8 11h9M12 16h12M8 21h7" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>',
+  reading: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#c0527a"/><path d="M11 8h10v16l-5-4-5 4z" fill="#fff"/></svg>'};
 const server = http.createServer((req, res) => {
-  const title = new URL(req.url, 'http://localhost').searchParams.get('t') || 'Page';
+  const url = new URL(req.url, 'http://localhost'), icon = ICONS[url.searchParams.get('i')];
+  if (url.pathname === '/icon.svg' && icon) { res.setHeader('Content-Type', 'image/svg+xml'); res.end(icon); return; }
+  const title = url.searchParams.get('t') || 'Page';
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.end(`<!doctype html><title>${title.replace(/[<&]/g, '')}</title><body style="font:16px system-ui;margin:48px"><h1>${title.replace(/[<&]/g, '')}</h1>`);
+  res.end(`<!doctype html><title>${title.replace(/[<&]/g, '')}</title>${icon ? `<link rel="icon" href="/icon.svg?i=${url.searchParams.get('i')}">` : ''}<body style="font:16px system-ui;margin:48px"><h1>${title.replace(/[<&]/g, '')}</h1>`);
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const page = title => `http://127.0.0.1:${server.address().port}/?t=${encodeURIComponent(title)}`;
+const page = (title, icon = '') => `http://127.0.0.1:${server.address().port}/?t=${encodeURIComponent(title)}${icon && `&i=${icon}`}`;
 const log = message => console.log(`capture: ${message}`);
 async function waitFor(check, ms, what) {
   for (const end = Date.now() + ms; Date.now() < end; await sleep(1000)) if (await check()) return;
@@ -61,7 +69,7 @@ try {
   // Park three windows quickly; Settings is shown with its defaults afterwards.
   await send({type: 'configure', settings: {...defaults, delayMinutes: 1, sleepingMode: 'immediate'}});
   const ids = [];
-  for (const titles of WINDOWS) ids.push(await js(`chrome.windows.create({url: ${JSON.stringify(titles.map(page))}}).then(w => w.id)`));
+  for (const [n, titles] of WINDOWS.entries()) ids.push(await js(`chrome.windows.create({url: ${JSON.stringify(titles.map((t, i) => page(t, i ? '' : Object.keys(ICONS)[n])))}}).then(w => w.id)`));
   await sleep(2500);
   // Headless Chrome reports every visible window as focused; minimized ones aren't, so they can park.
   for (const w of ids) await js(`chrome.windows.update(${w}, {state: 'minimized'}).then(() => 1)`);
