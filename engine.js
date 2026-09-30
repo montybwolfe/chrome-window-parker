@@ -99,7 +99,7 @@ export class Parker {
     this.owners = Object.fromEntries(Object.entries(owners && typeof owners === 'object' ? owners : {}).filter(([token, id]) =>
       /^[a-zA-Z0-9-]{8,80}$/.test(token) && Number.isInteger(id) && pages.has(token)));
     const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
-    for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
+    const forgotten = this.dropClosed(live, pages);
     for (const w of windows) this.adopt(w);
     // A focus event that wakes this worker is signalled before persisted state
     // loads, so signalFocus() cannot record leaving a genuinely used window.
@@ -134,10 +134,26 @@ export class Parker {
       await this.cleanupParking(w.id);
       await this.cleanupEmptyParked(w.id);
     }
+    if (forgotten) await this.saveRecords();
     await this.startDwell();
     await this.save(); await this.schedule();
     // Sync is optional: a failure here must never stop the worker starting.
     try { await this.pullSync(); } catch (error) { console.error('[Chrome Window Parker] sync check', error); }
+  }
+  // A window that closed while no worker was listening (or before its close was
+  // handled) loses its state, and its recovery record with it, unless its page
+  // lives on in another window (moved there and awaiting cleanup). A browser
+  // restart starts with no state, so records for restored windows are kept.
+  dropClosed(live, pages) {
+    let forgotten = false;
+    for (const [id, s] of Object.entries(this.states)) {
+      if (live.has(id)) continue;
+      if (s.token && !pages.has(s.token)) {
+        forgotten ||= s.token in this.records; delete this.records[s.token]; delete this.owners[s.token];
+      }
+      delete this.states[id];
+    }
+    return forgotten;
   }
   signalFocus(id) {
     this.shellEpoch++;
@@ -233,7 +249,8 @@ export class Parker {
     if (!this.settings.enabled) return;
     const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
     const live = new Set(windows.filter(w => this.supported(w)).map(w => String(w.id)));
-    for (const id of Object.keys(this.states)) if (!live.has(id)) delete this.states[id];
+    const pages = new Set(windows.flatMap(w => (w.tabs || []).map(t => this.token(t))).filter(Boolean));
+    if (this.dropClosed(live, pages)) await this.saveRecords();
     for (const w of windows) {
       if (onlyWindowId !== undefined && w.id !== onlyWindowId) continue;
       const s = this.adopt(w);
@@ -643,6 +660,9 @@ export class Parker {
   async closed(id) {
     const s = this.states[id];
     if (s?.token) await this.forgetRecord(s.token);
+    // While a window closes, Chrome can still list its tabs, so removed() may
+    // have kept the record of its own page. The window is gone now.
+    for (const [token, owner] of Object.entries(this.owners)) if (owner === id) await this.forgetRecord(token);
     delete this.states[id]; this.tabEpoch.delete(id); this.selectionEpoch.delete(id);
     for (const [tabId, source] of this.detachedTabs) if (source === id) this.detachedTabs.delete(tabId);
     await this.saveRecords(); await this.save(); await this.schedule();

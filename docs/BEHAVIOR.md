@@ -86,7 +86,7 @@ Each parking page has a random token in its address, and a small recovery record
 
 Chrome controls session restore. It may reload selected tabs before the extension starts, or not restore windows at all, depending on your startup settings. The extension never creates replacement windows.
 
-Recovery records are deleted when their window closes or returns to normal. Up to 100 leftovers from crashes are kept. Removing the extension deletes all of its local storage.
+Recovery records are deleted when their window closes or returns to normal. Records of windows still parked when Chrome closes stay, so restored windows can use them; at most 100 leftovers are kept, and Clear parked tabs removes them. Removing the extension deletes all of its local storage.
 
 ## Permissions
 
