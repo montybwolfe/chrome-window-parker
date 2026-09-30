@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULTS,compareRules,matchesRule,simplifyRule,validateSettings} from '../settings.js';
+import {DEFAULTS,cleanUpRules,compareRules,matchesRule,simplifyRule,validateSettings} from '../settings.js';
 import {harness} from './helpers.js';
 
 test('plain meeting domain covers pages and subdomains; advanced URL limits the path',()=>{
@@ -27,7 +27,31 @@ for(const sleepingMode of ['chrome','immediate'])test(`${sleepingMode}: selected
 test('factory sites are already in Sort A–Z order, using the same comparison as the button',()=>{
   assert.deepEqual(DEFAULTS.exclusions,['meet.google.com','music.youtube.com','teams.microsoft.com','zoom.us']);
   assert.deepEqual(DEFAULTS.exclusions.toSorted(compareRules),DEFAULTS.exclusions);
+  assert.deepEqual(cleanUpRules(DEFAULTS.exclusions),DEFAULTS.exclusions,'Clean up has nothing to do');
   assert.deepEqual(validateSettings({}).exclusions,DEFAULTS.exclusions,'a new installation starts in that order');
+});
+
+test('Clean up sorts A–Z and removes only entries that repeat another, so exactly the same pages stay excluded',()=>{
+  const messy=['zoom.us','meet.google.com','zoom.us','Zoom.US','*.zoom.us','https://zoom.us/','http://zoom.us','HTTPS://Meet.Google.com:443/',
+    'https://example.com/work/*','https://example.com/work/*','www.example.com','https://www.example.com/','WWW.Example.com'];
+  const cleaned=cleanUpRules(messy);
+  assert.deepEqual(cleaned,['https://example.com/work/*','meet.google.com','www.example.com','zoom.us']);
+  assert.deepEqual(cleanUpRules(cleaned),cleaned,'cleaning again changes nothing');
+  assert.deepEqual(cleanUpRules(messy.toReversed()),cleaned,'the result does not depend on the starting order');
+  // When no plain lowercase spelling is listed, the first in A–Z order stays, exactly as written.
+  assert.deepEqual(cleanUpRules(['Example.com','*.EXAMPLE.com']),['*.EXAMPLE.com']);
+  // Entries that differ in what they exclude all stay, unchanged: subdomains, www, ports, paths, queries,
+  // fragments, *, capitals in full addresses, and home addresses whose website isn't listed.
+  const distinct=['example.com','www.example.com','docs.example.com','example.com:8080','https://example.com/work/*','https://example.com/Work/*',
+    'http://example.com/work/*','https://example.com/account/settings','https://example.com/?q=1','https://example.com/#top',
+    'https://example.com:8443/','https://example.org/','http://example.org/','*://example.net/','https://*.example.net/'];
+  assert.deepEqual(cleanUpRules(distinct),distinct.toSorted(compareRules));
+  const urls=['https://zoom.us/j/1','http://zoom.us/','https://us02web.zoom.us/','https://meet.google.com/abc-defg-hij','https://example.com/',
+    'https://example.com/work/a','https://example.com/Work/a','https://www.example.com/','https://www.example.com/x','https://docs.example.com/',
+    'https://example.com:8080/','https://example.com:8443/','https://example.org/','http://example.org/','https://example.org/x',
+    'http://example.net/','https://a.example.net/','https://example.com/?q=1','https://example.com/#top'];
+  for(const list of [messy,distinct])for(const url of urls)
+    assert.equal(cleanUpRules(list).some(rule=>matchesRule(url,rule)),list.some(rule=>matchesRule(url,rule)),url);
 });
 
 test('Sort A–Z orders by website, ignoring http(s)://, then by the rest; the text itself never changes',()=>{

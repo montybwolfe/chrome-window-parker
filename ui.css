@@ -55,8 +55,12 @@ select { appearance: none; width: 100%; padding: 0 32px 0 10px; cursor: pointer;
 .section-note { margin-top: 10px; }
 .field { margin-top: 22px; }
 .field > label { display: block; margin-bottom: 6px; font-weight: 500; }
-.field-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.field-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 12px; margin-bottom: 6px; }
 .field-head > label { font-weight: 500; }
+.field-action { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.settings-page .field-action .hint { font-size: 12px; }
+/* Metadata in the page's top corner, outside the content (and the Store crops). */
+.version-tag { position: absolute; top: 14px; right: 18px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 textarea { display: block; width: 100%; min-height: 108px; max-height: 320px; padding: 10px 12px; resize: vertical; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .field > .hint { margin: 7px 0; }
 summary { cursor: pointer; width: fit-content; }
