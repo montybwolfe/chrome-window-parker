@@ -8,7 +8,7 @@ STORAGE PERMISSION JUSTIFICATION
 Saves settings and a small recovery record for each parked window (the previous tab's address, title and position) in local extension storage, and temporary window/tab state in session storage. If the user turns on sync for a setting, that setting is also stored in chrome.storage.sync so Chrome can sync it across the user's own computers. Sync is off by default and chosen per setting.
 
 ALARMS PERMISSION JUSTIFICATION
-Schedules the inactivity checks and recovers the return delay while the Manifest V3 service worker is stopped, instead of polling.
+Schedules the inactivity checks and recovers the restore delay while the Manifest V3 service worker is stopped, instead of polling.
 
 FAVICON PERMISSION JUSTIFICATION
 Shows the previously selected tab's site icon on the parking page, next to its title, so the user can recognise a parked window. The icon is read from Chrome's own local copy of site icons through the extension's _favicon address; nothing is downloaded or sent anywhere.

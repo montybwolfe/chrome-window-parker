@@ -4,7 +4,7 @@ This is the detailed version: what the extension does, what it deliberately does
 
 ## Parking
 
-A window parks when it hasn't been used for the parking delay (15 minutes by default). "Used" means you stayed focused on it for the return delay, selected a tab in it, or navigated its selected tab. Mouse movement, typing and page contents are never watched. A focused window never parks.
+A window parks when it hasn't been used for the parking delay (15 minutes by default). "Used" means you stayed focused on it for the restore delay, selected a tab in it, or navigated its selected tab. Mouse movement, typing and page contents are never watched. A focused window never parks.
 
 To park a window, the extension adds a small parking page at the end of that window (unpinned and ungrouped) and selects it. Your previous tab becomes an ordinary background tab, and the parking page shows its title and icon. The icon is Chrome's own saved copy of the site's icon, so nothing is downloaded; the parking tab itself keeps the Window Parker icon. Nothing else changes: windows aren't moved, focused, resized or recreated, and real tabs are never moved or closed.
 
@@ -14,9 +14,9 @@ One alarm points at the next window that's due. Chrome can run it late. There's 
 
 ## Coming back
 
-When you focus a parked window and stay for the return delay (2 seconds by default), your previous tab is selected again and the parking page closes. Chrome reloads the tab if it had unloaded it; other sleeping tabs stay asleep. Passing through a window more quickly, for example while swiping between macOS desktops, doesn't count, and it doesn't restart that window's parking delay either.
+When you focus a parked window and stay for the restore delay (2 seconds by default), your previous tab is selected again and the parking page closes. Chrome reloads the tab if it had unloaded it; other sleeping tabs stay asleep. Passing through a window more quickly, for example while swiping between macOS desktops, doesn't count, and it doesn't restart that window's parking delay either.
 
-The return delay uses a short timer plus a backup alarm. If the extension's background worker is stopped part-way, the next worker starts a full new delay, and a timer that fires more than 1.5 seconds late (after the computer slept, say) also starts again. So restoring can take a little longer than the setting, but never less.
+The restore delay uses a short timer plus a backup alarm. If the extension's background worker is stopped part-way, the next worker starts a full new delay, and a timer that fires more than 1.5 seconds late (after the computer slept, say) also starts again. So restoring can take a little longer than the setting, but never less.
 
 If your previous tab was closed, the nearest real tab in the same window is used. You can also press **Restore tab**, or just click any tab.
 
@@ -30,13 +30,13 @@ Changing the mode takes effect on the next parking cycle. It doesn't unload or w
 
 ## What keeps tabs and windows awake
 
-**Site exclusions.** A website such as `meet.google.com` covers that site and addresses that end in it, such as `team.meet.google.com`, but not lookalikes such as `meet.google.com.evil.example`. Websites match the standard web ports; add the port for an address such as `localhost:3000`. For part of a site, use a full address with `*` meaning "any text", for example `https://example.com/work/*` (full addresses are case-sensitive).
+**Site exclusions.** A website such as `meet.google.com` covers that site and addresses that end in it, such as `team.meet.google.com`, but not lookalikes such as `meet.google.com.evil.example`. Websites match the standard web ports; add the port for an address such as `localhost:3000`. Website names with accented or non-Latin letters aren't supported yet. For part of a site, use a full address with `*` meaning "any text", for example `https://example.com/work/*` (full addresses are case-sensitive).
 
 Pasting a site's home address on a line of its own, such as `https://www.example.com/` or `http://localhost:3000/`, adds just the website (`www.example.com`, `localhost:3000`); an address with a path, query, `#` or `*` is kept exactly as pasted. **Clean up** orders the list by website, ignoring `http://` and `https://`, then by the rest of the address, and removes duplicates: an entry listed twice, a website written with different capitals or a leading `*.`, and a home address such as `https://example.com/` when `example.com` is also listed. Everything else stays exactly as written, including other subdomains such as `www.`, ports, paths and `*`, so the same pages are excluded. It doesn't save anything; the built-in list is already clean.
 
 If an excluded site is the selected tab, that window doesn't park. An excluded background tab doesn't stop its window parking, but Discard immediately skips it. Chrome's own Memory Saver can still unload it.
 
-**Protected tabs.** You can protect the current tab from the popup, or any tab from Settings. Protection follows the tab while you browse, and lasts until Chrome restarts or the extension is updated.
+**Protected tabs.** You can protect the current tab from the popup, or any open tab from Settings; both offer web pages only, because only they park or unload. Protection follows the tab while you browse, even when Chrome unloads it, and lasts until Chrome restarts or the extension is updated.
 
 **Downloads.** Chrome doesn't reliably say which tab a download came from, so any download in progress, including a paused one, pauses parking and discarding in every window. If the check fails, parking pauses too.
 
@@ -60,7 +60,7 @@ Chrome doesn't allow tab changes while you're still holding a dragged tab, so th
 
 ## Sync
 
-Sync is off by default and chosen separately on each computer: for all settings at once, for the Parking or Tab protection group, or one setting at a time. A group's box shows a dash when only some of its settings sync. The syncable settings are the parking delay, return delay, tab sleeping mode, theme, the pinned and audio tab options, and site exclusions.
+Sync is off by default and chosen separately on each computer: for all settings at once, for the Parking or Tab protection group, or one setting at a time. A group's box shows a dash when only some of its settings sync. The syncable settings are the parking delay, restore delay, tab sleeping mode, theme, the pinned and audio tab options, and site exclusions.
 
 Each computer keeps its own local copy of all settings, and that local copy is what the extension always uses, so it works offline, signed out, or with Chrome sync turned off. For each setting you choose, the value is also stored in Chrome's sync storage under its own key, so computers that share different settings don't overwrite each other. Chrome syncs that storage through your Google account when you're signed in with sync on.
 
@@ -85,6 +85,8 @@ Chrome can stop the extension's background worker at any time. Temporary state (
 Each parking page has a random token in its address, and a small recovery record for it (previous tab's address, title and position) is saved before the page is selected. After a Chrome restart, parked windows are found again from their parking pages. If the same address was open twice and the tabs were reordered, the exact tab can't always be told apart.
 
 Chrome controls session restore. It may reload selected tabs before the extension starts, or not restore windows at all, depending on your startup settings. The extension never creates replacement windows.
+
+Reloading a hand-installed copy from `chrome://extensions` closes its parking pages, so each parked window shows its last tab again. Chrome Web Store updates wait until the extension isn't in use, or until Chrome restarts.
 
 Recovery records are deleted when their window closes or returns to normal. Records of windows still parked when Chrome closes stay, so restored windows can use them; at most 100 leftovers are kept, and Clear parked tabs removes them. Removing the extension deletes all of its local storage.
 
