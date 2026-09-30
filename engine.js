@@ -1,4 +1,4 @@
-import {DEFAULTS, SYNCABLE, validateSettings, storedSettings, skipReason, syncPolicy, sameValue} from './settings.js';
+import {DEFAULTS, SYNCABLE, validateSettings, storedSettings, skipReason, syncFlags, sameValue} from './settings.js';
 import {systemClock} from './clock.js';
 
 // All asynchronous transitions are serialized by background.js. Focus signals
@@ -11,7 +11,7 @@ export class Parker {
     this.tabEpoch = new Map(); this.selectionEpoch = new Map();
     this.shellEpoch = 0; this.detachedTabs = new Map(); this.clearRequests = 0;
     this.loaded = false; this.departedAt = null;
-    this.policy = syncPolicy(); this.syncNotice = null;
+    this.policy = syncFlags(); this.customized = syncFlags(); this.syncNotice = null;
     this.owners = {}; this.retries = 0; this.retryTimer = null; this.deferred = false;
     this.parkingURL = api.runtime.getURL('parked.html');
   }
@@ -74,12 +74,12 @@ export class Parker {
   }
   async init() {
     const [local, session, windows] = await Promise.all([
-      this.api.storage.local.get(['settings', 'parkingRecords', 'syncPolicy']),
+      this.api.storage.local.get(['settings', 'parkingRecords', 'syncPolicy', 'customized']),
       this.api.storage.session.get('runtimeState'),
       this.api.windows.getAll({populate: true, windowTypes: ['normal']})
     ]);
     try { this.settings = storedSettings(local.settings || {}); } catch { this.settings = {...DEFAULTS, enabled: false}; }
-    this.policy = syncPolicy(local.syncPolicy);
+    this.policy = syncFlags(local.syncPolicy); this.customized = syncFlags(local.customized);
     // Storage can outlive older versions or be partially written. Rebuild invalid
     // entries from live tabs rather than letting them prevent worker startup.
     this.records = Object.fromEntries(Object.entries(local.parkingRecords || {}).filter(([token, r]) =>
@@ -634,35 +634,50 @@ export class Parker {
     for (const [tabId, source] of this.detachedTabs) if (source === id) this.detachedTabs.delete(tabId);
     await this.saveRecords(); await this.save(); await this.schedule();
   }
-  async configure(input) {
-    const settings = validateSettings(input), previous = this.settings;
-    await this.api.storage.local.set({settings});
+  async configure(input, shown, customized) {
+    // `shown` is what the Settings page (or popup) showed. Only fields changed
+    // from it are applied, so a value that changed meanwhile (by sync or another
+    // page) is not overwritten with a stale copy.
+    const previous = this.settings;
+    const settings = validateSettings(shown ? {...previous, ...Object.fromEntries(Object.entries(input)
+      .filter(([key, value]) => !sameValue(value, shown[key])))} : input);
+    const changed = SYNCABLE.filter(key => !sameValue(settings[key], previous[key]));
+    // A syncable value changed here is this device's own choice, even when it
+    // returns to its default (15 -> 30 -> 15 stays chosen). See reset().
+    customized ??= {...this.customized, ...Object.fromEntries(changed.map(key => [key, true]))};
+    await this.api.storage.local.set({settings, customized});
+    this.customized = customized;
     this.signalFocus(this.focus); this.settings = settings;
     for (const s of Object.values(this.states)) s.retryAt = 0;
     await this.startDwell(); await this.save(); await this.schedule();
-    await this.pushSync(SYNCABLE.filter(key => !sameValue(settings[key], previous[key])));
+    await this.pushSync(changed);
     return settings;
   }
   async reset() {
-    // Defaults apply to this device only: stop syncing here first, so shared
-    // values (and other devices) are left alone.
-    await this.setPolicy(syncPolicy());
-    return this.configure({...DEFAULTS});
+    // Restore defaults on this device only: stop syncing here first, so shared
+    // values (and other devices) are left alone. Afterwards nothing counts as
+    // chosen here, as on a new installation, so turning sync on adopts shared values.
+    await this.setPolicy(syncFlags());
+    return this.configure({...DEFAULTS}, undefined, syncFlags());
   }
   async setAppearance(appearance) {
     // A header control that applies immediately. Presentation only, so it never
     // interrupts parking work the way other settings changes do.
     const settings = validateSettings({...this.settings, appearance});
     if (sameValue(settings, this.settings)) return settings;
-    await this.applySettings(settings); await this.pushSync(['appearance']);
+    await this.applySettings(settings, true); await this.pushSync(['appearance']);
     return this.settings;
   }
-  // Apply settings that did not come from this device's Settings form (sync),
-  // with the same runtime semantics as an equivalent local change.
-  async applySettings(next) {
+  // Apply settings that did not come from the Settings form, with the same
+  // runtime semantics as an equivalent change there: the header theme (chosen
+  // here) or synced values (not chosen here: a synced value that replaces this
+  // device's value is no longer this device's own choice).
+  async applySettings(next, chosen) {
     const changed = Object.keys(next).filter(key => !sameValue(next[key], this.settings[key]));
     if (!changed.length) return;
-    await this.api.storage.local.set({settings: next});
+    const customized = {...this.customized};
+    for (const key of changed) if (key in customized) customized[key] = chosen;
+    await this.api.storage.local.set({settings: next, customized}); this.customized = customized;
     if (changed.every(key => key === 'appearance')) { this.settings = next; return; }
     this.signalFocus(this.focus); this.settings = next;
     for (const s of Object.values(this.states)) s.retryAt = 0;
@@ -684,6 +699,13 @@ export class Parker {
     try { await this.api.storage.sync.set(Object.fromEntries(keys.map(key => [key, this.settings[key]]))); return null; }
     catch (error) { if (error instanceof TypeError) throw error; this.log('sync write failed', error.message); return this.syncReason(error); }
   }
+  // Share this device's values one setting at a time, so a refusal (a site list
+  // over Chrome's size limit, say) affects only that setting. Returns refusals.
+  async share(keys) {
+    const failed = [];
+    for (const key of keys) { const reason = await this.writeSync([key]); if (reason) failed.push({key, reason}); }
+    return failed;
+  }
   // A synced value goes through normal validation. Undefined: nothing shared.
   // Null: malformed, or from a version this one does not understand.
   validSynced(key, value) {
@@ -691,19 +713,17 @@ export class Parker {
     try { return validateSettings({...this.settings, [key]: value})[key]; } catch { return null; }
   }
   async setPolicy(policy) {
-    this.policy = syncPolicy(policy);
+    this.policy = syncFlags(policy);
     await this.api.storage.local.set({syncPolicy: this.policy});
     return {policy: this.policy, settings: this.settings};
   }
   // Share local changes to opted-in settings. If Chrome refuses (for example a
   // very long site list), keep the value here and stop syncing that setting.
   async pushSync(keys) {
-    keys = keys.filter(key => this.policy[key]);
-    if (!keys.length) return true;
-    const reason = await this.writeSync(keys);
-    if (!reason) return true;
-    this.syncNotice = {keys, reason};
-    await this.setPolicy({...this.policy, ...Object.fromEntries(keys.map(key => [key, false]))});
+    const failed = await this.share(keys.filter(key => this.policy[key]));
+    if (!failed.length) return true;
+    this.syncNotice = failed;
+    await this.setPolicy({...this.policy, ...Object.fromEntries(failed.map(({key}) => [key, false]))});
     return false;
   }
   // Called synchronously by the worker: does a sync change affect this device?
@@ -719,7 +739,7 @@ export class Parker {
       if (value === null) this.log('ignored invalid synced value', key);
       else if (value !== undefined) next = {...next, [key]: value};
     }
-    await this.applySettings(next);
+    await this.applySettings(next, false);
   }
   // At startup, apply changes that arrived while no worker was listening, and
   // share opted-in values that are missing (for example after sync data reset).
@@ -731,40 +751,48 @@ export class Parker {
     await this.pushSync(keys.filter(key => values[key] === undefined));
     await this.syncChanged(Object.fromEntries(keys.map(key => [key, {newValue: values[key]}])));
   }
-  syncKey(key) { if (!SYNCABLE.includes(key)) throw new Error('This setting does not sync.'); }
-  async syncEnable(key) {
-    this.syncKey(key);
-    const values = await this.readSync([key]);
+  syncKeys(keys) {
+    if (!Array.isArray(keys) || !keys.every(key => SYNCABLE.includes(key))) throw new Error('This setting does not sync.');
+    return keys;
+  }
+  // Turn sync on for some settings: one, a group, or all. Those already syncing
+  // are left alone. For each of the others: with nothing shared yet, this
+  // device's value is shared; an equal shared value simply turns on; a different
+  // shared value is used, unless this device's value was chosen here or the
+  // shared value can't be used, which needs the user's choice. Every choice is
+  // asked together and nothing changes until all are made. `choices` answers
+  // them ({key: {use, local, synced}}); an answer counts only while both values
+  // are still the ones the user was shown.
+  async syncEnable(keys, choices) {
+    keys = this.syncKeys(keys).filter(key => !this.policy[key]);
+    const values = keys.length ? await this.readSync(keys) : {};
     if (!values) return {status: 'error', reason: 'unavailable'};
-    const synced = this.validSynced(key, values[key]);
-    if (synced === undefined) {
-      // Nothing shared yet: share this device's value.
-      const reason = await this.writeSync([key]);
-      if (reason) return {status: 'error', reason};
-    } else if (!sameValue(synced, this.settings[key])) {
-      // Never silently overwrite either side. The user chooses; null means the
-      // shared value cannot be used here, so only this device's value is offered.
-      return {status: 'conflict', key, local: this.settings[key], synced};
+    const adopt = {}, share = [], mine = [], on = [], conflicts = [];
+    for (const key of keys) {
+      const local = this.settings[key], synced = this.validSynced(key, values[key]), choice = choices?.[key];
+      if (synced === undefined) share.push(key);
+      else if (sameValue(synced, local)) on.push(key);
+      else if (synced !== null && !this.customized[key]) adopt[key] = synced;
+      else if (!choice || !sameValue(choice.local, local) || !sameValue(choice.synced, synced)) conflicts.push({key, local, synced});
+      else if (choice.use === 'synced' && synced !== null) adopt[key] = synced;
+      else if (choice.use === 'local') { share.push(key); mine.push(key); }
+      else if (choice.use !== 'off') throw new Error('Choose which value to keep.');
     }
-    return {status: 'on', ...await this.setPolicy({...this.policy, [key]: true})};
+    if (conflicts.length) return {status: 'conflict', conflicts};
+    if (Object.keys(adopt).length) await this.applySettings({...this.settings, ...adopt}, false);
+    // Keeping this device's value over a synced one is a choice made here.
+    if (mine.some(key => !this.customized[key])) {
+      this.customized = {...this.customized, ...Object.fromEntries(mine.map(key => [key, true]))};
+      await this.api.storage.local.set({customized: this.customized});
+    }
+    const failed = await this.share(share), shared = share.filter(key => !failed.some(f => f.key === key));
+    const enabled = [...on, ...Object.keys(adopt), ...shared];
+    return {status: 'on', failed, ...await this.setPolicy({...this.policy, ...Object.fromEntries(enabled.map(key => [key, true]))})};
   }
-  async syncResolve(key, use) {
-    this.syncKey(key);
-    if (use === 'synced') {
-      const values = await this.readSync([key]), synced = values && this.validSynced(key, values[key]);
-      if (synced === undefined || synced === null)
-        return {status: 'error', reason: !values ? 'unavailable' : synced === null ? 'unusable' : 'changed'};
-      await this.applySettings({...this.settings, [key]: synced});
-    } else if (use === 'local') {
-      const reason = await this.writeSync([key]);
-      if (reason) return {status: 'error', reason};
-    } else throw new Error('Choose which value to keep.');
-    return {status: 'on', ...await this.setPolicy({...this.policy, [key]: true})};
-  }
-  // Keeps the current value here and leaves the shared value for other devices.
-  async syncDisable(key) {
-    this.syncKey(key);
-    return {status: 'off', ...await this.setPolicy({...this.policy, [key]: false})};
+  // Keeps the current values here and leaves shared values for other devices.
+  async syncDisable(keys) {
+    keys = this.syncKeys(keys);
+    return {status: 'off', ...await this.setPolicy({...this.policy, ...Object.fromEntries(keys.map(key => [key, false]))})};
   }
   async message(msg, sender) {
     if (!msg || typeof msg.type !== 'string') throw new Error('Invalid message.');
@@ -787,16 +815,15 @@ export class Parker {
       throw new Error('Unsupported parking action.');
     }
     if (msg.type === 'settings') return this.settings;
-    if (msg.type === 'configure') return this.configure(msg.settings);
+    if (msg.type === 'configure') return this.configure(msg.settings, msg.shown);
     if (msg.type === 'appearance') return this.setAppearance(msg.appearance);
     if (msg.type === 'reset') return this.reset();
     if (msg.type === 'sync-state') {
       const notice = this.syncNotice; this.syncNotice = null;
       return {policy: this.policy, notice};
     }
-    if (msg.type === 'sync-enable') return this.syncEnable(msg.key);
-    if (msg.type === 'sync-resolve') return this.syncResolve(msg.key, msg.use);
-    if (msg.type === 'sync-disable') return this.syncDisable(msg.key);
+    if (msg.type === 'sync-enable') return this.syncEnable(msg.keys, msg.choices);
+    if (msg.type === 'sync-disable') return this.syncDisable(msg.keys);
     if (msg.type === 'close-parked') return this.closeParkedTabs();
     if (msg.type === 'protect') {
       if (typeof msg.protected !== 'boolean') throw new Error('Invalid tab protection.');

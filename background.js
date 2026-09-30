@@ -101,7 +101,7 @@ chrome.runtime.onStartup.addListener(() => enqueue(() => parker.schedule()));
 chrome.runtime.onInstalled.addListener(() => enqueue(() => parker.schedule()));
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   // Cancel any in-flight parking before queued settings / protection changes.
-  if (sender.id === chrome.runtime.id && ['configure', 'reset', 'protect', 'close-parked', 'sync-resolve'].includes(msg?.type))
+  if (sender.id === chrome.runtime.id && ['configure', 'reset', 'protect', 'close-parked', 'sync-enable'].includes(msg?.type))
     parker.safetyEpoch++;
   // A Clear request arriving during initialization/cleanup takes priority before
   // its queued handler runs. Release the guard even when initialization fails.

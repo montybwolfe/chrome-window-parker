@@ -39,8 +39,9 @@ $('protect').addEventListener('click', () => act(async () => {
   if (current) await request('protect', {tabId: current.id, protected: !current.protected});
 }));
 $('toggle').addEventListener('click', () => act(async () => {
+  // Only the pause state changes; `shown` stops this copy undoing a synced change.
   const settings = await request('settings');
-  await request('configure', {settings: {...settings, enabled: !settings.enabled}});
+  await request('configure', {settings: {...settings, enabled: !settings.enabled}, shown: settings});
 }));
 $('options').addEventListener('click', () => chrome.runtime.openOptionsPage().catch(report));
 refresh().catch(report);

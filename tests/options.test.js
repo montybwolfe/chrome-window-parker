@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DEFAULTS, SYNCABLE, validateSettings} from '../settings.js';
+import {harness} from './helpers.js';
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const html=read('options.html'), css=read('ui.css');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
@@ -25,11 +26,21 @@ test('Settings order: tab protection (with individual tabs), sync, diagnostics, 
   for(const [,id] of read('options.js').matchAll(/\$\('([^']+)'\)/g))assert(html.includes(`id="${id}"`),id);
 });
 
-test('every syncable setting has its own checkbox, and nothing else can sync',()=>{
+test('sync: "Sync all settings", then Parking and Tab protection groups as on the page, then Theme; nothing else syncs',()=>{
   const keys=[...html.matchAll(/data-sync="(\w+)"/g)].map(m=>m[1]);
   assert.deepEqual(keys.toSorted(),[...SYNCABLE].toSorted());
   for(const local of ['enabled','debug'])assert(!keys.includes(local));
   assert.match(html,/Pausing, protected tabs, debug logging and anything about your windows and tabs stay on this computer/);
+  // Group boxes are derived from their settings; a group with one setting (Theme) gets no box of its own.
+  assert.deepEqual([...html.matchAll(/data-sync-group="(\w+)"/g)].map(m=>m[1]),['all','parking','protection']);
+  const group=name=>[...html.matchAll(new RegExp(`data-sync="(\\w+)" data-group="${name}"`,'g'))].map(m=>m[1]);
+  const page=ids=>ids.toSorted((a,b)=>html.indexOf(`id="${a}"`)-html.indexOf(`id="${b}"`));
+  assert.deepEqual(group('parking'),['sleepingMode','delayMinutes','dwellSeconds']);assert.deepEqual(group('parking'),page(group('parking')),'page order');
+  assert.deepEqual(group('protection'),['discardPinned','protectAudio','exclusions']);assert.deepEqual(group('protection'),page(group('protection')));
+  assert.match(html,/<input type="checkbox" data-sync="appearance"><span>Theme<\/span>/);
+  assert.match(html,/<label class="check-row sync-all"><input type="checkbox" data-sync-group="all"><span>Sync all settings<\/span><\/label>/);
+  for(const name of ['Parking','Tab protection'])assert.match(html,new RegExp(`<div class="sync-children" role="group" aria-label="${name}">`));
+  assert.match(html,/<button id="reset" type="button">Restore defaults<\/button>/);assert(!html.includes('Reset settings'));
 });
 
 test('theme is a compact labelled three-state icon control; bug report is a small labelled control',()=>{
@@ -66,74 +77,91 @@ test('the tab list shows that it scrolls: edge fades and a chevron, without addi
   assert.match(css,/\.individual-intro, \.tab-scroll, \.individual-section #tabStatus \{ margin-left: 0; \}/,'full width on narrow pages');
 });
 
-function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,synced={},policy={},tabs=[{id:11,windowId:1,title:'Research'},{id:12,windowId:2,title:'x'.repeat(400)}],reduced=false}={}){
+// The page runs against the real worker engine (tests/helpers.js), so sync
+// requests use the real rules. Tab listing and protection are simulated.
+async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync={},policy={},customized={},tabs=[{id:11,windowId:1,title:'Research'},{id:12,windowId:2,title:'x'.repeat(400)}],reduced=false}={}){
   const elements=new Map(),messages=[],storageListeners=[];
   const events=()=>({on:{},addEventListener(type,fn){(this.on[type]||=[]).push(fn);},
     fire(type,e={}){return Promise.all((this.on[type]||[]).map(fn=>fn({preventDefault(){},isTrusted:true,detail:1,...e})));}});
-  const node=(props={})=>{const n={...events(),disabled:false,hidden:false,checked:false,value:'',textContent:'',title:'',className:'',children:[],
-    classes:new Set(),dataset:{},focused:false,focus(){n.focused=true;},append(...kids){this.children.push(...kids);},replaceChildren(){this.children=[];this.textContent='';},...props};
+  const node=(props={})=>{const n={...events(),disabled:false,hidden:false,checked:false,indeterminate:false,value:'',textContent:'',title:'',className:'',children:[],
+    classes:new Set(),dataset:{},focused:false,focus(){for(const other of all)other.focused=false;n.focused=true;},append(...kids){this.children.push(...kids);},replaceChildren(...kids){this.children=kids;this.textContent='';},...props};
     n.classList={add:c=>n.classes.add(c),remove:c=>n.classes.delete(c),toggle:(c,on=!n.classes.has(c))=>{on?n.classes.add(c):n.classes.delete(c);return on;}};
     n.style={props:{},setProperty(k,v){this.props[k]=v;}};n.scrolls=[];n.scrollBy=o=>n.scrolls.push(o);
-    Object.assign(n,{scrollHeight:0,clientHeight:0,scrollTop:0,offsetWidth:0,clientWidth:0});return n;};
+    Object.assign(n,{scrollHeight:0,clientHeight:0,scrollTop:0,offsetWidth:0,clientWidth:0});all.push(n);return n;};
+  const all=[];
   const el=id=>{if(!elements.has(id))elements.set(id,node({id}));return elements.get(id);};
   const themes=['light','dark','auto'].map(value=>node({value,name:'appearance'}));
   const groups=[1,2,3,4].map(()=>node({disabled:true}));
-  const boxes=SYNCABLE.map(key=>node({dataset:{sync:key}}));
+  // In page order, as options.html lists them.
+  const boxes=[...html.matchAll(/data-sync="(\w+)"(?: data-group="(\w+)")?/g)].map(m=>node({dataset:{sync:m[1],...(m[2]?{group:m[2]}:{})}}));
+  const groupBoxes=[...html.matchAll(/data-sync-group="(\w+)"/g)].map(m=>node({dataset:{syncGroup:m[1]}}));
   el('syncList').disabled=true;
-  let stored=validateSettings(settings),protectedIds=[],syncPolicy=Object.fromEntries(SYNCABLE.map(k=>[k,policy[k]===true])),notice=null;
+  const h=harness(2,3);h.local.settings=validateSettings(settings);h.local.syncPolicy=policy;h.local.customized=customized;Object.assign(h.sync,sync);
+  await h.restart();
+  // Chrome reports each storage write to every extension page, after the write.
+  const set=h.api.storage.local.set;h.api.storage.local.set=async values=>{await set(values);
+    const changes=Object.fromEntries(Object.entries(values).map(([k,v])=>[k,{newValue:structuredClone(v)}]));
+    setImmediate(()=>storageListeners.forEach(fn=>fn(changes,'local')));};
+  let protectedIds=[];
   const reply=data=>({ok:true,data:structuredClone(data)});
   const old={document:globalThis.document,chrome:globalThis.chrome,ResizeObserver:globalThis.ResizeObserver,matchMedia:globalThis.matchMedia};
   const resizers=[];globalThis.ResizeObserver=class{constructor(fn){resizers.push(fn);}observe(){}};
   globalThis.matchMedia=query=>({matches:reduced&&/reduced-motion: reduce/.test(query)});
-  globalThis.document={getElementById:el,createElement:()=>node(),
-    querySelectorAll:selector=>({'input[name=appearance]':themes,'.settings-fields':groups,'input[data-sync]':boxes})[selector]||[]};
+  globalThis.document={getElementById:el,createElement:tag=>node({tagName:tag.toUpperCase()}),get activeElement(){return all.find(n=>n.focused);},
+    querySelectorAll:selector=>({'input[name=appearance]':themes,'.settings-fields':groups,'input[data-sync]':boxes,'input[data-sync-group]':groupBoxes})[selector]||[]};
   globalThis.chrome={storage:{onChanged:{addListener:fn=>storageListeners.push(fn)}},runtime:{async sendMessage(msg){
-    messages.push(structuredClone(msg));const {type,key}=msg;
-    if(type==='settings')return fail?{ok:false,error:'Worker unavailable'}:reply(stored);
-    if(type==='configure'){stored=validateSettings(msg.settings);return reply(stored);}
-    if(type==='appearance'){stored=validateSettings({...stored,appearance:msg.appearance});return reply(stored);}
-    if(type==='reset'){stored=validateSettings({...DEFAULTS});syncPolicy=Object.fromEntries(SYNCABLE.map(k=>[k,false]));return reply(stored);}
-    if(type==='status')return reply({tabs,protectedIds});
-    if(type==='protect'){protectedIds=msg.protected?[msg.tabId]:[];return reply({protected:msg.protected});}
-    if(type==='sync-state'){const n=notice;notice=null;return reply({policy:syncPolicy,notice:n});}
-    if(type==='sync-enable'){
-      if(synced[key]!==undefined&&JSON.stringify(synced[key])!==JSON.stringify(stored[key]))return reply({status:'conflict',key,local:stored[key],synced:synced[key]});
-      if(key==='exclusions'&&synced.tooLarge)return reply({status:'error',reason:'too-large'});
-      syncPolicy={...syncPolicy,[key]:true};return reply({status:'on',policy:syncPolicy,settings:stored});
-    }
-    if(type==='sync-resolve'){
-      if(msg.use==='synced')stored=validateSettings({...stored,[key]:synced[key]});
-      syncPolicy={...syncPolicy,[key]:true};return reply({status:'on',policy:syncPolicy,settings:stored});
-    }
-    if(type==='sync-disable'){syncPolicy={...syncPolicy,[key]:false};return reply({status:'off',policy:syncPolicy,settings:stored});}
-    return {ok:false,error:'unexpected'};
+    messages.push(structuredClone(msg));
+    if(msg.type==='settings'&&fail)return {ok:false,error:'Worker unavailable'};
+    if(msg.type==='status')return reply({tabs,protectedIds});
+    if(msg.type==='protect'){protectedIds=msg.protected?[msg.tabId]:[];return reply({protected:msg.protected});}
+    try{return reply(await h.p.message(structuredClone(msg),{id:'test',url:'chrome-extension://test/options.html'}));}
+    catch(error){return {ok:false,error:error.message};}
   }},tabs:{create:async()=>({})}};
   t.after(()=>Object.assign(globalThis,old));
   const choose=value=>{for(const r of themes)r.checked=r.value===value;};
-  const box=key=>boxes.find(b=>b.dataset.sync===key);
+  const box=key=>boxes.find(b=>b.dataset.sync===key),group=name=>groupBoxes.find(b=>b.dataset.syncGroup===name);
+  // A click: a box showing a dash becomes ticked, as in Chrome.
+  const click=async target=>{target.checked=target.indeterminate||!target.checked;target.indeterminate=false;await target.fire('change');await flush();await flush();};
+  const state=b=>b.indeterminate?'some':b.checked?'on':'off';
+  const tree=()=>({all:state(group('all')),parking:state(group('parking')),protection:state(group('protection')),theme:state(box('appearance'))});
+  // The open choice panel: each setting's name and its options.
+  const choices=()=>p.el('syncChoices').children.map(set=>({name:set.children[0].textContent,hidden:set.children[0].className==='visually-hidden',
+    note:set.children.find(c=>c.className==='hint')?.textContent,
+    options:set.children.filter(c=>c.className==='check-row').map(label=>({radio:label.children[0],text:label.children[1].textContent}))}));
+  const pick=async(name,text)=>{const radio=choices().find(c=>c.name===name).options.find(o=>o.text.startsWith(text)).radio;radio.checked=true;await radio.fire('change');};
   const remote=settings=>storageListeners.forEach(fn=>fn({settings:{newValue:settings}},'local'));
-  return {el,themes,groups,boxes,box,messages,choose,remote,stored:()=>stored,setNotice:n=>{notice=n;},resize:()=>resizers.forEach(fn=>fn()),
+  const sent=type=>messages.filter(m=>m.type===type);
+  const p={h,el,themes,groups,boxes,box,group,click,tree,choices,pick,messages,sent,choose,remote,stored:()=>h.p.settings,resize:()=>resizers.forEach(fn=>fn()),
     checked:()=>themes.filter(r=>r.checked).map(r=>r.value)};
+  return p;
 }
+const load=async(p,name)=>{await import(`../options.js?${name}=${Math.random()}`);await flush();await flush();return p;};
 
-test('theme control reflects the saved value and applies each choice immediately',async t=>{
-  const p=page(t);await import(`../options.js?theme=${Math.random()}`);await flush();
+test('theme control reflects the saved value and applies each choice immediately; Restore defaults',async t=>{
+  const p=await load(await page(t),'theme');
   assert.deepEqual(p.checked(),['dark']);assert(p.groups.every(g=>!g.disabled));
   for(const value of ['light','auto','dark']){
     p.choose(value);await p.themes.find(r=>r.value===value).fire('change');await flush();
     assert.deepEqual(p.messages.at(-1),{type:'appearance',appearance:value});assert.equal(p.stored().appearance,value);
   }
-  // Saving the form keeps the theme the header already saved.
+  // Saving the form keeps the theme the header already saved, and says what the page showed.
   p.el('delayMinutes').value='30';await p.el('settings').fire('submit');await flush();
-  assert.equal(p.messages.at(-2).type,'configure');assert.equal(p.messages.at(-2).settings.appearance,'dark');
-  assert.equal(p.messages.at(-2).settings.delayMinutes,30);assert.equal(p.messages.at(-1).type,'sync-state');
-  assert.deepEqual(Object.keys(p.messages.at(-2).settings).toSorted(),Object.keys(DEFAULTS).toSorted());
-  await p.el('reset').fire('click');await flush();
-  assert.deepEqual(p.checked(),['auto']);assert.equal(p.el('status').textContent,'Defaults restored. Sync is now off on this computer.');
+  const saved=p.sent('configure').at(-1);assert.equal(saved.settings.appearance,'dark');assert.equal(saved.settings.delayMinutes,30);
+  assert.deepEqual(Object.keys(saved.settings).toSorted(),Object.keys(DEFAULTS).toSorted());
+  assert.equal(saved.shown.delayMinutes,15,'the value the page showed before the edit');assert.equal(p.messages.at(-1).type,'sync-state');
+  assert.equal(p.stored().delayMinutes,30);assert.equal(p.h.p.customized.delayMinutes,true);
+  // Restore defaults: defaults here, sync off here, nothing chosen here, shared values untouched.
+  await p.click(p.group('all'));assert.deepEqual(p.tree(),{all:'on',parking:'on',protection:'on',theme:'on'});
+  const shared=structuredClone(p.h.sync);
+  await p.el('reset').fire('click');await flush();await flush();
+  assert.deepEqual(p.checked(),['auto']);assert.equal(p.el('delayMinutes').value,15);
+  assert.equal(p.el('status').textContent,'Defaults restored. Sync is now off on this computer; your other computers keep their settings.');
+  assert.deepEqual(p.tree(),{all:'off',parking:'off',protection:'off',theme:'off'});assert(p.boxes.every(b=>!b.checked));
+  assert.deepEqual(p.h.sync,shared);assert(Object.values(p.h.p.customized).every(on=>!on));
 });
 
 test('individual tabs: refresh lists every tab, checkboxes protect immediately and survive a settings load failure',async t=>{
-  const p=page(t,{fail:true});await import(`../options.js?individual=${Math.random()}`);await flush();
+  const p=await load(await page(t,{fail:true}),'individual');
   assert.equal(p.el('loadError').hidden,false);assert(p.groups.every(g=>g.disabled),'settings stay locked');
   assert.equal(p.el('syncList').disabled,true,'sync choices need loaded settings');
   p.el('individual').open=true;await p.el('individual').fire('toggle');await flush();
@@ -141,11 +169,14 @@ test('individual tabs: refresh lists every tab, checkboxes protect immediately a
   const [box,text]=rows[1].children;assert.equal(text.children[0].className,'tab-title');
   assert.equal(text.children[0].textContent.length,400);assert.equal(rows[1].title.length,400);
   assert.equal(text.children[1].textContent,'Window 2');assert.equal(box.disabled,false);
-  // Enter on a checkbox in these lists must not submit (save) the settings form; Space still toggles.
-  for(const id of ['tabs','syncList']){
-    const prevented=[];for(const key of ['Enter',' '])await p.el(id).fire('keydown',{key,preventDefault(){prevented.push(key);}});
+  // Enter on a checkbox or choice in these lists must not submit (save) the settings form;
+  // Space still toggles, and Enter still presses a button.
+  for(const id of ['tabs','syncList','syncChoice']){
+    const prevented=[];for(const key of ['Enter',' '])await p.el(id).fire('keydown',{key,target:{tagName:'INPUT'},preventDefault(){prevented.push(key);}});
     assert.deepEqual(prevented,['Enter'],id);
   }
+  const pressed=[];await p.el('syncChoice').fire('keydown',{key:'Enter',target:{tagName:'BUTTON'},preventDefault(){pressed.push('Enter');}});
+  assert.deepEqual(pressed,[],'Apply and Cancel still work with Enter');
   box.checked=true;await box.fire('change');
   assert.deepEqual(p.messages.at(-1),{type:'protect',tabId:12,protected:true});
   assert.equal(p.el('tabStatus').textContent,'Tab protection updated.');
@@ -155,7 +186,7 @@ test('individual tabs: refresh lists every tab, checkboxes protect immediately a
 });
 
 test('scroll cue follows the list: none without overflow; below at the top, both in the middle, above at the bottom',async t=>{
-  const p=page(t);await import(`../options.js?cue=${Math.random()}`);await flush();
+  const p=await load(await page(t),'cue');
   const list=p.el('tabs'),scroll=p.el('tabScroll'),cue=p.el('moreTabs');
   const state=()=>({above:scroll.classes.has('more-above'),below:scroll.classes.has('more-below'),cue:!cue.hidden});
   const at=async(top,{height=900,visible=338}={})=>{Object.assign(list,{scrollHeight:height,clientHeight:visible,scrollTop:top});await list.fire('scroll');return state();};
@@ -177,57 +208,157 @@ test('scroll cue follows the list: none without overflow; below at the top, both
 });
 
 test('scroll cue respects reduced motion; windows are numbered, not shown by Chrome ID',async t=>{
-  const p=page(t,{reduced:true,tabs:[{id:1,windowId:509769978,title:'A'},{id:2,windowId:509769986,title:'B'},{id:3,windowId:509769978,title:'C'}]});
-  await import(`../options.js?cue-motion=${Math.random()}`);await flush();
+  const p=await load(await page(t,{reduced:true,tabs:[{id:1,windowId:509769978,title:'A'},{id:2,windowId:509769986,title:'B'},{id:3,windowId:509769978,title:'C'}]}),'cue-motion');
   Object.assign(p.el('tabs'),{clientHeight:300});await p.el('moreTabs').fire('click');
   assert.deepEqual(p.el('tabs').scrolls,[{top:240,behavior:'auto'}]);
   p.el('individual').open=true;await p.el('individual').fire('toggle');await flush();
   assert.deepEqual(p.el('tabs').children.map(row=>row.children[1].children[1].textContent),['Window 1','Window 2','Window 1']);
 });
 
-test('sync: each setting turns on and off separately, right away',async t=>{
-  const p=page(t,{policy:{appearance:true}});await import(`../options.js?sync-basic=${Math.random()}`);await flush();
-  assert.deepEqual(p.boxes.filter(b=>b.checked).map(b=>b.dataset.sync),['appearance']);
-  assert.equal(p.el('syncList').disabled,false);
-  p.box('delayMinutes').checked=true;await p.box('delayMinutes').fire('change');await flush();
-  assert.deepEqual(p.messages.at(-1),{type:'sync-enable',key:'delayMinutes'});
+test('sync: "Sync all settings" and the group boxes show their settings: off, some (a dash) or on',async t=>{
+  const cases=[[{},{all:'off',parking:'off',protection:'off',theme:'off'}],
+    [{appearance:true},{all:'some',parking:'off',protection:'off',theme:'on'}],
+    [{delayMinutes:true},{all:'some',parking:'some',protection:'off',theme:'off'}],
+    [{delayMinutes:true,dwellSeconds:true,sleepingMode:true,exclusions:true},{all:'some',parking:'on',protection:'some',theme:'off'}],
+    [Object.fromEntries(SYNCABLE.map(k=>[k,true])),{all:'on',parking:'on',protection:'on',theme:'on'}]];
+  for(const [i,[policy,expected]] of cases.entries()){
+    const p=await load(await page(t,{policy}),`sync-states-${i}`);assert.deepEqual(p.tree(),expected,JSON.stringify(policy));
+    assert.deepEqual(p.boxes.filter(b=>b.checked).map(b=>b.dataset.sync).toSorted(),Object.keys(policy).toSorted());
+    assert(p.boxes.every(b=>!b.indeterminate),'single settings are simply on or off');
+    assert.equal(p.el('syncList').disabled,false);
+  }
+});
+
+test('sync: one setting, a group or everything turns on in one request, and off again; nothing else is stored',async t=>{
+  const p=await load(await page(t),'sync-groups');
+  await p.click(p.box('delayMinutes'));
+  assert.deepEqual(p.messages.at(-1),{type:'sync-enable',keys:['delayMinutes'],choices:{}});
   assert.equal(p.el('syncStatus').textContent,'Park windows after now syncs.');
-  assert(p.box('delayMinutes').checked&&!p.box('exclusions').checked);
-  p.box('appearance').checked=false;await p.box('appearance').fire('change');await flush();
-  assert.deepEqual(p.messages.at(-1),{type:'sync-disable',key:'appearance'});
-  assert.equal(p.el('syncStatus').textContent,'Theme now stays on this computer.');
+  assert.deepEqual(p.tree(),{all:'some',parking:'some',protection:'off',theme:'off'});
+  await p.click(p.group('parking')); // the dash becomes a tick: the rest of the group turns on
+  assert.deepEqual(p.messages.at(-1).keys,['sleepingMode','dwellSeconds'],'only settings not already syncing');
+  assert.equal(p.el('syncStatus').textContent,'Parking settings now sync.');
+  assert.deepEqual(p.tree(),{all:'some',parking:'on',protection:'off',theme:'off'});
+  await p.click(p.group('all'));
+  assert.deepEqual(p.messages.at(-1).keys,['discardPinned','protectAudio','exclusions','appearance']);
+  assert.equal(p.el('syncStatus').textContent,'All settings now sync.');assert.deepEqual(p.tree(),{all:'on',parking:'on',protection:'on',theme:'on'});
+  assert.equal(p.sent('sync-enable').length,3,'one request per click');
+  const shared=structuredClone(p.h.sync);
+  await p.click(p.group('protection'));
+  assert.deepEqual(p.messages.at(-1),{type:'sync-disable',keys:['discardPinned','protectAudio','exclusions']});
+  assert.equal(p.el('syncStatus').textContent,'Tab protection settings now stay on this computer.');
+  assert.deepEqual(p.tree(),{all:'some',parking:'on',protection:'off',theme:'on'});
+  await p.click(p.box('appearance'));assert.equal(p.el('syncStatus').textContent,'Theme now stays on this computer.');
+  await p.click(p.group('all'));await p.click(p.group('all')); // on, then off again
+  assert.deepEqual(p.messages.at(-1),{type:'sync-disable',keys:[...p.boxes.map(b=>b.dataset.sync)]});
+  assert.equal(p.el('syncStatus').textContent,'All settings now stay on this computer.');
+  assert.deepEqual(p.tree(),{all:'off',parking:'off',protection:'off',theme:'off'});
+  assert.deepEqual(p.h.sync,shared,'turning sync off leaves shared values alone');
+  assert(Object.keys(p.h.local).every(key=>['customized','parkingRecords','settings','syncPolicy'].includes(key)),'no stored group or "all" state');
+  assert(p.group('all').focused,'focus returns to the box you used');
 });
 
-test('sync: a different shared value needs an explicit choice, and Cancel changes nothing',async t=>{
-  const p=page(t,{settings:{...DEFAULTS,delayMinutes:15},synced:{delayMinutes:60,sleepingMode:'immediate'}});
-  await import(`../options.js?sync-conflict=${Math.random()}`);await flush();
-  const b=p.box('delayMinutes');b.checked=true;await b.fire('change');await flush();
+test('sync on a new computer: different synced values are used without asking, and the page says so',async t=>{
+  const p=await load(await page(t,{sync:{delayMinutes:30,sleepingMode:'immediate',appearance:'dark'}}),'sync-new');
+  await p.click(p.group('all'));
+  assert.equal(p.el('syncChoice').hidden,true,'no question');assert.deepEqual(p.tree(),{all:'on',parking:'on',protection:'on',theme:'on'});
+  assert.equal(p.el('delayMinutes').value,30);assert.equal(p.el('delayPreset').value,'30');assert.equal(p.el('sleepingMode').value,'immediate');
+  assert.equal(p.el('sleepingHelp').textContent,'Unload eligible tabs as soon as their window is parked.');
+  assert.equal(p.el('syncStatus').textContent,'All settings now sync. Updated here from your synced settings: Tab sleeping (Discard immediately), Park windows after (30 minutes).');
+  assert(Object.values(p.h.p.customized).every(on=>!on));
+});
+
+test('sync: settings chosen here that differ are asked about together; Cancel changes nothing',async t=>{
+  const options={settings:{...DEFAULTS,appearance:'dark'},customized:{delayMinutes:true,appearance:true},sync:{delayMinutes:60,appearance:'light',sleepingMode:'immediate'}};
+  const p=await load(await page(t,options),'sync-conflicts');
+  const before=structuredClone({settings:p.h.local.settings,sync:p.h.sync});
+  await p.click(p.group('all'));
   assert.equal(p.el('syncChoice').hidden,false);assert.equal(p.el('syncList').disabled,true);
-  assert.equal(p.el('syncChoiceText').textContent,'Park windows after is 15 minutes here and 1 hour in sync. Which should all your computers use?');
-  assert.equal(p.el('useSynced').textContent,'Use synced: 1 hour');assert.equal(p.el('useLocal').textContent,'Use this computer’s: 15 minutes');
-  assert(p.el('useSynced').focused);
+  assert.equal(p.el('syncChoiceText').textContent,'Some settings are different on this computer and in your synced settings. Choose which to use for each one.');
+  assert.deepEqual(p.choices().map(c=>[c.name,c.hidden,c.options.map(o=>o.text)]),[
+    ['Park windows after',false,['Use synced: 1 hour','Use this computer’s: 15 minutes']],['Theme',false,['Use synced: Light','Use this computer’s: Dark']]]);
+  assert(p.choices()[0].options[0].radio.focused,'focus moves to the first choice');
+  assert.equal(p.el('applySync').textContent,'Apply choices');assert.equal(p.el('applySync').disabled,true,'every setting needs a choice');
+  assert.equal(p.group('all').checked,true,'the box you ticked stays ticked while you choose');
+  assert.deepEqual({settings:p.h.local.settings,sync:p.h.sync},before,'nothing changed yet');assert(Object.values(p.h.p.policy).every(on=>!on));
+  await p.pick('Park windows after','Use synced');assert.equal(p.el('applySync').disabled,true);
   await p.el('cancelSync').fire('click');
-  assert.equal(b.checked,false);assert.equal(p.el('syncChoice').hidden,true);assert.equal(p.el('syncStatus').textContent,'Nothing changed.');
-  assert(!p.messages.some(m=>m.type==='sync-resolve'));
-  // Choosing the synced value updates the effective value and the unedited field.
-  b.checked=true;await b.fire('change');await flush();await p.el('useSynced').fire('click');await flush();
-  assert.deepEqual(p.messages.at(-1),{type:'sync-resolve',key:'delayMinutes',use:'synced'});
-  assert.equal(p.el('delayMinutes').value,60);assert.equal(p.el('delayPreset').value,'60');assert(b.checked);
-  const s=p.box('sleepingMode');s.checked=true;await s.fire('change');await flush();await p.el('useLocal').fire('click');await flush();
-  assert.deepEqual(p.messages.at(-1),{type:'sync-resolve',key:'sleepingMode',use:'local'});assert.equal(p.el('sleepingMode').value,'chrome');
+  assert.equal(p.el('syncChoice').hidden,true);assert.equal(p.el('syncStatus').textContent,'Nothing changed.');
+  assert.deepEqual(p.tree(),{all:'off',parking:'off',protection:'off',theme:'off'});assert.equal(p.el('syncList').disabled,false);
+  assert.equal(p.sent('sync-enable').length,1,'Cancel sends nothing');assert(p.group('all').focused);
+  assert.deepEqual({settings:p.h.local.settings,sync:p.h.sync},before);assert(Object.values(p.h.p.policy).every(on=>!on));
+  // Escape cancels too.
+  await p.click(p.group('all'));await p.el('syncChoice').fire('keydown',{key:'Escape',target:{tagName:'INPUT'}});
+  assert.equal(p.el('syncChoice').hidden,true);assert.equal(p.el('syncStatus').textContent,'Nothing changed.');
 });
 
-test('sync: failures are explained and leave the setting local',async t=>{
-  const p=page(t,{synced:{tooLarge:true}});await import(`../options.js?sync-error=${Math.random()}`);await flush();
-  const b=p.box('exclusions');b.checked=true;await b.fire('change');await flush();
-  assert.equal(b.checked,false);assert(p.el('syncStatus').classes.has('error'));
+test('sync: one choice per setting, applied together',async t=>{
+  const p=await load(await page(t,{settings:{...DEFAULTS,appearance:'dark'},customized:{delayMinutes:true,appearance:true},
+    sync:{delayMinutes:60,appearance:'light',sleepingMode:'immediate'}}),'sync-apply');
+  await p.click(p.group('all'));await p.pick('Park windows after','Use synced');await p.pick('Theme','Use this computer’s');
+  assert.equal(p.el('applySync').disabled,false);
+  await p.el('applySync').fire('click');await flush();await flush();
+  const request=p.sent('sync-enable').at(-1);
+  assert.deepEqual(request.choices,{delayMinutes:{use:'synced',local:15,synced:60},appearance:{use:'local',local:'dark',synced:'light'}});
+  assert.equal(p.el('syncChoice').hidden,true);assert.deepEqual(p.tree(),{all:'on',parking:'on',protection:'on',theme:'on'});
+  assert.equal(p.el('delayMinutes').value,60);assert.equal(p.el('delayPreset').value,'60');assert.deepEqual(p.checked(),['dark']);
+  assert.equal(p.h.sync.appearance,'dark');assert.equal(p.h.p.customized.delayMinutes,false);assert.equal(p.h.p.customized.appearance,true);
+  assert.equal(p.el('syncStatus').textContent,'All settings now sync. Updated here from your synced settings: Tab sleeping (Discard immediately), Park windows after (1 hour).');
+  assert(p.group('all').focused);
+});
+
+test('sync: a single setting asks one question; if a value changes meanwhile, it asks again',async t=>{
+  const p=await load(await page(t,{customized:{delayMinutes:true},sync:{delayMinutes:60}}),'sync-single');
+  await p.click(p.box('delayMinutes'));
+  assert.equal(p.el('syncChoiceText').textContent,'Park windows after is different on this computer and in your synced settings. Which should your computers use?');
+  assert.deepEqual(p.choices().map(c=>[c.name,c.hidden]),[['Park windows after',true]],'the question names it once');
+  assert.equal(p.el('applySync').textContent,'Apply');
+  p.h.sync.delayMinutes=90; // another computer changes it while you choose
+  await p.pick('Park windows after','Use this computer’s');await p.el('applySync').fire('click');await flush();await flush();
+  assert.equal(p.el('syncChoiceText').textContent,'A setting changed while you were choosing. Please choose again.');
+  assert.deepEqual(p.choices()[0].options.map(o=>o.text),['Use synced: 90 minutes','Use this computer’s: 15 minutes']);
+  assert.equal(p.el('applySync').disabled,true);assert.equal(p.h.sync.delayMinutes,90,'not overwritten');assert.equal(p.h.p.policy.delayMinutes,false);
+  await p.pick('Park windows after','Use synced');await p.el('applySync').fire('click');await flush();await flush();
+  assert.equal(p.el('delayMinutes').value,90);assert.equal(p.el('delayPreset').value,'custom');assert.equal(p.box('delayMinutes').checked,true);
+  assert.equal(p.el('syncStatus').textContent,'Park windows after now syncs. Updated here from your synced settings: Park windows after (90 minutes).');
+});
+
+test('sync: a synced value this version can’t use is explained, and only safe choices are offered',async t=>{
+  const p=await load(await page(t,{sync:{sleepingMode:'smart'}}),'sync-unusable');
+  await p.click(p.box('sleepingMode'));
+  const [row]=p.choices();assert.equal(row.note,'The synced value can’t be used by this version of Chrome Window Parker.');
+  assert.deepEqual(row.options.map(o=>o.text),['Use this computer’s: Let Chrome decide','Don’t sync this setting']);
+  await p.pick('Tab sleeping','Don’t sync');await p.el('applySync').fire('click');await flush();await flush();
+  assert.equal(p.el('syncStatus').textContent,'Tab sleeping stays on this computer.');assert.equal(p.box('sleepingMode').checked,false);
+  assert.equal(p.h.sync.sleepingMode,'smart','left for the other computer');
+});
+
+test('sync: failures are explained, and the boxes show only what really syncs',async t=>{
+  const p=await load(await page(t),'sync-error');
+  p.h.hooks.syncSet=values=>{if('exclusions' in values)throw new Error('QUOTA_BYTES_PER_ITEM quota exceeded');};
+  await p.click(p.group('protection'));
+  assert.equal(p.el('syncStatus').textContent,'Pinned tabs and Audio tabs now sync. Sites to exclude is too long to sync, so it stays on this computer.');
+  assert(p.el('syncStatus').classes.has('error'));
+  assert.deepEqual(p.tree(),{all:'some',parking:'off',protection:'some',theme:'off'});assert.equal(p.box('exclusions').checked,false);
+  p.h.p.syncNotice=[{key:'exclusions',reason:'too-large'}];await p.el('settings').fire('submit');await flush();
   assert.equal(p.el('syncStatus').textContent,'Sites to exclude is too long to sync, so it stays on this computer.');
-  p.setNotice({keys:['exclusions'],reason:'too-large'});await p.el('settings').fire('submit');await flush();
-  assert.equal(p.el('syncStatus').textContent,'Sites to exclude is too long to sync, so it stays on this computer.');
+  p.h.hooks.syncGet=()=>{throw new Error('Sync is unavailable');};
+  await p.click(p.box('dwellSeconds'));
+  assert.equal(p.el('syncStatus').textContent,'Chrome sync isn’t available right now. Try again later.');
+  assert.equal(p.box('dwellSeconds').checked,false);assert.equal(p.el('syncList').disabled,false);
+});
+
+test('keyboard focus stays on Save settings, Restore defaults and Refresh list while they work',async t=>{
+  const p=await load(await page(t),'focus');
+  // Chrome drops focus from a button that is disabled while it works.
+  for(const [id,run] of [['save',()=>p.el('settings').fire('submit')],['reset',()=>p.el('reset').fire('click')],['refresh',()=>p.el('refresh').fire('click')]]){
+    p.el(id).focus();const done=run();p.el(id).focused=false;await done;await flush();await flush();
+    assert(p.el(id).focused,id);
+  }
 });
 
 test('changes from another page or computer update only fields you have not edited',async t=>{
-  const p=page(t);await import(`../options.js?remote=${Math.random()}`);await flush();
+  const p=await load(await page(t),'remote');
   p.el('dwellSeconds').value='5'; // an unsaved edit
   p.remote({...p.stored(),delayMinutes:30,dwellSeconds:9,sleepingMode:'immediate',appearance:'light'});
   assert.equal(p.el('delayMinutes').value,30);assert.equal(p.el('sleepingMode').value,'immediate');
