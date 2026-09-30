@@ -90,6 +90,9 @@ test('problems with a site are explained in plain words, with what to enter inst
   for(const bad of ['exa$mple.com','ftp://example.com','https://'])
     assert.throws(()=>validateSettings({exclusions:[bad]}),new RegExp(`“${bad.replace(/[$/.*]/g,'\\$&')}” isn’t a website\\. Enter one such as example\\.com, or a full address such as https://example\\.com/work/\\*\\.`));
   assert.throws(()=>validateSettings({exclusions:['example .com']}),/Put one site on each line, without spaces/);
+  // A very long address is too long, not misdiagnosed as containing spaces.
+  assert.throws(()=>validateSettings({exclusions:['https://example.com/'+'a'.repeat(1000)]}),/^Error: A site can be at most 1,000 characters long\.$/);
+  assert.doesNotThrow(()=>validateSettings({exclusions:['https://example.com/'+'a'.repeat(980)]}));
   for(const good of ['http://example.com/work/*','https://example.com/work/*','*://example.com/*','*.example.com','localhost:3000'])
     assert.doesNotThrow(()=>validateSettings({exclusions:[good]}),good);
 });

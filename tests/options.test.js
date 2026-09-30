@@ -100,7 +100,8 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
     fire(type,e={}){return Promise.all((this.on[type]||[]).map(fn=>fn({preventDefault(){},isTrusted:true,detail:1,...e})));}});
   const node=(props={})=>{const n={...events(),disabled:false,hidden:false,checked:false,indeterminate:false,value:'',textContent:'',title:'',className:'',children:[],
     classes:new Set(),dataset:{},focused:false,focus(){for(const other of all)other.focused=false;n.focused=true;},append(...kids){this.children.push(...kids);},replaceChildren(...kids){this.children=kids;this.textContent='';},
-    selectionStart:0,selectionEnd:0,setRangeText(text,start,end){this.value=this.value.slice(0,start)+text+this.value.slice(end);},...props};
+    selectionStart:0,selectionEnd:0,setRangeText(text,start,end){this.value=this.value.slice(0,start)+text+this.value.slice(end);},
+    select(){this.selectionStart=0;this.selectionEnd=this.value.length;},...props};
     n.classList={add:c=>n.classes.add(c),remove:c=>n.classes.delete(c),toggle:(c,on=!n.classes.has(c))=>{on?n.classes.add(c):n.classes.delete(c);return on;}};
     n.style={props:{},setProperty(k,v){this.props[k]=v;}};n.scrolls=[];n.scrollBy=o=>n.scrolls.push(o);
     Object.assign(n,{scrollHeight:0,clientHeight:0,scrollTop:0,offsetWidth:0,clientWidth:0});all.push(n);return n;};
@@ -120,7 +121,9 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
     setImmediate(()=>storageListeners.forEach(fn=>fn(changes,'local')));};
   let protectedIds=[];
   const reply=data=>({ok:true,data:structuredClone(data)});
-  const old={document:globalThis.document,chrome:globalThis.chrome,ResizeObserver:globalThis.ResizeObserver,matchMedia:globalThis.matchMedia};
+  const old={document:globalThis.document,chrome:globalThis.chrome,ResizeObserver:globalThis.ResizeObserver,matchMedia:globalThis.matchMedia,confirm:globalThis.confirm};
+  // Restore defaults asks first; answer OK unless a test says otherwise.
+  const confirms=[];let answer=true;globalThis.confirm=text=>{confirms.push(text);return answer;};
   const resizers=[];globalThis.ResizeObserver=class{constructor(fn){resizers.push(fn);}observe(){}};
   globalThis.matchMedia=query=>({matches:reduced&&/reduced-motion: reduce/.test(query)});
   globalThis.document={getElementById:el,createElement:tag=>node({tagName:tag.toUpperCase()}),get activeElement(){return all.find(n=>n.focused);},
@@ -148,6 +151,7 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
   const remote=settings=>storageListeners.forEach(fn=>fn({settings:{newValue:settings}},'local'));
   const sent=type=>messages.filter(m=>m.type===type);
   const p={h,el,themes,groups,boxes,box,group,click,tree,choices,pick,messages,sent,choose,remote,stored:()=>h.p.settings,resize:()=>resizers.forEach(fn=>fn()),
+    confirms,answer:value=>{answer=value;},
     checked:()=>themes.filter(r=>r.checked).map(r=>r.value)};
   return p;
 }
@@ -360,7 +364,7 @@ test('sync: failures are explained, and the boxes show only what really syncs',a
   assert.equal(p.el('syncStatus').textContent,'Sites to exclude is too long to sync, so it stays on this computer.');
   p.h.hooks.syncGet=()=>{throw new Error('Sync is unavailable');};
   await p.click(p.box('dwellSeconds'));
-  assert.equal(p.el('syncStatus').textContent,'Restore delay couldn’t sync because Chrome sync isn’t available right now. Try again later.');
+  assert.equal(p.el('syncStatus').textContent,'Chrome sync isn’t available right now. Try again later.');
   assert.equal(p.box('dwellSeconds').checked,false);assert.equal(p.el('syncList').disabled,false);
 });
 
@@ -382,8 +386,16 @@ test('excluded sites: Clean up sorts and removes repeats without saving; the fac
   await p.el('settings').fire('submit');await flush();
   assert.equal(p.h.p.customized.exclusions,false,'saving an unchanged list is not a change made here');
   sites.value='zoom.us\n  https://example.com/work/*\n\nmeet.google.com \nZoom.us\nhttps://meet.google.com/\nzoom.us';
-  await p.el('cleanUpSites').fire('click');
+  // In Chrome the new list replaces the whole old one as an edit, so Undo brings the old list back.
+  const commands=[];globalThis.document.execCommand=(command,ui,text)=>{commands.push([command,text,sites.selectionStart,sites.selectionEnd,sites.focused]);
+    sites.setRangeText(text,sites.selectionStart,sites.selectionEnd);return true;};
+  const length=sites.value.length;p.el('cleanUpSites').focus();await p.el('cleanUpSites').fire('click');delete globalThis.document.execCommand;
+  assert.deepEqual(commands,[['insertText','https://example.com/work/*\nmeet.google.com\nzoom.us',0,length,true]]);
+  assert(p.el('cleanUpSites').focused,'focus stays on the button');
   assert.equal(sites.value,'https://example.com/work/*\nmeet.google.com\nzoom.us');assert.equal(p.messages.length,sent+2,'still unsaved');
+  // Without that editing command, the text is simply replaced.
+  sites.value='zoom.us\nmeet.google.com\nZOOM.us\nhttps://example.com/work/*';await p.el('cleanUpSites').fire('click');
+  assert.equal(sites.value,'https://example.com/work/*\nmeet.google.com\nzoom.us');
   assert.deepEqual(p.stored().exclusions,DEFAULTS.exclusions);
   await p.el('settings').fire('submit');await flush();
   assert.deepEqual(p.stored().exclusions,['https://example.com/work/*','meet.google.com','zoom.us']);assert.equal(p.h.p.customized.exclusions,true);
@@ -480,4 +492,18 @@ test('Restore defaults clears obsolete sync success and failure messages', async
   assert.equal(p.el('syncStatus').textContent, '');
   assert.equal(p.h.p.syncNotice, null);
   assert.equal(p.tree().all, 'off');
+});
+
+test('Restore defaults asks first, naming what is lost; Cancel changes nothing', async t => {
+  const p = await load(await page(t, {settings: {...DEFAULTS, delayMinutes: 30, exclusions: ['zoom.us', 'my.example']}}), 'reset-confirm');
+  p.answer(false);
+  await p.el('reset').fire('click'); await flush(); await flush();
+  assert.deepEqual(p.confirms, ['Restore all settings to their defaults? Your excluded sites go back to the built-in list, and sync turns off on this computer.']);
+  assert.equal(p.sent('reset').length, 0, 'nothing is sent');
+  assert.equal(p.stored().delayMinutes, 30); assert.deepEqual(p.stored().exclusions, ['zoom.us', 'my.example']);
+  assert.equal(p.el('exclusions').value, 'zoom.us\nmy.example', 'the page still shows your list');
+  assert.equal(p.el('status').textContent, '');
+  p.answer(true);
+  await p.el('reset').fire('click'); await flush(); await flush();
+  assert.equal(p.sent('reset').length, 1); assert.deepEqual(p.stored().exclusions, DEFAULTS.exclusions);
 });

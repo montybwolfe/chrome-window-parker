@@ -64,6 +64,8 @@ $('settings').addEventListener('submit', event => {
   save(() => request('configure', {settings, shown: saved}), 'Settings saved.');
 });
 $('reset').addEventListener('click', () => {
+  // A custom site list has no undo, so ask first.
+  if (!confirm('Restore all settings to their defaults? Your excluded sites go back to the built-in list, and sync turns off on this computer.')) return;
   if (asking) { closeChoice(); syncLocked(false); }
   save(async () => { const settings = await request('reset'); status('', 'syncStatus'); return settings; }, 'Defaults restored. Sync is now off on this computer; your other computers keep their settings.');
 });
@@ -82,10 +84,14 @@ sites.addEventListener('paste', event => {
 });
 // Clean up sorts the list and removes repeats (see cleanUpRules). A tidying
 // action only: it changes nothing else, saves nothing, and leaves a list that
-// is already clean exactly as it is.
+// is already clean exactly as it is. The new list replaces the old one as an
+// edit, so Undo brings the old list back; focus stays on the button.
 $('cleanUpSites').addEventListener('click', () => {
   const lines = sites.value.split('\n').map(line => line.trim()).filter(Boolean), cleaned = cleanUpRules(lines);
-  if (!same(cleaned, lines)) sites.value = cleaned.join('\n');
+  if (same(cleaned, lines)) return;
+  sites.focus(); sites.select();
+  if (!document.execCommand?.('insertText', false, cleaned.join('\n'))) sites.value = cleaned.join('\n');
+  sites.scrollTop = 0; $('cleanUpSites').focus();
 });
 for (const input of themes) input.addEventListener('change', async () => {
   if (!input.checked || !saved) return;
@@ -162,7 +168,7 @@ async function enableSync(keys, origin, choices = {}) {
   try {
     const result = await request('sync-enable', {keys, choices});
     if (result.status === 'conflict') { askChoice(result.conflicts, {keys, origin, choices}, !!asking); return; }
-    if (result.status !== 'on') throw new Error(reason(keys[0], result.reason));
+    if (result.status !== 'on') throw new Error('Chrome sync isn’t available right now. Try again later.');
     closeChoice(); renderSync(result.policy); refreshFields(result.settings);
     // Name what was ticked ("All settings") when all of it now syncs.
     const on = keys.filter(key => result.policy[key]), used = on.filter(key => !same(result.settings[key], before[key]));
@@ -273,7 +279,7 @@ async function refresh() {
       });
       label.append(box, text); $('tabs').append(label);
     }
-    if (!data.tabs.length) $('tabs').textContent = 'No regular tabs are open.';
+    if (!data.tabs.length) $('tabs').textContent = 'No web pages are open.';
   } catch (error) { report(error, 'tabStatus'); }
   finally { $('refresh').disabled = false; scrollCue(); if (focused) refocus($('refresh')); }
 }

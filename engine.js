@@ -856,12 +856,14 @@ export class Parker {
     if (msg.type === 'status') {
       const windows = await this.api.windows.getAll({populate: true, windowTypes: ['normal']});
       const supported = windows.filter(w => this.supported(w));
-      const current = supported.find(w => w.focused)?.tabs.find(t => t.active && this.real(t));
+      // Only web pages ever park or unload, so only they are offered for protection.
+      const web = t => this.real(t) && /^https?:\/\//.test(t.url || '');
+      const current = supported.find(w => w.focused)?.tabs.find(t => t.active && web(t));
       return {enabled: this.settings.enabled,
         parkingTabs: supported.reduce((n,w) => n + w.tabs.filter(t => this.token(t)).length, 0),
         currentTab: current ? {id: current.id, protected: this.protectedIds.includes(current.id)} : null,
         ...(msg.includeTabs ? {protectedIds: this.protectedIds,
-          tabs: supported.flatMap(w => w.tabs.filter(t => this.real(t)).map(t =>
+          tabs: supported.flatMap(w => w.tabs.filter(web).map(t =>
             ({id: t.id, windowId: w.id, title: t.title || t.url || 'Tab'})))} : {}),
         windows: supported.map(w => ({id: w.id, parked: !!w.tabs.find(t => t.active && this.token(t)),
           sleeping: w.tabs.filter(t => this.real(t) && t.discarded).length}))};
