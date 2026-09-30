@@ -2,6 +2,14 @@
 
 Owned by Codex. Follow the shared audit rules in [AGENTS.md](AGENTS.md).
 
+### 2026-09-30 — 1.5.5.3 integration and GitHub publication
+
+- Integrated: original Claude commits `eebdd9d`, `9c1ebc4`, `f3ddbf7`, `1e557b5` fast-forwarded into dev, then correction `ebea0f749d6f3ed13cdf68afbeb8fbf0620d17e9` cherry-picked as `9c7199dfccb507df7c7073526e0b580e1884c022`. Main fast-forwarded to the same SHA; dev and main pushed normally. Earlier Codex audit-only lane commits were not integrated. Worktrees clean; Claude remains at `1e557b5f62fc2840779d56a5f4b657f804c57162`.
+- Gates: independent `npm test` runs on dev and main each passed 373/373, zero failures/skips; each built the package and verified all nine artwork assets. Every main ZIP entry matches its committed blob and the dev package is byte-identical. Repeated all 42 Settings/popup live checks on the exact final main-built ZIP, with no page errors. Earlier 20 Chrome-managed and 13 immediate-mode lifecycle checks remain applicable; later runtime edits only affected sync diagnostics/reset, plus comments.
+- Published: [Chrome Window Parker v1.5.5.3](https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.5.3), public, Latest, non-draft and non-prerelease at 2026-09-30 08:46:39 UTC. Annotated tag object `2c0731f6c8e574ffca618da4b89ba8416f8aac26` peels to main/dev `9c7199dfccb507df7c7073526e0b580e1884c022`. Remote refs verified; main protections unchanged.
+- Artifacts: main `dist/chrome-window-parker-v1.5.5.3.zip`, 44,982 bytes / 21 files, SHA-256 `b696d3bc3e24c8c69c51acb7bd05e0ecc5d6173819c072d9c823a8d195baad13`, plus `RELEASE-SHA256.txt`. Anonymous downloads of both GitHub assets match the local final files byte-for-byte.
+- Manual: upload ZIP, replace screenshots 2/3/4/5, replace reviewer test instructions with the 492-character repository text, submit the Web Store update. Screenshot 1, icon/promos/cover, public listing, privacy and permission forms require no replacement. No Chrome Web Store access/submission performed. Published within the five-hour window; no unresolved release blocker. This post-publication audit stays on Codex, outside the immutable tag.
+
 ### 2026-09-30 — Independent 1.5.5.3 release gate
 
 - Base: accepted main/dev `fe546793947e7fc47a67a3349ad15d8de627c817`. Reviewed Claude's four pushed commits `eebdd9d`, `9c1ebc4`, `f3ddbf7`, `1e557b5` against that base, including the full runtime/UI diff, tests, docs, icon sources, capture pipeline and package allowlist. Work uses the newer `Documents/WindowParker` worktrees; the older `Documents/ChatGPT` copy is preserved. Claude's lane and audit were not edited.
