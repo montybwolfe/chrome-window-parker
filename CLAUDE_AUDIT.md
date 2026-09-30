@@ -121,3 +121,54 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 
 - Changed: `store-listing/test-instructions.txt` is cut from 1,291 to 488 characters (plain ASCII) for the Dashboard's 500-character Test instructions field. It keeps the 1-minute parking setup, what keeps a window awake, and the new sync controls. `tests/assets.test.js` now enforces the limit, counting line breaks as CRLF.
 - Not changed: product code, the release ZIP, and the `v1.5.5` tag and release. This change is on agent/claude only and hasn't been integrated into dev or main.
+
+### 2026-09-30 — v1.5.5.1: moved parking pages and the tab-list scroll cue
+
+- Base: `dev @ 9c32728`. That is the v1.5.5 runtime (tag `v1.5.5` is on `e82b3a4`) plus the two audit and Store-text commits `ab18576` and `9c32728`, which were integrated into dev and main before this task. agent/claude equalled dev, with no unresolved work.
+- Candidate, in order:
+  - `88001bd` adds the moved-parking-page lifecycle fix and its tests.
+  - `9374575` adds the scroll cue and window numbering, with UI tests and the capture records.
+  - This commit adds the docs, the 1.5.5.1 version bump and this entry.
+- Bug: dragging a parking page out of a parked window left it open as a parking-only window.
+- Root cause: reproduced in headless Chrome 154, with the drag-time refusal injected into the worker's `tabs.remove`. There were three causes:
+  1. Chrome refuses tab edits while a tab is held ("Tabs cannot be edited right now"). Cleanup triggered by the drag's events was deferred and never retried after the drop. The same refusal broke v1.5.5's empty-window cleanup when the last real tab was physically dragged away, and left a stale page when a real tab was dragged into a parked window.
+  2. `adopt()` treated any parking page as its window's own. A page dropped into another window made that window parked, with the other window's journal.
+  3. The source window kept its old `lastUse`. The `windows.onCreated` or `onDetached` sweep re-parked it 42–167 ms after the detach with a new page, recording Chrome's neighbouring tab as "previous".
+- Chosen behaviour: a page belongs to the window it was made for.
+  - Ownership is a session-scoped `owners` map (token → window), persisted in `runtimeState` and set in `park()` before `tabs.create`. Tokens with no known owner (after a browser restart or an update) are claimed by their window, which preserves restart recovery. Startup validates the map and prunes tokens with no live page.
+  - In any other window, a journaled page is removed and never adopted:
+    - Case A, a new window holding only that page: the window closes naturally, with no `about:blank`.
+    - Case B, an existing window: only that page goes; the window's tabs, order and selection are untouched.
+  - Case C, the source window: it keeps its tabs and becomes unparked. Nothing is activated or focused. The page leaving counts as use, via the `wasParked && !ownPage` rule in `adopt()`, so the window waits a full delay before parking again.
+  - Dragged back home, the page is its own again.
+  - Clear keeps its window-preserving semantics.
+- Race safety in `cleanupStray()`:
+  - Removal requires a committed parking address, a recovery record, a known owner other than this window, and no unresolved transfer.
+  - It takes two fresh snapshots. The `shellEpoch` check means any tab event cancels it and asks for a follow-up pass.
+  - Clear (`clearRequests`) goes first, and the clock must be sane.
+  - Refusals from `cleanupStray()`, `cleanupEmptyParked()` or `cleanupParking()` call `deferCleanup()`. That schedules a cleanup-only `tidy()` every 500 ms (at most 240 times), plus a 30-second `cleanup-retry` alarm for a stopped worker.
+- Tests:
+  - `tests/moved-parking.test.js` has 23 tests on the real worker queue. They cover a new window in Chrome's observed event order and three stress orders; a held drag and the drop; the retry alarm; worker restarts (stopped, cold, and a browser restart); existing windows, selected or not; another parked window; out and back; duplicate, unknown, other-extension, navigating and real tabs; paused parking; Clear; and the last real tab dragged out or a real tab dragged in under refusal.
+  - 15 of the 23 fail on v1.5.5.
+  - The engine audit now counts 3 `tabs.remove` call sites.
+- Live checks, in headless Chrome 154 with disposable profiles and synthetic pages:
+  - What was exercised: Chrome's own detach and attach via `windows.create({tabId})` and `tabs.move`, with the drag-time refusal injected for a held drag. No physical tab-strip drag was performed.
+  - v1.5.5 reproduced all three defects. The fix passed 17/17: the leftover window closed 402 ms after the drop, the source was not re-parked, Case B was handled selected and unselected, out-and-back kept the page, and the last real tab dragged out closed the source. With the worker stopped mid-drag, the alarm woke it and the window closed 27 s later.
+- Scroll cue:
+  - `#tabScroll` wraps the list. Pseudo-element fades in `--control` show at the bottom while more is below and at the top once scrolled, with `pointer-events: none`, inset past a visible scrollbar.
+  - A 28 px chevron (`tabindex="-1"`, `aria-hidden`) scrolls 80% of the panel, with no smooth scroll under reduced motion.
+  - State is set from scroll events, a `ResizeObserver` and each refresh, and `scroll-padding-block` keeps focused rows clear of the fades.
+  - Live 12/12: one tab, 6 tabs just overflowing and 42 tabs at top, middle and bottom; a real chevron click; 41 Tab presses; refresh down to one tab; dark theme.
+  - Screenshots were reviewed in light, dark and at 420 px.
+- Found and fixed (related): rows showed Chrome's internal window IDs ("Window 509769978"); windows are now numbered in order. Physical drags of real tabs are also covered by the retry above.
+- Assets: a fresh capture of this tree was byte-identical for all five UI sources, because no Store image shows this panel. Only `capture.json`'s three UI hashes and one `assets.json` input hash were updated. Re-rendering showed anti-aliasing noise in screenshots 1 and 2 (70 and 67 pixels) and the icon (21 pixels), so no PNG was changed. `verify.mjs` passes, including its UI check.
+- Verified: `npm test` passes on a clean export of each commit (332, 335, 335). The package has 20 runtime files at v1.5.5.1, permissions and CSP are unchanged, and there is no network or backend change. The final live smoke of the unzipped ZIP passed 23/23 with no worker errors. It covered ordinary parking, exclusions and a protected tab, zero explicit discards in Let Chrome decide, restoration, the final real tab, Discard immediately (4 of 4), moved pages (held drag, source, existing window), Clear, sync, the instant theme, Report a bug, the scroll cue with no console or CSP errors, and the last normal window.
+- Not changed: permissions, CSP, sync, exclusions, protection, discard, dwell and download logic, Clear semantics, README, the Store description and images, main, agent/codex and `CODEX_AUDIT.md`.
+- For Astra:
+  - Claiming ownerless tokens in `adopt()`: after a browser restart, a token present in two windows goes to the first window enumerated, and the other copy is removed.
+  - The `adopt()` use rule, which also delays re-parking after any unrestored page loss.
+  - The retry polling during a held drag.
+  - The deliberate change for moved pages with no journal: they are no longer swept from the destination and go on the next tab selection there, or with Clear.
+  - The chevron is not focusable.
+  - After an out-and-back drag, `previousId` may point to the neighbour Chrome selected.
+- Open: a physical tab-strip drag, headful macOS, Windows and Linux are not tested. Promotion to main, the tag, the release and the Store update are left for Astra and the user.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.5.1
+
+- **Fixed** a parking page dragged out of its window staying open as a window of its own. A parking page now only belongs to the window it was made for: moved anywhere else, it's removed. The window it came from keeps its tabs and isn't parked again straight away.
+- **Fixed** parking pages left behind when you drag tabs between windows by hand. Chrome blocks changes while you're holding a tab, so the cleanup now finishes as soon as you let go.
+- **Protect individual tabs** shows when the list has more below, and numbers windows 1, 2, 3 instead of showing Chrome's internal window IDs.
+
 ## 1.5.5
 
 - **Optional sync.** Choose which settings stay the same on your other computers, using Chrome sync. It's off by default and chosen per setting on each computer. Pausing, protected tabs and window details never sync.
