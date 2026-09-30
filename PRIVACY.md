@@ -21,7 +21,7 @@ A parked window's recovery record is deleted when the window closes or goes back
 
 ## Links
 
-The Report a bug and Support buttons open GitHub or Buy Me a Coffee in a new tab, only when you click them. Nothing about your tabs or browsing is sent with them. Those sites have their own privacy policies. Support is optional, unlocks nothing, and Chrome Window Parker receives no payment or supporter details.
+The Report a bug and Buy me a coffee buttons open GitHub or Buy Me a Coffee in a new tab, only when you click them. Nothing about your tabs or browsing is sent with them. Those sites have their own privacy policies. Support is optional, unlocks nothing, and Chrome Window Parker receives no payment or supporter details.
 
 ## Chrome Web Store policy
 

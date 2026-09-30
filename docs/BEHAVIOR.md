@@ -87,7 +87,7 @@ Recovery records are deleted when their window closes or returns to normal. Up t
 | `alarms` | Parking checks and return-delay recovery while the worker is stopped. |
 | `downloads` | Checking whether a download is in progress. Chrome describes it as "Manage your downloads"; downloads are never started, opened, changed or deleted. |
 
-There are no host permissions, content scripts or remote code, and extension pages can't make network connections. Report a bug and Support open a fixed web page in a new tab only when you click them.
+There are no host permissions, content scripts or remote code, and extension pages can't make network connections. Report a bug and Buy me a coffee open a fixed web page in a new tab only when you click them.
 
 ## Checking memory savings
 
