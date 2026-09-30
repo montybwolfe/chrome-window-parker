@@ -172,3 +172,48 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
   - The chevron is not focusable.
   - After an out-and-back drag, `previousId` may point to the neighbour Chrome selected.
 - Open: a physical tab-strip drag, headful macOS, Windows and Linux are not tested. Promotion to main, the tag, the release and the Store update are left for Astra and the user.
+
+### 2026-09-30 — v1.5.5.2: moved parking pages, scroll cue, coffee link
+
+- Base: `dev @ e40908d`. That is the unpublished v1.5.5.1 candidate (`88001bd`, `9374575`, `e40908d`), folded into 1.5.5.2 instead of being released separately. main is `9c32728` (v1.5.5 runtime; tag `v1.5.5` on `e82b3a4`). agent/codex and `CODEX_AUDIT.md` were unchanged.
+- Candidate, in order:
+  - `d0cf10c` handles a moved page that is closed or still loading.
+  - `66d729a` adds the coffee link, the README button, the button-name docs and the targeted Store images.
+  - This commit bumps the version to 1.5.5.2 and adds the changelog entry and this entry.
+- Movement bug, root cause, lifecycle behaviour and race safety are as in the v1.5.5.1 entry. New here:
+  - A moved page closed before its cleanup, or one that vanishes just as it is removed, no longer leaves its journal and owner entry until the next worker start. `removed()` forgets owned tokens that belong to no window's state and have no live page, and skips the window read when there are none.
+  - A moved page that is still loading is removed once it commits.
+- Tests:
+  - The moved-parking suite now has 26 tests. Both new journal tests fail without the change.
+  - A support test pins the coffee control: inline cup, visible label, accessible name, no vague "Support" control, a distinct bug control, footer order, a one-line footer at the fixed 360 px width, and the README button's destination.
+  - `npm test` passes on a clean export of each commit: 338, 339, 339.
+- Scroll cue (unchanged from `9374575`): extra live checks passed 6/6. They cover very long titles (two-line clamp), Auto switching to dark while open (the fade follows the panel colour), 400 px width, the bottom state, and refreshing down to one row.
+- Coffee UX:
+  - The popup footer reads "Parking on", a bug icon, a cup with "Buy me a coffee" in the muted colour, then "Settings…" in the accent colour. Settings uses the same cup and label beside Report a bug.
+  - Accessible names are "Buy me a coffee (opens in a new tab)" and "Report a bug on GitHub (opens in a new tab)".
+  - Live: the footer stays on one line for every status text with at least 18 px spare, in light and dark. Keyboard order is bug, coffee, Settings. There are no console or CSP errors.
+  - Destinations are unchanged: `https://buymeacoffee.com/montybwolfe` and `https://github.com/montybwolfe/chrome-window-parker/issues`.
+- README: restored Buy Me a Coffee's official blue button image, as used before v1.5.5 (`cdn.buymeacoffee.com/buttons/v2/default-blue.png`, width 217, since GitHub strips inline styles), linking to the same page.
+- Store assets, from a full pipeline run on a scratch copy:
+  - The popup captures changed only in the footer, and the Settings capture only in its support section, which is below both Settings crops.
+  - Screenshots 2 and 5 are regenerated.
+  - Screenshots 3 and 4 re-rendered byte-identically from the new inputs; only their records changed.
+  - Screenshot 1, both promos, the icon and the cover keep their files and records, because their inputs are unchanged and fresh renders showed only anti-aliasing noise.
+  - The verifier passes, including its UI check.
+- Web Store delta against v1.5.5:
+  - Replace the ZIP, and screenshots 2 and 5.
+  - Unchanged: the summary, description, icon, screenshots 1, 3 and 4, both promo tiles, the URLs, the test instructions (488 characters, as prepared after 1.5.5), the permissions, the data categories and the certifications.
+  - Only the data-handling note in `privacy-fields.txt` and `PRIVACY.md` name the button differently.
+- Verified:
+  - The package has 20 runtime files: v1.5.5.2, 39,721 bytes, SHA-256 `8eabf37f…b9be`. Permissions and CSP are unchanged, and the only URLs are the two fixed links.
+  - Live, on the unzipped ZIP in headless Chrome 154 with disposable profiles: the release smoke passed 25/25. It adds real clicks on the popup's coffee and bug links to the 23 v1.5.5.1 checks.
+  - The movement suite passed 17/17. The held-drag window closed 403 ms after the drop, and with the worker stopped mid-drag the alarm cleaned up after 26 s.
+  - Moves used `windows.create({tabId})` and `tabs.move`, with the drag-time refusal injected. No physical tab-strip drag was performed.
+- Not changed: permissions, CSP, sync, exclusions, protection, discard, dwell and download logic, Clear semantics, the Store description and the other Store images, main, agent/codex and `CODEX_AUDIT.md`.
+- For Astra:
+  - Everything listed for v1.5.5.1.
+  - The orphan-journal prune in `removed()`.
+  - The asset records: kept or refreshed according to whether inputs changed.
+  - The README's hotlinked official button image.
+  - The muted coffee link's contrast (it uses `--muted`, the same colour as other popup hints).
+- Open: a physical tab-strip drag, headful macOS, Windows and Linux are not tested. Promotion, tag, release and the Store update are left for Astra and the user.
