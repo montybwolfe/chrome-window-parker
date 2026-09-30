@@ -1,7 +1,8 @@
 export const DEFAULTS = Object.freeze({
   enabled: true, delayMinutes: 15, dwellSeconds: 2, discardPinned: false,
   protectAudio: true, debug: false, sleepingMode: 'chrome', appearance: 'auto',
-  exclusions: ['meet.google.com', 'zoom.us', 'teams.microsoft.com', 'music.youtube.com']
+  // Already in Sort A–Z order (compareRules), so sorting an untouched list changes nothing.
+  exclusions: ['meet.google.com', 'music.youtube.com', 'teams.microsoft.com', 'zoom.us']
 });
 
 // Portable preferences that may sync, each opted in separately on each device.
@@ -32,13 +33,36 @@ export function validateSettings(input) {
     if (typeof line !== 'string') throw new Error('Excluded sites must be text.');
     const rule = line.trim();
     if (!rule || rule.length > 1000 || /\s/.test(rule)) throw new Error('Put one site on each line, without spaces.');
-    if (!rule.includes('://') && !/^(\*\.)?[a-z0-9.-]+(?::\d+)?$/i.test(rule))
-      throw new Error(`Use a domain such as example.com, or a full address: ${rule}`);
-    if (rule.includes('://') && !/^(https?|\*):\/\/[^/]+(?:\/.*)?$/i.test(rule))
-      throw new Error(`Use an address starting with http:// or https://: ${rule}`);
+    if (rule.includes('://') ? !/^(https?|\*):\/\/[^/]+(?:\/.*)?$/i.test(rule) : !/^(\*\.)?[a-z0-9.-]+(?::\d+)?$/i.test(rule))
+      throw new Error(`“${rule}” isn’t a website. Enter one such as example.com, or a full address such as https://example.com/work/*.`);
     return rule;
   }))];
   return Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, s[k]]));
+}
+
+// A pasted home-page address becomes the plain website it names, which covers
+// the whole site: https://www.example.com/ -> www.example.com, and
+// http://localhost:3000/ -> localhost:3000. Anything more specific (a path,
+// query, #, *, sign-in details or non-ASCII text) is returned as it was.
+export function simplifyRule(text) {
+  const rule = text.trim(), match = /^(https?):\/\/([a-z0-9.-]+)(?::(\d+))?\/?$/i.exec(rule);
+  if (!match) return rule;
+  const [, scheme, host, port] = match;
+  const standard = port === undefined || Number(port) === (scheme.toLowerCase() === 'https' ? 443 : 80);
+  return host.toLowerCase() + (standard ? '' : `:${port}`);
+}
+
+// Sort A–Z for excluded sites: by website first, ignoring a leading http://,
+// https:// or *:// (and *.), then by the rest of the address, ignoring case.
+// The exact text breaks ties, so the result never depends on the input order.
+export function compareRules(a, b) {
+  const parts = rule => {
+    const rest = rule.replace(/^(?:https?|\*):\/\//i, '').replace(/^\*\./, '').toLowerCase(), slash = rest.indexOf('/');
+    return slash < 0 ? [rest, ''] : [rest.slice(0, slash), rest.slice(slash)];
+  };
+  const order = (x, y) => x < y ? -1 : x > y ? 1 : 0;
+  const [x, y] = [parts(a), parts(b)];
+  return order(x[0], y[0]) || order(x[1], y[1]) || order(a, b);
 }
 
 export function matchesRule(url, rule) {

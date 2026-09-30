@@ -27,14 +27,14 @@
 <fieldset class="settings-fields" disabled>
 <label class="check-row"><input id="discardPinned" type="checkbox"><span>Allow parking when a pinned tab is selected</span></label>
 <label class="check-row"><input id="protectAudio" type="checkbox"><span>Skip windows whose selected tab is playing audio</span></label>
-<div class="field"><label for="exclusions">Sites to exclude</label>
-<p class="hint" id="exclusionHelp">Add sites Chrome Window Parker should avoid disturbing. Enter one domain per line, such as <code>meet.google.com</code>. This covers every page on that domain and its subdomains.</p>
+<div class="field"><div class="field-head"><label for="exclusions">Sites to exclude</label><button class="small" type="button" id="sortSites" title="Sort the sites alphabetically">Sort A–Z</button></div>
+<p class="hint" id="exclusionHelp">One website per line, such as <code>meet.google.com</code>. Paste a site’s home address to exclude the whole site. To exclude only part of a site, use a full address starting with <code>https://</code>, with <code>*</code> where anything can match, such as <code>https://example.com/work/*</code>.</p>
 <textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp exclusionBehavior" placeholder="meet.google.com&#10;calendar.google.com"></textarea>
 <div id="exclusionBehavior">
 <p class="hint section-note">If an excluded site is the selected tab, that window will not park. Other windows can still park normally.</p>
 <p class="hint section-note">An excluded background tab does not prevent parking. In Discard immediately mode, Chrome Window Parker skips that tab. Chrome’s own Memory Saver may still unload it.</p>
 </div>
-<details class="safety-note"><summary>Advanced URL patterns</summary><p>To exclude only part of a site, enter a full URL with <code>*</code>, meaning “any text”. For example, <code>https://example.com/work/*</code> covers pages under <code>/work/</code> without excluding the rest of the site. For an address with a port, such as <code>localhost:3000</code>, include the port.</p></details>
+<details class="safety-note"><summary>More about excluded sites</summary><p>A website also covers addresses that end in it: <code>example.com</code> includes <code>docs.example.com</code>. In a full address, capital letters count, and <code>https://example.com/work/*</code> leaves the rest of <code>example.com</code> alone. For a local address with a number, such as <code>localhost:3000</code>, include the number.</p></details>
 </div>
 <details class="safety-note"><summary>Calls, video and unsaved work</summary><p>Exclude these sites or keep their tabs pinned. Chrome doesn’t reliably report screen sharing, Picture-in-Picture or unsaved edits to this extension. Parking pauses during active downloads.</p></details>
 </fieldset>
