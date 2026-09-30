@@ -84,7 +84,8 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
   const events=()=>({on:{},addEventListener(type,fn){(this.on[type]||=[]).push(fn);},
     fire(type,e={}){return Promise.all((this.on[type]||[]).map(fn=>fn({preventDefault(){},isTrusted:true,detail:1,...e})));}});
   const node=(props={})=>{const n={...events(),disabled:false,hidden:false,checked:false,indeterminate:false,value:'',textContent:'',title:'',className:'',children:[],
-    classes:new Set(),dataset:{},focused:false,focus(){for(const other of all)other.focused=false;n.focused=true;},append(...kids){this.children.push(...kids);},replaceChildren(...kids){this.children=kids;this.textContent='';},...props};
+    classes:new Set(),dataset:{},focused:false,focus(){for(const other of all)other.focused=false;n.focused=true;},append(...kids){this.children.push(...kids);},replaceChildren(...kids){this.children=kids;this.textContent='';},
+    selectionStart:0,selectionEnd:0,setRangeText(text,start,end){this.value=this.value.slice(0,start)+text+this.value.slice(end);},...props};
     n.classList={add:c=>n.classes.add(c),remove:c=>n.classes.delete(c),toggle:(c,on=!n.classes.has(c))=>{on?n.classes.add(c):n.classes.delete(c);return on;}};
     n.style={props:{},setProperty(k,v){this.props[k]=v;}};n.scrolls=[];n.scrollBy=o=>n.scrolls.push(o);
     Object.assign(n,{scrollHeight:0,clientHeight:0,scrollTop:0,offsetWidth:0,clientWidth:0});all.push(n);return n;};
@@ -355,6 +356,45 @@ test('keyboard focus stays on Save settings, Restore defaults and Refresh list w
     p.el(id).focus();const done=run();p.el(id).focused=false;await done;await flush();await flush();
     assert(p.el(id).focused,id);
   }
+});
+
+test('excluded sites: Sort A–Z tidies the list without saving; the factory list is already in order',async t=>{
+  const p=await load(await page(t,{settings:{...DEFAULTS}}),'sites-sort');const sites=p.el('exclusions');
+  assert.equal(sites.value,'meet.google.com\nmusic.youtube.com\nteams.microsoft.com\nzoom.us');
+  const sent=p.messages.length;await p.el('sortSites').fire('click');
+  assert.equal(sites.value,'meet.google.com\nmusic.youtube.com\nteams.microsoft.com\nzoom.us','nothing to change');
+  assert.equal(p.messages.length,sent,'sorting saves nothing');
+  await p.el('settings').fire('submit');await flush();
+  assert.equal(p.h.p.customized.exclusions,false,'saving an unchanged list is not a change made here');
+  sites.value='zoom.us\n  https://example.com/work/*\n\nmeet.google.com ';
+  await p.el('sortSites').fire('click');
+  assert.equal(sites.value,'https://example.com/work/*\nmeet.google.com\nzoom.us');assert.equal(p.messages.length,sent+2,'still unsaved');
+  assert.deepEqual(p.stored().exclusions,DEFAULTS.exclusions);
+  await p.el('settings').fire('submit');await flush();
+  assert.deepEqual(p.stored().exclusions,['https://example.com/work/*','meet.google.com','zoom.us']);assert.equal(p.h.p.customized.exclusions,true);
+  // Restore defaults brings back the same order a new installation has.
+  await p.el('reset').fire('click');await flush();await flush();
+  assert.equal(sites.value,DEFAULTS.exclusions.join('\n'));assert.equal(p.h.p.customized.exclusions,false);
+});
+
+test('excluded sites: pasted home-page addresses on whole lines become websites; other pastes are left alone',async t=>{
+  const p=await load(await page(t,{settings:{...DEFAULTS,exclusions:['zoom.us']}}),'sites-paste');const sites=p.el('exclusions');
+  const paste=async(text,start,end=start)=>{let prevented=false;Object.assign(sites,{selectionStart:start,selectionEnd:end});
+    await sites.fire('paste',{clipboardData:{getData:type=>type==='text/plain'?text:''},preventDefault(){prevented=true;}});return prevented;};
+  // Several lines on a new line: tidied, specific addresses kept, repeats dropped.
+  sites.value='zoom.us\n';
+  assert(await paste('https://meet.google.com/\r\n  https://www.example.com/ \nhttps://example.com/work/*\nhttps://meet.google.com\nhttp://localhost:3000/',8));
+  assert.equal(sites.value,'zoom.us\nmeet.google.com\nwww.example.com\nhttps://example.com/work/*\nlocalhost:3000');
+  // Replacing a whole selected line works the same way.
+  sites.value='zoom.us\nold.example';assert(await paste('https://new.example/',8,19));assert.equal(sites.value,'zoom.us\nnew.example');
+  // Nothing to tidy: Chrome pastes it normally.
+  sites.value='zoom.us\n';assert(!await paste('teams.microsoft.com',8));assert.equal(sites.value,'zoom.us\n');
+  // Into part of a line: left as typed.
+  sites.value='zoom.us\nwww.';assert(!await paste('https://example.com/',12));
+  sites.value='zoom.us';assert(!await paste('https://example.com/',0),'before existing text on the line');
+  assert(!await paste('',0),'nothing pasted');
+  // Pasting changes only the text box: nothing is saved or counted as changed until Save.
+  assert(!p.messages.some(m=>m.type==='configure'));assert.equal(p.h.p.customized.exclusions,false);
 });
 
 test('changes from another page or computer update only fields you have not edited',async t=>{

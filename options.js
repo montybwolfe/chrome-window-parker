@@ -1,3 +1,4 @@
+import {compareRules, simplifyRule} from './settings.js';
 import {bindIssues, bindSupport} from './support.js';
 import {request, report} from './ui.js';
 const $ = id => document.getElementById(id);
@@ -63,6 +64,25 @@ $('settings').addEventListener('submit', event => {
 $('reset').addEventListener('click', () => {
   if (asking) { closeChoice(); syncLocked(false); }
   save(() => request('reset'), 'Defaults restored. Sync is now off on this computer; your other computers keep their settings.');
+});
+// Excluded sites. A pasted home-page address becomes the plain website (see
+// simplifyRule), for whole lines only, so pasting into part of a line stays as is.
+const sites = $('exclusions');
+sites.addEventListener('paste', event => {
+  const text = event.clipboardData?.getData('text/plain') || '', {value, selectionStart: start, selectionEnd: end} = sites;
+  const next = value.indexOf('\n', end), lineStart = value.lastIndexOf('\n', start - 1) + 1;
+  if (value.slice(lineStart, start).trim() || value.slice(end, next < 0 ? value.length : next).trim()) return;
+  const cleaned = [...new Set(text.split(/\r?\n/).map(simplifyRule).filter(Boolean))].join('\n');
+  if (!cleaned || cleaned === text) return;
+  event.preventDefault();
+  // insertText keeps Undo working; where it isn't available, insert directly.
+  if (!document.execCommand?.('insertText', false, cleaned)) sites.setRangeText(cleaned, start, end, 'end');
+});
+// A tidying action only: it changes nothing else, saves nothing, and leaves a
+// list that is already in order exactly as it is.
+$('sortSites').addEventListener('click', () => {
+  const lines = sites.value.split('\n').map(line => line.trim()).filter(Boolean), sorted = lines.toSorted(compareRules);
+  if (!same(sorted, lines)) sites.value = sorted.join('\n');
 });
 for (const input of themes) input.addEventListener('change', async () => {
   if (!input.checked || !saved) return;
