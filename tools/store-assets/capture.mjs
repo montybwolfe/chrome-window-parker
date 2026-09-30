@@ -65,6 +65,10 @@ try {
   const send = message => js(`chrome.runtime.sendMessage(${JSON.stringify(message)}).then(r => { if (!r.ok) throw new Error(r.error); return r.data; })`);
   const defaults = await send({type: 'settings'});
   const theme = async appearance => { await send({type: 'appearance', appearance}); await sleep(600); };
+  // Headless Chrome reports every visible window as focused, and the popup's
+  // Protect this tab follows the first: the startup window. Give it a web page,
+  // as the window you're using would have; a focused window never parks.
+  await js(`chrome.tabs.query({}).then(tabs => chrome.tabs.update(tabs.find(t => t.url === 'about:blank').id, {url: ${JSON.stringify(page('Team notes'))}})).then(() => 1)`);
 
   // Park three windows quickly; Settings is shown with its defaults afterwards.
   await send({type: 'configure', settings: {...defaults, delayMinutes: 1, sleepingMode: 'immediate'}});
