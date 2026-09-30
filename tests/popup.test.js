@@ -34,3 +34,9 @@ test('popup Settings icon opens Settings exactly as the old Settings link did',a
  try{await import(`../popup.js?settings=${Math.random()}`);await flush();await el('options').click();assert.equal(opened,1);}
  finally{Object.assign(globalThis,original);}
 });
+
+test('popup has a main landmark after its header, like Settings and the parking page',async()=>{
+ const {readFileSync}=await import('node:fs');const read=f=>readFileSync(new URL('../'+f,import.meta.url),'utf8');
+ assert.match(read('popup.html'),/<\/header>\n<main>\n<dl class="stats">[\s\S]*<p id="status" role="status" aria-live="polite"><\/p>\n<\/main><\/body>/);
+ for(const page of ['options.html','parked.html'])assert.match(read(page),/<main\b/,page);
+});
