@@ -142,16 +142,33 @@ $('cancelSync').addEventListener('click', () => {
   box.checked = false; closeConflict(); status('Nothing changed.', 'syncStatus'); box.focus();
 });
 
+// The tab list scrolls inside its panel, but macOS hides scrollbars until you
+// scroll. Fade the edges, and offer a chevron, only while there is more to see.
+const tabList = $('tabs'), tabScroll = $('tabScroll');
+function scrollCue() {
+  const below = tabList.scrollHeight - tabList.clientHeight - tabList.scrollTop > 1;
+  tabScroll.classList.toggle('more-above', tabList.scrollTop > 1);
+  tabScroll.classList.toggle('more-below', below);
+  $('moreTabs').hidden = !below;
+  // Keep the fades clear of a scrollbar that takes up space (Windows, Linux).
+  tabScroll.style.setProperty('--scrollbar', `${Math.max(0, tabList.offsetWidth - tabList.clientWidth - 2)}px`);
+}
+tabList.addEventListener('scroll', scrollCue, {passive: true});
+new ResizeObserver(scrollCue).observe(tabList);
+$('moreTabs').addEventListener('click', () => tabList.scrollBy({top: tabList.clientHeight * 0.8,
+  behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}));
 async function refresh() {
   $('refresh').disabled = true;
   try {
     const data = await request('status', {includeTabs: true}); $('tabs').replaceChildren();
+    // Chrome's window IDs are long internal numbers; number windows in order instead.
+    const windows = [...new Set(data.tabs.map(tab => tab.windowId))];
     for (const tab of data.tabs) {
       const label = document.createElement('label'); label.className = 'check-row tab-row';
       const box = document.createElement('input'); box.type = 'checkbox'; box.checked = data.protectedIds.includes(tab.id);
       const text = document.createElement('span'); text.className = 'tab-text';
       const title = document.createElement('span'); title.className = 'tab-title'; title.textContent = tab.title;
-      const windowLabel = document.createElement('span'); windowLabel.className = 'hint'; windowLabel.textContent = `Window ${tab.windowId}`;
+      const windowLabel = document.createElement('span'); windowLabel.className = 'hint'; windowLabel.textContent = `Window ${windows.indexOf(tab.windowId) + 1}`;
       text.append(title, windowLabel); label.title = tab.title;
       box.addEventListener('change', async () => {
         box.disabled = true;
@@ -163,7 +180,7 @@ async function refresh() {
     }
     if (!data.tabs.length) $('tabs').textContent = 'No regular tabs are open.';
   } catch (error) { report(error, 'tabStatus'); }
-  finally { $('refresh').disabled = false; }
+  finally { $('refresh').disabled = false; scrollCue(); }
 }
 $('refresh').addEventListener('click', refresh);
 $('individual').addEventListener('toggle', () => { if ($('individual').open) refresh(); });

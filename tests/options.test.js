@@ -54,22 +54,37 @@ test('a long individual-tab list scrolls inside its own bounded panel; body text
   assert.match(css,/body \{ margin: 0; font: inherit; \}/,"override Chrome's 75% extension-page body size");
 });
 
-function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,synced={},policy={}}={}){
+test('the tab list shows that it scrolls: edge fades and a chevron, without adding a tab stop or covering clicks',()=>{
+  assert.match(html,/<div class="tab-scroll" id="tabScroll"><div id="tabs" class="tab-list"[^>]*><\/div><button class="scroll-cue" id="moreTabs" type="button" tabindex="-1" aria-hidden="true" title="More tabs below" hidden><svg[^>]*aria-hidden="true"/);
+  const fades=css.match(/\.tab-scroll::before, \.tab-scroll::after \{([^}]+)\}/)[1];
+  assert.match(fades,/pointer-events: none/);assert.match(fades,/opacity: 0/);assert.match(fades,/right: calc\(1px \+ var\(--scrollbar, 0px\)\)/);
+  assert.match(css,/\.tab-scroll\.more-above::before, \.tab-scroll\.more-below::after \{ opacity: 1; \}/);
+  // Fades use the panel's own colour, so they work in light, dark and Auto.
+  assert.match(css,/\.tab-scroll::after \{[^}]*background: linear-gradient\(transparent, var\(--control\)/);
+  assert.match(css,/\.tab-list \{[^}]*scroll-padding-block: 24px 56px/,'keyboard focus scrolls rows clear of the fades');
+  assert.match(css,/prefers-reduced-motion: reduce\) \{ \.tab-scroll::before, \.tab-scroll::after \{ transition: none; \}/);
+  assert.match(css,/\.individual-intro, \.tab-scroll, \.individual-section #tabStatus \{ margin-left: 0; \}/,'full width on narrow pages');
+});
+
+function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,synced={},policy={},tabs=[{id:11,windowId:1,title:'Research'},{id:12,windowId:2,title:'x'.repeat(400)}],reduced=false}={}){
   const elements=new Map(),messages=[],storageListeners=[];
   const events=()=>({on:{},addEventListener(type,fn){(this.on[type]||=[]).push(fn);},
     fire(type,e={}){return Promise.all((this.on[type]||[]).map(fn=>fn({preventDefault(){},isTrusted:true,detail:1,...e})));}});
   const node=(props={})=>{const n={...events(),disabled:false,hidden:false,checked:false,value:'',textContent:'',title:'',className:'',children:[],
     classes:new Set(),dataset:{},focused:false,focus(){n.focused=true;},append(...kids){this.children.push(...kids);},replaceChildren(){this.children=[];this.textContent='';},...props};
-    n.classList={add:c=>n.classes.add(c),remove:c=>n.classes.delete(c)};return n;};
+    n.classList={add:c=>n.classes.add(c),remove:c=>n.classes.delete(c),toggle:(c,on=!n.classes.has(c))=>{on?n.classes.add(c):n.classes.delete(c);return on;}};
+    n.style={props:{},setProperty(k,v){this.props[k]=v;}};n.scrolls=[];n.scrollBy=o=>n.scrolls.push(o);
+    Object.assign(n,{scrollHeight:0,clientHeight:0,scrollTop:0,offsetWidth:0,clientWidth:0});return n;};
   const el=id=>{if(!elements.has(id))elements.set(id,node({id}));return elements.get(id);};
   const themes=['light','dark','auto'].map(value=>node({value,name:'appearance'}));
   const groups=[1,2,3,4].map(()=>node({disabled:true}));
   const boxes=SYNCABLE.map(key=>node({dataset:{sync:key}}));
   el('syncList').disabled=true;
-  const tabs=[{id:11,windowId:1,title:'Research'},{id:12,windowId:2,title:'x'.repeat(400)}];
   let stored=validateSettings(settings),protectedIds=[],syncPolicy=Object.fromEntries(SYNCABLE.map(k=>[k,policy[k]===true])),notice=null;
   const reply=data=>({ok:true,data:structuredClone(data)});
-  const old={document:globalThis.document,chrome:globalThis.chrome};
+  const old={document:globalThis.document,chrome:globalThis.chrome,ResizeObserver:globalThis.ResizeObserver,matchMedia:globalThis.matchMedia};
+  const resizers=[];globalThis.ResizeObserver=class{constructor(fn){resizers.push(fn);}observe(){}};
+  globalThis.matchMedia=query=>({matches:reduced&&/reduced-motion: reduce/.test(query)});
   globalThis.document={getElementById:el,createElement:()=>node(),
     querySelectorAll:selector=>({'input[name=appearance]':themes,'.settings-fields':groups,'input[data-sync]':boxes})[selector]||[]};
   globalThis.chrome={storage:{onChanged:{addListener:fn=>storageListeners.push(fn)}},runtime:{async sendMessage(msg){
@@ -97,7 +112,7 @@ function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,synced={},p
   const choose=value=>{for(const r of themes)r.checked=r.value===value;};
   const box=key=>boxes.find(b=>b.dataset.sync===key);
   const remote=settings=>storageListeners.forEach(fn=>fn({settings:{newValue:settings}},'local'));
-  return {el,themes,groups,boxes,box,messages,choose,remote,stored:()=>stored,setNotice:n=>{notice=n;},
+  return {el,themes,groups,boxes,box,messages,choose,remote,stored:()=>stored,setNotice:n=>{notice=n;},resize:()=>resizers.forEach(fn=>fn()),
     checked:()=>themes.filter(r=>r.checked).map(r=>r.value)};
 }
 
@@ -137,6 +152,37 @@ test('individual tabs: refresh lists every tab, checkboxes protect immediately a
   await p.el('refresh').fire('click');await flush();
   assert.equal(p.messages.filter(m=>m.type==='status'&&m.includeTabs).length,2);
   assert.equal(p.el('tabs').children[1].children[0].checked,true);
+});
+
+test('scroll cue follows the list: none without overflow; below at the top, both in the middle, above at the bottom',async t=>{
+  const p=page(t);await import(`../options.js?cue=${Math.random()}`);await flush();
+  const list=p.el('tabs'),scroll=p.el('tabScroll'),cue=p.el('moreTabs');
+  const state=()=>({above:scroll.classes.has('more-above'),below:scroll.classes.has('more-below'),cue:!cue.hidden});
+  const at=async(top,{height=900,visible=338}={})=>{Object.assign(list,{scrollHeight:height,clientHeight:visible,scrollTop:top});await list.fire('scroll');return state();};
+  assert.deepEqual(await at(0,{height:300,visible:300}),{above:false,below:false,cue:false},'short list: nothing implied');
+  assert.deepEqual(await at(0,{height:340}),{above:false,below:true,cue:true},'just overflowing');
+  assert.deepEqual(await at(0),{above:false,below:true,cue:true},'top');
+  assert.deepEqual(await at(281),{above:true,below:true,cue:true},'middle');
+  assert.deepEqual(await at(562),{above:true,below:false,cue:false},'bottom');
+  assert.deepEqual(await at(561.5),{above:true,below:false,cue:false},'fractional bottom still counts');
+  assert.deepEqual(await at(0,{height:9000}),{above:false,below:true,cue:true},'very long list');
+  // Refreshing to a shorter list, or resizing, clears the cue without a scroll event.
+  Object.assign(list,{scrollHeight:120,clientHeight:120,scrollTop:0});
+  p.el('individual').open=true;await p.el('refresh').fire('click');await flush();assert.deepEqual(state(),{above:false,below:false,cue:false});
+  Object.assign(list,{scrollHeight:900,clientHeight:338});p.resize();assert.deepEqual(state(),{above:false,below:true,cue:true});
+  // A scrollbar that takes up space (Windows) is kept clear of the fades; macOS overlay scrollbars take none.
+  Object.assign(list,{offsetWidth:600,clientWidth:583});p.resize();assert.equal(scroll.style.props['--scrollbar'],'15px');
+  Object.assign(list,{offsetWidth:600,clientWidth:598});p.resize();assert.equal(scroll.style.props['--scrollbar'],'0px');
+  await cue.fire('click');assert.deepEqual(list.scrolls,[{top:338*0.8,behavior:'smooth'}]);
+});
+
+test('scroll cue respects reduced motion; windows are numbered, not shown by Chrome ID',async t=>{
+  const p=page(t,{reduced:true,tabs:[{id:1,windowId:509769978,title:'A'},{id:2,windowId:509769986,title:'B'},{id:3,windowId:509769978,title:'C'}]});
+  await import(`../options.js?cue-motion=${Math.random()}`);await flush();
+  Object.assign(p.el('tabs'),{clientHeight:300});await p.el('moreTabs').fire('click');
+  assert.deepEqual(p.el('tabs').scrolls,[{top:240,behavior:'auto'}]);
+  p.el('individual').open=true;await p.el('individual').fire('toggle');await flush();
+  assert.deepEqual(p.el('tabs').children.map(row=>row.children[1].children[1].textContent),['Window 1','Window 2','Window 1']);
 });
 
 test('sync: each setting turns on and off separately, right away',async t=>{
