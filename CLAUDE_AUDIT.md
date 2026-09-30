@@ -323,4 +323,29 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 - Phase 2 live: page out to its own window, into another window, out and back (held, then dropped and selected), held drag (leftover closed 122 ms after the drop), last real tab moved out, Clear during a pending move, and a worker stopped mid-drag (alarm cleaned up after 27 s): all pass. No physical tab-strip drag: Computer Use has read-only access to Chrome.
 - UX found, to fix in Phase 6: after a failed Restore click the parked page says "No tab is available to restore" although tabs are available, and the text persists.
 - Privacy to verify in Phase 12: a closed parked window's record can outlive the window until the next tab removal; records of windows parked at quit stay by design, which PRIVACY.md attributes only to crashes.
-- Checkpoint: phases 0–2 complete. Next: phase 3 (settings and storage).
+- Phase 3–8 (so far):
+  - Settings drove real storage: single-field saves mark only that field; no-op save writes nothing; browser validation stops out-of-range values; theme saves at once; an edit saved elsewhere doesn't clobber an unsaved one.
+  - Sync: Chrome's real write limit (120 per minute) is classified and explained.
+  - Favicons: PNG 16/32/64/256, ICO, SVG, data URI and root `/favicon.ico`; missing and broken icons fall back to Chrome's globe; 5 real sites (Wikipedia, GitHub, HN, MDN, Apple) pass.
+  - Paste: the real macOS pasteboard through Chrome's paste into Settings, and Undo.
+  - Native views: Mission Control thumbnails are legible; the 1.5× toolbar icon is Chrome's 24 px entry.
+  - Accessibility: Chrome's tree for all three pages; a 27-stop Tab traversal, each stop with a ring; text contrast at least 4.5:1 in both themes; Lighthouse accessibility 100 on all three pages (DevTools MCP, http preview).
+- 1.5.6 release model (Monty, for this release only): Claude Max owns convergence, dev integration, main promotion, the tag and the GitHub release after a clean convergence pass; Astra is an informed peer with a smaller spot-check, not a gate. Store submission stays manual. This is not a standing division of roles.
+
+#### Astra handoff (kept current)
+
+- Candidate: `agent/claude @ 0a556b7` on `dev @ d28267f`; `npm test` 391/391. Not yet converged; audit in progress.
+- Defects found and fixed:
+  1. Protection was lost when Chrome unloaded a protected tab, because Chrome 154 gives a discarded tab a new ID (`7d27041`).
+  2. A closed parked window's record (address and title) was retained if it closed while the worker was stopped, contrary to PRIVACY.md (`0a556b7`).
+- UI/UX changes (`622ca36`, `c3ad6d8`, `fda6442`):
+  - Restore defaults asks first; Clean up is undoable.
+  - Parked-page wording ("1 seconds" bug; honest restore-failure note; balanced wrap; RTL titles).
+  - Protect offered on web pages only.
+  - 3:1 field borders; units announced; popup main landmark.
+- Environment limits: no physical tab drag, toolbar click or Cmd+V keystroke (Computer Use is read-only for Chrome); no two-computer sync (needs a Google sign-in); no real browser relaunch (CDP installs aren't persisted); no real system sleep (no autonomous wake); no VoiceOver run; no Windows or Linux host.
+- Highest-value challenges so far:
+  - The `init()` ordering around `replaced()` and `dropClosed()` versus events Chrome delivers after the window snapshot.
+  - `closed()` forgetting records of owned pages versus pages moved to another window.
+
+- Checkpoint: phases 0–8 largely complete (VoiceOver documented; Spaces pending). Next: phases 9–14 static reviews (performance, dead code, security, privacy, dependencies, remaining tests), then 15–25.
