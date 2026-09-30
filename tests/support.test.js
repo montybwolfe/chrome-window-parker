@@ -54,6 +54,25 @@ for(const [input,detail] of [['mouse',1],['keyboard',0]])test(`deliberate ${inpu
   assert.match(read(name+'.js'),/bindIssues\(\$\('reportBug'\)/);assert(!read(name+'.html').includes(ISSUES_URL));
  }
 });
+test('popup and Settings: a quiet Buy me a coffee link with a cup, clearly distinct from Report a bug',()=>{
+ for(const name of ['popup','options']){
+  const html=read(name+'.html'),coffee=html.match(/<button class="text-button coffee-link" id="support"[^>]*>.*?<\/button>/)?.[0];
+  assert(coffee,name);
+  assert.match(coffee,/aria-label="Buy me a coffee \(opens in a new tab\)"/,'the accessible name starts with the visible label');
+  assert.match(coffee,/title="Support Chrome Window Parker on Buy Me a Coffee"/);
+  assert.match(coffee,/<svg viewBox="0 0 24 24" aria-hidden="true"[^>]*>.*<\/svg><span>Buy me a coffee<\/span><\/button>$/,'an inline cup: no image request');
+  assert(!/<button[^>]*>Support( development)?<\/button>/.test(html),`${name}: no vague "Support" control`);
+  assert.match(html,/id="reportBug"[^>]*aria-label="Report a bug on GitHub \(opens in a new tab\)"/);
+ }
+ const links=read('popup.html').match(/<div class="popup-links">(.*?)<\/div>/)[1];
+ assert.deepEqual([...links.matchAll(/<button[^>]*id="(\w+)"/g)].map(m=>m[1]),['reportBug','support','options'],'bug, coffee, then Settings');
+ const css=read('ui.css');
+ assert.match(css,/\.popup-links \.coffee-link \{ color: var\(--muted\); \}/,'quieter than Settings');
+ assert.match(css,/\.popup-footer \{[^}]*white-space: nowrap/,'one line');
+ assert.match(css,/html\.popup-root \{ width: 360px; min-width: 360px; \}/,'the fixed width the footer is laid out for');
+ // The README's graphical button goes to the same page as the extension's link.
+ assert(read('README.md').includes(`<a href="${SUPPORT_URL}"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" width="217"></a>`));
+});
 test('permission list and restrictive CSP remain unchanged; no external resources or payment integration',()=>{
  const m=JSON.parse(read('manifest.json'));assert.deepEqual(m.permissions,['tabs','storage','alarms','downloads']);assert.equal(m.host_permissions,undefined);assert.equal(m.content_scripts,undefined);
  assert.equal(m.content_security_policy.extension_pages,"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'");

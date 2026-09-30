@@ -47,7 +47,7 @@ Use a separate Chrome profile with nothing important in it, and note the extensi
 10. **Sync.** On two computers signed in to the same Chrome profile with sync on: turn on one setting on each and check a changed value arrives and applies. A different existing value must ask which to keep. Turning sync off keeps the value, and pausing never syncs.
 11. **Restarts.** Try the worker stopping by itself, an extension reload, a browser restart, disabling and re-enabling, and computer sleep. Interrupted return delays start again; interrupted batches don't resume. Leave a window you've used for longer than the parking delay while the worker is stopped: it must still wait a full delay after you leave.
 12. **Look and feel.** Check Light, Dark and Auto (the header switch applies immediately) across Settings, the popup and the parked page. Open Protect individual tabs with many tabs: the list scrolls inside its box, with a fade and a small arrow at the bottom while there's more below. Both go away at the end of the list.
-13. **Links and network.** Report a bug and Support open one tab each, only when clicked, by mouse or keyboard. Extension pages load only their own files.
+13. **Links and network.** Report a bug and Buy me a coffee open one tab each, only when clicked, by mouse or keyboard. Extension pages load only their own files.
 
 For memory comparisons, see [Checking memory savings](docs/BEHAVIOR.md#checking-memory-savings).
 

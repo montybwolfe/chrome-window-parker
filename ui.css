@@ -157,6 +157,11 @@ button.icon-button:hover { color: var(--text); background: var(--button); }
 .support-section .text-button { padding-left: 0; font-size: 13px; }
 .bug-link { display: inline-flex; align-items: center; gap: 6px; }
 .bug-link svg { flex: none; width: 16px; height: 16px; }
+/* Buy me a coffee: a small cup and a plain label. In the popup it stays quieter than Settings. */
+.coffee-link { display: inline-flex; align-items: center; gap: 5px; }
+.coffee-link svg { flex: none; width: 16px; height: 16px; }
+.popup-links .coffee-link { color: var(--muted); }
+.popup-links .coffee-link:hover { color: var(--text); }
 #supportStatus:empty { display: none; }
 #supportStatus { margin-top: 8px; font-size: 12px; }
 

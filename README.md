@@ -34,4 +34,8 @@ Found a bug? [Open an issue](https://github.com/montybwolfe/chrome-window-parker
 
 There's no build step: load this folder as an unpacked extension. `npm test` runs the tests and `python3 scripts/package.py` builds the release ZIP. See [Testing](TESTING.md) and the [changelog](CHANGELOG.md).
 
-Chrome Window Parker is free and open source ([MIT](LICENSE)). If it's useful to you, you can [buy me a coffee](https://buymeacoffee.com/montybwolfe). It's an independent project, not affiliated with or endorsed by Google.
+Chrome Window Parker is free and open source ([MIT](LICENSE)). If it's useful to you, you can buy me a coffee:
+
+<a href="https://buymeacoffee.com/montybwolfe"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" width="217"></a>
+
+It's an independent project, not affiliated with or endorsed by Google.

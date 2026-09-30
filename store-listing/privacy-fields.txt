@@ -26,7 +26,7 @@ User activity: window focus, tab selection and navigation timing are used on the
 If the user turns on sync for "Sites to exclude", their list of excluded domains and address patterns is stored in Chrome sync storage and synced by Chrome through the user's Google account. The developer never receives it.
 
 DATA HANDLING EXPLANATION
-All processing happens in the user's browser. Nothing is sent to the developer or third parties, sold, used for advertising, or used for creditworthiness or lending. There is no account, analytics, telemetry or tracking. Optional sync uses Chrome's own chrome.storage.sync, only for settings the user chooses. The Report a bug and Support buttons open GitHub or Buy Me a Coffee in a new tab only when clicked, without attaching any browsing information.
+All processing happens in the user's browser. Nothing is sent to the developer or third parties, sold, used for advertising, or used for creditworthiness or lending. There is no account, analytics, telemetry or tracking. Optional sync uses Chrome's own chrome.storage.sync, only for settings the user chooses. The Report a bug and Buy me a coffee buttons open GitHub or Buy Me a Coffee in a new tab only when clicked, without attaching any browsing information.
 
 LIMITED USE CERTIFICATIONS
 Certify all three: the extension does not sell or transfer user data to third parties (outside the approved use cases), does not use or transfer it for purposes unrelated to its single purpose, and does not use or transfer it to determine creditworthiness or for lending.
