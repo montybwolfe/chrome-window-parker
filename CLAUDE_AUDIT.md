@@ -217,3 +217,71 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
   - The README's hotlinked official button image.
   - The muted coffee link's contrast (it uses `--muted`, the same colour as other popup hints).
 - Open: a physical tab-strip drag, headful macOS, Windows and Linux are not tested. Promotion, tag, release and the Store update are left for Astra and the user.
+
+### 2026-09-30 — v1.5.5.3: sync by group with local intent, excluded-site tidying, popup and icon polish
+
+- Base: `dev @ fe54679`, which is v1.5.5.2 as released and tagged. agent/claude was fast-forwarded from `73301f9`, with no unresolved work.
+- Candidate, in order:
+  - `eebdd9d` adds local intent, grouped sync with one combined question, Restore defaults, stale-copy protection and the keyboard focus fix.
+  - `9c1ebc4` tidies excluded sites: paste cleanup, Sort A–Z, sorted defaults, plainer help and errors.
+  - `f3ddbf7` adds the icon-only popup footer, Settings section icons, the 16/24 px toolbar icons and `tools/store-assets/icons.mjs`.
+  - This commit bumps the version to 1.5.5.3 and adds the changelog, docs, Store text and caption, regenerated screenshots and this entry.
+- Local intent:
+  - Stored in `storage.local.customized`: one boolean per `SYNCABLE` key (`syncFlags`), never synced. Missing means all false, with no migration.
+  - Set only when that key's stored value really changes, through Save (`configure`) or the header theme (`setAppearance`).
+  - Cleared when a synced value replaces the value (`applySettings(next, false)`, from sync, the startup pull or adoption) and by Restore defaults. `reset` passes all-false flags, so the defaults never count as chosen.
+  - Save without changes, same-value sync events, turning sync off and non-syncable settings leave it alone.
+- `configure(settings, shown)`: Settings and the popup's pause toggle send the values they showed. Only fields that differ from those are applied over the current settings, so a value changed meanwhile (by sync or another page) is neither overwritten nor claimed as chosen here.
+- `syncEnable(keys, choices)` is the single path for one setting, a group or everything:
+  - Keys already syncing are skipped.
+  - Nothing shared → share. Equal → turn on. Different and not chosen here → adopt. Different and chosen here, or unusable (`null`) → conflict.
+  - Nothing is written until every conflict has an answer. An answer carries `{use, local, synced}` and counts only while both values still match; otherwise the question is asked again.
+  - `local` marks the key as chosen here. `off`, offered only for unusable values, leaves the key off.
+  - Shares are written one key at a time. Refusals come back in `failed`, and only those keys stay off.
+  - `sync-resolve` is gone. `background.js` now bumps `safetyEpoch` synchronously for `sync-enable`, because it can adopt settings. `syncNotice` is now a list of `{key, reason}`.
+- Settings UI:
+  - "Sync all settings", then Parking and Tab protection group boxes (matching the page's own sections), then a Theme leaf. Theme is a single setting, so it has no group box.
+  - Group and master states are derived (checked or indeterminate) and never stored.
+  - One panel holds a radio pair per setting, with Apply, Cancel and Escape. The tree is locked meanwhile, and focus returns to the box used.
+  - Save settings, Restore defaults and Refresh list keep keyboard focus. This fixes a pre-existing problem: Chrome dropped focus to the page when they disabled themselves.
+- Exclusions:
+  - `simplifyRule` turns a home-page http(s) address into a lowercase host[:port], dropping default ports. Anything with a path, query, `#`, `*`, sign-in details or non-ASCII text is kept as it is.
+  - It runs on paste for whole lines only, drops repeats within the paste, and inserts with `insertText` so Undo works.
+  - `compareRules` sorts by site, then by the rest of the address, ignoring `http(s)://`, `*://` and `*.`, case-insensitively, with the exact text breaking ties. It drives Sort A–Z and the defaults-order test.
+  - `DEFAULTS.exclusions` is reordered to match, and the invalid-site message now says what to enter instead.
+- Icons:
+  - The existing 16/32/48/128 px PNGs were already native renders of the SVG: a fresh render differs by at most 2.6/255 on average.
+  - Added a native 24 px toolbar icon for 1.5× screens.
+  - Re-rendered the 16 px icon with its 1 px stem, crown and hands moved half a pixel onto whole pixels, which is visibly sharper at 1×.
+  - The SVG, the 32/48/128 px PNGs, `docs/assets` and all marketing art are unchanged. Retina toolbars use the unchanged 32 px icon.
+- Found (harness, not product): CDP Space/Enter on a button in the sync panel hangs headless Chrome 154's renderer, even with a no-op handler, and `Debugger.pause` also times out. The identical steps work in headful Chrome, so keyboard checks were run headful.
+- Verified:
+  - `npm test`: 367/367 here, against 339 at the base. The results for each commit, on a clean export, are in the handoff report.
+  - New queue case: `sync-enable` stops an in-flight discard batch, and it fails without the `background.js` change. The focus test fails without the fix.
+  - The Settings tests run against the real engine.
+- Live, in disposable Chrome 154 profiles over the CDP pipe:
+  - Settings sync, headful: 36 of 37 checks passed. The one miss was my own expectation: after Restore defaults, the unchanged Tab sleeping adopted the synced value without asking, which is correct.
+  - Excluded sites, headful: 11/11.
+  - Keyboard Apply with Space and Enter, and Save/Refresh focus, headful.
+  - The real toolbar popup via `action.openPopup`, headful: 360×313, no overflow, a one-line footer, and the gear opens Settings.
+  - All manifest and toolbar icon references resolve at their declared sizes.
+  - The DevTools MCP on the http preview: accessible names, and `checked="mixed"` for a partly synced group. No console messages.
+- Store assets, from capture and compose runs on a scratch copy:
+  - `parked-light` and `parked-dark` were byte-identical and kept.
+  - `popup-light` and `popup-dark` (2 px taller, new footer) and `settings-light` were updated, along with `capture.json` (`syncTop` 1029 → 1060).
+  - Screenshots 2 (popup), 3 (Parking heading icon), 4 (Sync) and 5 (dark popup) are replaced.
+  - Screenshot 1 is kept: its inputs are unchanged and the fresh render showed 70 anti-aliasing pixels, max 8/255.
+  - The promos, Store icon and cover were byte-identical. `verify.mjs` passes all 9 images, including the UI check.
+- Package: 21 runtime files (the new 24 px icon added). Version 1.5.5.3, with permissions and CSP unchanged. The size and SHA-256 are in the handoff report. The unzipped ZIP passed a 13/13 live smoke: real parking in both modes, restore, Clear, sync adoption, Restore defaults, and the popup and Settings pages, with no errors.
+- Not changed: permissions, CSP, host access, `SYNCABLE`, debug logging, parking/dwell/restore/discard/download/Clear/last-window/moved-page logic, the Store description and privacy fields, main, dev, agent/codex and `CODEX_AUDIT.md`.
+- For Astra:
+  - The adopt-without-asking rule and where intent is set and cleared.
+  - The `shown` merge in `configure`.
+  - Per-key share writes.
+  - Stale-answer handling.
+  - `off` offered only for unusable values.
+  - The 16 px half-pixel alignment.
+  - The reviewer test instructions text changed in source, which is optional for the Dashboard.
+- Open:
+  - Not tested: real two-computer sync, a real clipboard paste (synthetic paste events were used), rendering on a 1.5× display, physical tab drags, headful Spaces, Windows and Linux.
+  - The Store needs the new ZIP and screenshots 2, 3, 4 and 5.

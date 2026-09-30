@@ -1,6 +1,6 @@
 No login needed.
-1. Toolbar icon > Settings: set "Park windows after" to Custom, 1 minute. Save settings.
+1. Toolbar icon > gear (Settings): set "Park windows after" to Custom, 1 minute. Save settings.
 2. Open a second window with some pages; return to the first.
 3. Within 2 minutes it shows "Window parked". Focus it for 2 seconds (or click Restore tab): the tab returns.
 Pinned, audible or excluded tabs keep a window awake.
-New: Settings > Sync (off by default). Tick a setting to sync it via Chrome sync; if values differ, you choose which to keep. Nothing goes to the developer.
+Settings > Sync is off by default. Tick a setting, a group or all. Settings changed here ask before taking synced values. Nothing goes to the developer.

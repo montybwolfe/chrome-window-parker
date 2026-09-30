@@ -88,8 +88,8 @@ try {
   await sleep(3000);
   const P = await open('popup.html', 360, 332); await shot(P, 'popup-light', true);
 
-  await send({type: 'sync-enable', key: 'delayMinutes'}); await send({type: 'sync-enable', key: 'sleepingMode'});
-  await send({type: 'sync-enable', key: 'appearance'});
+  // The Parking group and Theme sync; Tab protection stays on this computer.
+  await send({type: 'sync-enable', keys: ['sleepingMode', 'delayMinutes', 'dwellSeconds', 'appearance']});
   await cdp.send('Page.reload', {}, S); await sleep(1500);
   await shot(S, 'settings-light', true);
   const syncTop = await js(`Math.round(document.querySelector('[aria-labelledby=sync-heading]').getBoundingClientRect().top + scrollY)`);

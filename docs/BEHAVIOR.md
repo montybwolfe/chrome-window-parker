@@ -30,7 +30,9 @@ Changing the mode takes effect on the next parking cycle. It doesn't unload or w
 
 ## What keeps tabs and windows awake
 
-**Site exclusions.** A plain domain such as `meet.google.com` covers that domain and its subdomains, but not lookalikes such as `meet.google.com.evil.example`. Domains match the standard web ports; add the port for an address such as `localhost:3000`. For part of a site, use a full address with `*` meaning "any text", for example `https://example.com/work/*` (these patterns are case-sensitive).
+**Site exclusions.** A website such as `meet.google.com` covers that site and addresses that end in it, such as `team.meet.google.com`, but not lookalikes such as `meet.google.com.evil.example`. Websites match the standard web ports; add the port for an address such as `localhost:3000`. For part of a site, use a full address with `*` meaning "any text", for example `https://example.com/work/*` (full addresses are case-sensitive).
+
+Pasting a site's home address on a line of its own, such as `https://www.example.com/` or `http://localhost:3000/`, adds just the website (`www.example.com`, `localhost:3000`); an address with a path, query, `#` or `*` is kept exactly as pasted. **Sort A–Z** orders the list by website, ignoring `http://` and `https://`, then by the rest of the address. It doesn't change any entry or save anything; the built-in list already starts in that order.
 
 If an excluded site is the selected tab, that window doesn't park. An excluded background tab doesn't stop its window parking, but Discard immediately skips it. Chrome's own Memory Saver can still unload it.
 
@@ -58,15 +60,23 @@ Chrome doesn't allow tab changes while you're still holding a dragged tab, so th
 
 ## Sync
 
-Sync is off by default and chosen per setting, separately on each computer. The syncable settings are the parking delay, return delay, tab sleeping mode, theme, the pinned and audio tab options, and site exclusions.
+Sync is off by default and chosen separately on each computer: for all settings at once, for the Parking or Tab protection group, or one setting at a time. A group's box shows a dash when only some of its settings sync. The syncable settings are the parking delay, return delay, tab sleeping mode, theme, the pinned and audio tab options, and site exclusions.
 
 Each computer keeps its own local copy of all settings, and that local copy is what the extension always uses, so it works offline, signed out, or with Chrome sync turned off. For each setting you choose, the value is also stored in Chrome's sync storage under its own key, so computers that share different settings don't overwrite each other. Chrome syncs that storage through your Google account when you're signed in with sync on.
 
-When you turn a setting on and there's no shared value yet, this computer's value is shared. If a different value is already shared, Settings asks which one to keep. Turning a setting off keeps the current value here and leaves the shared value alone for your other computers.
+The extension remembers, on this computer only, which of these settings you've changed here. A value that arrives through sync doesn't count as changed here, even if it replaces one that did. When you turn sync on for a setting:
 
-A value changed on another computer goes through normal validation and then behaves exactly like the same change made here (a new sleeping mode applies to the next parking cycle, for example). Values that don't validate, perhaps from a newer version, are ignored. If Chrome refuses to store a value (a site list over Chrome's 8 KB limit per setting, for example), it stays local, sync turns off for that setting, and Settings says why. Reset settings restores the defaults and turns sync off on that computer only.
+- With no shared value yet, this computer's value is shared.
+- With the same shared value, sync simply turns on.
+- With a different shared value, and a setting you haven't changed here, the shared value is used. On a new computer, that picks up your other computers' settings without any questions.
+- With a different shared value, and a setting you have changed here (even back to its default), Settings asks which to keep. Turning on several settings at once asks about all of them together, with a choice for each, and nothing changes until you apply your choices; Cancel changes nothing. If a value changes while you're choosing, Settings asks again.
+- A shared value this version can't use (from a newer version, say) is never replaced without asking.
 
-Pausing, protected tabs, debug logging, your sync choices, and everything about windows, tabs and parking never sync.
+Turning a setting off keeps the current value here and leaves the shared value alone for your other computers.
+
+A value changed on another computer goes through normal validation and then behaves exactly like the same change made here (a new sleeping mode applies to the next parking cycle, for example). Values that don't validate, perhaps from a newer version, are ignored. If Chrome refuses to store a value (a site list over Chrome's 8 KB limit per setting, for example), it stays local, that setting doesn't sync (or stops syncing), and Settings says why. Restore defaults restores the defaults, turns sync off on that computer only, and forgets which settings were changed here, so turning sync on again uses the shared values. It never changes what's shared.
+
+Pausing, protected tabs, debug logging, your sync choices, the record of which settings you've changed here, and everything about windows, tabs and parking never sync.
 
 ## Restarts and recovery
 

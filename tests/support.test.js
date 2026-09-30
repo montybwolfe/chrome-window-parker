@@ -81,5 +81,5 @@ test('permission list and restrictive CSP remain unchanged; no external resource
  const m=JSON.parse(read('manifest.json'));assert.deepEqual(m.permissions,['tabs','storage','alarms','downloads']);assert.equal(m.host_permissions,undefined);assert.equal(m.content_scripts,undefined);
  assert.equal(m.content_security_policy.extension_pages,"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'");
  for(const f of ['popup.html','options.html','parked.html'])assert(!/<(?:script|img|iframe)[^>]+(?:src|href)="https?:/.test(read(f)));
- assert.equal(m.version,'1.5.5.2');assert(!/stripe|payment|entitlement/i.test(read('support.js')));
+ assert.equal(m.version,'1.5.5.3');assert(!/stripe|payment|entitlement/i.test(read('support.js')));
 });
