@@ -1,6 +1,6 @@
 # Shared development workflow
 
-This is the canonical instruction file for both Codex/Astra and Claude Code/Opus. Keep this workflow lightweight. Consult [README.md](README.md), [TESTING.md](TESTING.md), [docs/BEHAVIOR.md](docs/BEHAVIOR.md) and [CHANGELOG.md](CHANGELOG.md) for product behavior, testing and release history; do not duplicate them here.
+This is the canonical instruction file for Codex/Astra, Claude Max and Claude Ultra. Keep this workflow lightweight. Consult [README.md](README.md), [TESTING.md](TESTING.md), [docs/BEHAVIOR.md](docs/BEHAVIOR.md) and [CHANGELOG.md](CHANGELOG.md) for product behavior, testing and release history; do not duplicate them here.
 
 ## Accepted state and ownership
 
@@ -13,14 +13,27 @@ At bootstrap, v1.5.1.3 is stable and submitted to the Chrome Web Store. Leave it
 | `main` | Canonical release state; user-controlled promotion | `.` (existing `Chrome Window Parker` checkout) |
 | `dev` | Accepted integration state for the next release | `../chrome-window-parker-dev` |
 | `agent/codex` | Codex's disposable candidate lane | `../chrome-window-parker-codex` |
-| `agent/claude` | Claude's disposable candidate lane | `../chrome-window-parker-claude` |
+| `agent/claude` | Claude Max's disposable candidate lane | `../chrome-window-parker-claude` |
+| `agent/ultra` | Claude Ultra's occasional isolated deep-audit lane | `../chrome-window-parker-ultra` |
 
-- Normal work starts from the latest **dev**, not main. Agent lanes are workbenches, not competing product histories.
+- Normal Codex/Max work starts from the latest **dev**, not main. Ultra follows the exact-baseline lifecycle below. Agent lanes are workbenches, not competing product histories.
 - Modify, commit, rebase, reset and push only your own agent lane. Never perform these operations on the other agent's branch or edit its working files.
 - Modify `dev` only when the user explicitly authorizes integration of an identified candidate. This one-time workflow bootstrap on dev is separately authorized.
 - Modify `main` only for the specific promotion/release operation the user explicitly requests. Never silently switch to main.
-- Codex owns `CODEX_AUDIT.md`; Claude owns `CLAUDE_AUDIT.md`. After initial bootstrap creation, never edit the other agent's audit. An approved cherry-pick may carry that candidate's existing audit entry unchanged.
+- Codex owns `CODEX_AUDIT.md`; Claude Max owns `CLAUDE_AUDIT.md`; Ultra owns `ULTRA_AUDIT.md`. After initial bootstrap creation, never edit the other agent's audit. An approved cherry-pick may carry that candidate's existing audit entry unchanged.
 - Accepted behavior already in dev is settled. Challenge it only with new concrete evidence of a bug, regression or other problem, not personal preference.
+
+## Occasional Ultra cycles
+
+Read [ULTRA.md](ULTRA.md) before working on `agent/ultra`. Its persistent name has disposable state: it may remain dormant and stale for weeks and is **not expected to stay current**. Ordinary lane refresh/rebase guidance does not apply to Ultra.
+
+Lifecycle: dormant → explicit new-cycle authorization → reinitialize from an exact nominated verified SHA → isolated deep work → independent Claude Max review → selected approved commits integrated through the normal workflow → dormant again.
+
+Do not merge intervening releases into a stale Ultra lane or routinely rebase a large old patch stack. Before a destructive restart, confirm the previous cycle is resolved and preserve genuinely valuable unresolved work under an identifiable archival ref only when needed. Re-evaluate old findings against the new baseline. Ultra must stop if stale without explicit authorization to reinitialize from a specified verified SHA.
+
+Ultra may modify only its own lane; it must never write main, dev, agent/claude or agent/codex, or release/publish/submit anything. Max independently verifies actual commits, the complete baseline-to-candidate diff, source, tests and relevant live behavior before any Ultra-originated product work enters dev. Max may reject, reproduce or accept only part of a cycle; human integration approval is still required.
+
+The initial Ultra infrastructure bootstrap is separately authorized to Codex: create the Ultra lane and its initial documentation and integrate only that workflow setup into dev. This grants no ongoing cross-lane authority and starts no Ultra audit.
 
 ## Source of truth
 
@@ -94,7 +107,7 @@ Serialize integration/promotion operations: only one agent should write the dev 
 
 ## Refreshing a resolved agent lane
 
-Begin unrelated tasks from current dev. Never reset unresolved work, including a committed but unaccepted candidate. If dev advances during active work, preserve the candidate; deliberately rebase it onto current dev only when appropriate, rerun checks and make the revised SHA(s) available for re-review. Do not casually rewrite dev or main.
+For ordinary Codex/Max lanes, begin unrelated tasks from current dev. Ultra instead follows [ULTRA.md](ULTRA.md). Never reset unresolved work, including a committed but unaccepted candidate. If dev advances during active work, preserve the candidate; deliberately rebase it onto current dev only when appropriate, rerun checks and make the revised SHA(s) available for re-review. Do not casually rewrite dev or main.
 
 After acceptance or rejection/abandonment, and after the user confirms resolution and authorizes cleanup/sync:
 

@@ -1,6 +1,10 @@
 # Claude Code
 
-Read [AGENTS.md](AGENTS.md) first. It is the canonical shared workflow for both agents.
+Read [AGENTS.md](AGENTS.md) first. It is the canonical shared workflow for all agents.
+
+- When explicitly assigned an Ultra cycle in `../chrome-window-parker-ultra` on `agent/ultra`, read [ULTRA.md](ULTRA.md) and maintain `ULTRA_AUDIT.md`. Its isolation and exact-baseline rules take precedence over the ordinary Max instructions below. An idle Ultra checkout does not authorize starting a cycle.
+
+For ordinary Claude Max work:
 
 - Work on `agent/claude` in `../chrome-window-parker-claude` (relative to the existing main checkout).
 - Read and maintain `CLAUDE_AUDIT.md` before substantial implementation.

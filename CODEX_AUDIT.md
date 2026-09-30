@@ -55,3 +55,13 @@ Owned by Codex. Follow the shared audit rules in [AGENTS.md](AGENTS.md).
 - Changed by Astra: this audit only. Candidate / final approved dev and main target: this commit (resolve with `git log -1 -- CODEX_AUDIT.md`). Release decision: approve integration and dev-to-main fast-forward under the user's explicit authority, after integrated validation. Exact resulting refs, promotion verification and the main-built artifact are recorded in the final handoff and `dist/RELEASE-HANDOFF.md`; that generated handoff is not packaged.
 - Publication: replace the ZIP and screenshots 2/5; update the optional data-handling explanation to the new button label. Summary, description, other artwork, permission/data categories, certifications, policy URL, homepage/support URLs, test instructions and distribution are unchanged relative to the prepared v1.5.5 material. PRIVACY.md receives only the button-name change. No Store Dashboard access or assertion about unpublished Dashboard state.
 - Boundaries: no changes to Claude's local lane, remote lane or audit beyond carrying its existing approved commits unchanged. Main protection was read and remains active (deletion/non-fast-forward blocked; no bypass). No tag, GitHub Release or Store submission authorized or performed. No material unresolved release concern; the live coverage limits above remain explicit.
+
+### 2026-09-30 — Bootstrap occasional Claude Ultra lane
+
+- Base: accepted origin/dev and origin/main `9c7199dfccb507df7c7073526e0b580e1884c022` (v1.5.5.3); baseline tests 373/373 passed.
+- Candidate: this workflow-only commit, created on the new agent/ultra lane under explicit initial-setup authority; canonical dev integration is authorized for this setup only.
+- Changed: ULTRA.md operating contract, initial ULTRA_AUDIT.md, narrow AGENTS.md lane/lifecycle rules and CLAUDE.md routing. Ultra remains dormant until a separately authorized exact-baseline cycle.
+- Why: isolate occasional long-running work, avoid stale merge burdens and require independent Max verification before product integration.
+- Checkpointing: durable local setup status/test logs in the shared Git directory, ultra-setup-checkpoint.md; no conversation or private reasoning recorded.
+- Not changed: runtime/product files, version, assets, main/release state, existing Codex/Claude branches and Claude audit. No Ultra audit or live Chrome test started.
+- Resume after this commit: verify clean Ultra and dev refs, cherry-pick only this setup commit into current dev, run npm test, push dev and agent/ultra, then verify remote SHAs. Completion/push evidence belongs in the local checkpoint and final handoff.
