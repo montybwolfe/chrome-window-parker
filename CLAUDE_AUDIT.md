@@ -306,46 +306,69 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 - Not changed: parking, dwell, restore, discard, download, Clear, last-window, moved-page and sync logic; `SYNCABLE`; popup; main, dev, agent/codex and `CODEX_AUDIT.md`.
 - Open: headless only, so there was no macOS Mission Control or Window-menu look, no 1.5×/2× physical-display check of favicon sharpness, and no macOS-pasteboard paste. Adaptive favicons (e.g. GitHub) show the variant Chrome stored under the system theme at load time, which can differ from a forced Window Parker theme; the hairline keeps them visible.
 
-### 2026-09-30 — 1.5.6 final hardening pass (in progress; checkpoint)
+### 2026-10-01 — 1.5.6 final hardening pass and release candidate
 
-- Base: `dev @ d28267f` (v1.5.5.3 `9c7199d` plus the workflow-only Ultra bootstrap). The four 1.5.6 commits were rebased onto it and lease-pushed with Monty's approval: `d783b51→1b4e215`, `e3ea633→285d6d2`, `f2872ab→4abb6ad`, `1269303→504ed95`; trees identical apart from dev's five workflow files; 377/377 before and after.
+- Base: `dev @ d28267f` (v1.5.5.3 `9c7199d` plus the workflow-only Ultra bootstrap). The four earlier 1.5.6 commits were rebased onto it and lease-pushed with Monty's approval: `d783b51→1b4e215`, `e3ea633→285d6d2`, `f2872ab→4abb6ad`, `1269303→504ed95`; trees identical apart from dev's five workflow files; 377/377 before and after.
+- Candidate: `d28267f..` this commit on agent/claude, linear on dev, for exact fast-forward into dev and main.
+- 1.5.6 release model (Monty, for this release only): Claude Max owns convergence, dev integration, main promotion, the tag and the GitHub release; Astra is an informed peer with a smaller spot-check, not a gate. Store submission stays manual. This is not a standing division of roles.
 - Ultra: no local `agent/ultra` branch or Ultra worktree exists on this Mac, although the bootstrap entry describes one; `origin/agent/ultra` `1c4e3a1` is tree-identical to dev. Recorded only; not touched.
 - Environment: Chrome 154.0.8037.58, macOS 27.0 (M1 Pro, built-in 2× Retina), Node 24.21, Python 3.9.6. No Docker, VM or container runtime; only Chrome and Safari installed. Computer Use (Full Control) grants Chrome READ tier only (screenshots; no clicks, keys or drags), with clipboard read/write and system keys.
-- Live harness: disposable Chrome profiles over the CDP pipe (`Extensions.loadUnpacked`), popup-type driver window, local test site; kept in ignored `work/hardening-1.5.6/` with the coverage matrix and findings.
-- Found and fixed (this pass): Chrome 154 gives a tab a new ID when it discards it, through `tabs.discard` and Chrome's own discard (`chrome://discards` Urgent Discard), and fires `tabs.onReplaced`; protection kept the dead ID and was silently lost. See the fix commit for the ordering evidence.
-- Phase 1 live (disposable Chrome 154, build = candidate runtime):
-  - Headful, real macOS focus: 7-window run (pinned, grouped, excluded selected and background, protected, audible); tabs, pins, groups and bounds unchanged; page last, unpinned, ungrouped; the parking tab keeps the timer icon and "Parked · <title>"; brief visit stays parked; 2 s return restores (+2.02 s); Restore button 24 ms; Clear discards nothing. Chrome kept losing app focus about 1 s after programmatic activation (the Claude app was frontmost); the engine handled those real sequences as designed.
-  - `chrome://discards` after parking: the previous tab is "hidden" and the parking page visible; Chrome's own reason, "Tab is recently visible", starts its timer.
-  - Headless: a real in-progress download held parking 100 s (resumed 20 s after cancel); Chrome stopped the idle worker itself after 29 s and the waking departure still waited a full delay (61 s); Discard immediately unloaded exactly the eligible tabs and a return woke only the previous tab; closing the last real tab closed only that window.
-  - Freezing only the disposable Chrome process tree (SIGSTOP/SIGCONT, a sleep stand-in): an interrupted return restarted its delay (restored 2032 ms after resume); an interrupted discard batch stopped (1 of 40).
-  - Update path: a developer reload (dev mode on) of v1.5.5.3 (rebuilt byte-identical to the release) to 1.5.6 closed its parking pages, leaving each window on its last tab. Store updates differ: Chromium's `UpdateInstallGate` delays MV3 updates while the extension has frames or a process, until they end or Chrome restarts.
-  - Restart: a real relaunch is not testable here (CDP-loaded unpacked extensions are not persisted in branded Chrome; a persistent install needs the native folder picker). Engine side passed 6/6: empty session plus a new worker rebuilt parked windows, owners and remembered tabs, including the second copy of a duplicated page.
-- Phase 2 live: page out to its own window, into another window, out and back (held, then dropped and selected), held drag (leftover closed 122 ms after the drop), last real tab moved out, Clear during a pending move, and a worker stopped mid-drag (alarm cleaned up after 27 s): all pass. No physical tab-strip drag: Computer Use has read-only access to Chrome.
-- UX found, to fix in Phase 6: after a failed Restore click the parked page says "No tab is available to restore" although tabs are available, and the text persists.
-- Privacy to verify in Phase 12: a closed parked window's record can outlive the window until the next tab removal; records of windows parked at quit stay by design, which PRIVACY.md attributes only to crashes.
-- Phase 3–8 (so far):
-  - Settings drove real storage: single-field saves mark only that field; no-op save writes nothing; browser validation stops out-of-range values; theme saves at once; an edit saved elsewhere doesn't clobber an unsaved one.
-  - Sync: Chrome's real write limit (120 per minute) is classified and explained.
-  - Favicons: PNG 16/32/64/256, ICO, SVG, data URI and root `/favicon.ico`; missing and broken icons fall back to Chrome's globe; 5 real sites (Wikipedia, GitHub, HN, MDN, Apple) pass.
-  - Paste: the real macOS pasteboard through Chrome's paste into Settings, and Undo.
-  - Native views: Mission Control thumbnails are legible; the 1.5× toolbar icon is Chrome's 24 px entry.
-  - Accessibility: Chrome's tree for all three pages; a 27-stop Tab traversal, each stop with a ring; text contrast at least 4.5:1 in both themes; Lighthouse accessibility 100 on all three pages (DevTools MCP, http preview).
-- 1.5.6 release model (Monty, for this release only): Claude Max owns convergence, dev integration, main promotion, the tag and the GitHub release after a clean convergence pass; Astra is an informed peer with a smaller spot-check, not a gate. Store submission stays manual. This is not a standing division of roles.
+- Live harness: disposable Chrome profiles over the CDP pipe (`Extensions.loadUnpacked`), a popup-type driver window and a local test site; kept in ignored `work/hardening-1.5.6/` with the coverage matrix and findings. Nothing touched Monty's own Chrome profile.
 
-#### Astra handoff (kept current)
+#### Found and fixed
 
-- Candidate: `agent/claude @ 0a556b7` on `dev @ d28267f`; `npm test` 391/391. Not yet converged; audit in progress.
-- Defects found and fixed:
-  1. Protection was lost when Chrome unloaded a protected tab, because Chrome 154 gives a discarded tab a new ID (`7d27041`).
-  2. A closed parked window's record (address and title) was retained if it closed while the worker was stopped, contrary to PRIVACY.md (`0a556b7`).
-- UI/UX changes (`622ca36`, `c3ad6d8`, `fda6442`):
-  - Restore defaults asks first; Clean up is undoable.
-  - Parked-page wording ("1 seconds" bug; honest restore-failure note; balanced wrap; RTL titles).
-  - Protect offered on web pages only.
-  - 3:1 field borders; units announced; popup main landmark.
-- Environment limits: no physical tab drag, toolbar click or Cmd+V keystroke (Computer Use is read-only for Chrome); no two-computer sync (needs a Google sign-in); no real browser relaunch (CDP installs aren't persisted); no real system sleep (no autonomous wake); no VoiceOver run; no Windows or Linux host.
-- Highest-value challenges so far:
-  - The `init()` ordering around `replaced()` and `dropClosed()` versus events Chrome delivers after the window snapshot.
-  - `closed()` forgetting records of owned pages versus pages moved to another window.
+1. `7d27041` Protection was silently lost when Chrome unloaded a protected tab. Chrome 154 gives a discarded tab a new ID (`tabs.discard` and Chrome's own discard) and fires `tabs.onReplaced`; a worker woken by it usually got the event after `init()`'s window snapshot (7 of 10 live runs), and `init()` pruned protection against that snapshot. Protection and the remembered tab now follow the new ID, queued until state loads; no pruning against the snapshot.
+2. `0a556b7` A closed parked window's recovery record (address and title) stayed in storage when the window closed while the worker was stopped, or while Chrome still listed its closing tabs, contrary to PRIVACY.md. `init()` and `sweep()` now drop records of windows that are gone (`dropClosed`) unless their page lives on elsewhere, and `closed()` drops records of pages the window owned. Records of windows still parked when Chrome quits stay, so restored windows can use them (now documented).
+3. `622ca36` UX: Restore defaults replaced a custom site list without asking or undo (now asks); Clean up couldn't be undone (now an undoable edit, focus kept); the parked page said "1 seconds", and after a failed Restore click said "No tab is available" although tabs were, with the text persisting (now "Couldn’t restore your tab…", cleared on retry); Protect this tab was offered on tabs that never park (now web pages only, popup and Settings); RTL titles (`dir=auto`); a failed Sync all named only its first setting; a rule over 1,000 characters got the "without spaces" message.
+4. Accessibility and cleanup: text boxes and menus had 1.6:1 edges, now at least 3:1 in both themes (`c3ad6d8`); units and the main switch's hint are announced (`c3ad6d8`); the popup has a `main` landmark (`fda6442`); the chosen theme was invisible under forced colours, now Highlight (`e5bbe82`); one dead CSS rule removed (`25fc4bb`).
+5. Docs and Store: "restore delay" everywhere; protection, reload and update behaviour; the unsupported internationalised-domain note; the icons table; PRIVACY.md dated 1 October 2026 with its Limited Use link fixed (`#limited_use`). Store artwork recaptured from the 1.5.6 UI; the capture's headless startup window was `about:blank`, which 1.5.6 rightly doesn't offer for protection, so it now shows a made-up web page and the popup appears as in real use.
 
-- Checkpoint: phases 0–8 largely complete (VoiceOver documented; Spaces pending). Next: phases 9–14 static reviews (performance, dead code, security, privacy, dependencies, remaining tests), then 15–25.
+#### Evidence by phase
+
+- Runtime, races, lifecycle (live, disposable Chrome 154):
+  - Headful, real macOS focus: 7 windows (pinned, grouped, excluded selected and background, protected, audible); tabs, pins, groups and bounds unchanged; page last, unpinned, ungrouped; the parking tab keeps the timer icon and "Parked · <title>"; a brief visit stays parked; 2 s restores (+2.02 s); Restore button 24 ms; Clear discards nothing. Chrome kept losing app focus about 1 s after programmatic activation (the Claude app was frontmost); the engine handled those real sequences as designed.
+  - `chrome://discards`: the previous tab is "hidden", the parking page visible; Chrome's own reason, "Tab is recently visible", starts its timer.
+  - A real download held parking 100 s (resumed 20 s after cancel); Chrome stopped the idle worker after 29 s and the waking departure still waited a full delay (61 s); Discard immediately unloaded exactly the eligible tabs; closing the last real tab closed only that window.
+  - Freezing the disposable Chrome (SIGSTOP/SIGCONT, a sleep stand-in): an interrupted restore delay restarted (2032 ms after resume); an interrupted discard batch stopped (1 of 40).
+  - Moves (Chrome's own detach/attach, as a drop produces): page out, into another window, out and back, held drag (leftover closed 122 ms after the drop), last real tab moved out, Clear during a pending move, worker stopped mid-drag: all pass.
+  - Scale: 20 windows × 5 tabs parked within 86 s of the check; status 134 ms for 100 tabs; five overlapping Clears in 695 ms cleared each of 20 pages once; ten rapid pause/resume toggles settled with memory equal to storage; no errors.
+- Settings, storage, sync: single-field saves mark only that field; a no-op save writes nothing; the form stops out-of-range values; the theme saves at once; an edit saved elsewhere doesn't clobber an unsaved one; Chrome's real sync write limit (120 per minute) is classified and explained. With the extension's local storage filled to its 10 MB quota (U22, disposable profile): a save that needs more room fails visibly with Chrome's own message ("Resource::kQuotaBytes quota exceeded"), keeps the edit and changes nothing; windows stop parking, leaving one inactive parking page that later checks reuse; freeing space recovers both with no action. Getting there needs about 10 MB of the extension's own data (settings and at most 100 leftover records), so the raw message is left as a known limitation.
+- Exclusions and paste: the real macOS pasteboard through Chrome's paste, Clean up, a real Undo; Clean up keeps matching unchanged (property test).
+- Parking page: favicons (PNG 16/32/64/256, ICO, SVG, data URI, root `/favicon.ico`, missing and broken fall back to Chrome's globe), 5 real sites, HTML-looking and RTL titles, two-line clamp.
+- UI/UX and accessibility: Chrome's accessibility tree for all three pages; a 27-stop Tab traversal with a visible ring at each; text contrast at least 4.5:1 and field edges at least 3:1 in both themes; Lighthouse accessibility 100 on all three pages (DevTools MCP, http preview); forced colours; Verdana (a wide Windows font) keeps the popup and Settings in bounds; Mission Control thumbnails legible; the 1.5× toolbar icon is Chrome's 24 px entry and pixel-crisp.
+- Security, privacy, dependencies, cleanup: no dynamic code, HTML injection, network calls or obfuscation in the 15 runtime files; only the two fixed support URLs; CSP unchanged; `favicon` adds no install warning (`getPermissionWarningsByManifest`). No npm dependencies, lockfiles or CI workflows; packaging uses Python's standard library. No unused CSS classes or ids after `25fc4bb`.
+- Tests: every test file read for weak or tautological assertions (one of this pass's own was tautological and was fixed); 377 → 392, all passing.
+- Docs, GitHub, Store: every Markdown link resolves; external links answer 200; GitHub About, topics, licence and templates match. The live Store listing (HTTP fetch; the in-app browser refuses the Web Store) still shows 1.5.1.3 and its old description. Private vulnerability reporting is off on GitHub (optional).
+
+#### Coverage matrix (final)
+
+- TESTED — PASS: real macOS pasteboard paste (U4), 1.5× and Retina icons (U11, U12), Mission Control (U13), Chrome's discard eligibility (U15), idle worker termination (U18), download pause (U19), audible tab (U20), sync write limit (U21), favicon formats (U24), real sites (U25), the real popup through `action.openPopup` (U2's logic; not a physical click).
+- TESTED — ISSUE FOUND AND FIXED: tab ID replacement on discard (U26); closed-window records.
+- TESTED — KNOWN LIMITATION CONFIRMED: a developer reload closes parking pages; Store updates wait until the extension is idle (U16). Storage full shows Chrome's raw quota message (U22).
+- Approximations only: process freeze for sleep (U6); engine-side restart 6/6 (U17).
+- NOT TESTABLE WITH CURRENT ENVIRONMENT: physical tab drag, toolbar click and Cmd+V keystroke (U1–U3: Computer Use is read-only for Chrome; Chrome's own moves and paste command pass instead); Spaces (U5: switching would focus Monty's own Chrome); real sleep (U6: no autonomous wake without root); VoiceOver (U7: no key input to Chrome, and it would speak aloud); two-computer sync (U8: needs a Google sign-in); browser relaunch (U17: CDP installs aren't persisted); Windows and Linux (U9, U10: no VM or container).
+
+#### Convergence and gate
+
+- Last substantive product change: `e5bbe82`. After it: a whole-diff review from `d28267f` (code, tests, docs, Store text), which found only documentation leftovers (`64849e6`, `e1b4013`, `b3a30c2`, `51973d2`) and the capture artefact (`2c5b79a`); none changes a shipped file.
+- Gate on this commit: `npm test` 392/392; `verify.mjs` 9/9 including the UI check; `git diff --check` clean. `python3 scripts/package.py`: `chrome-window-parker-v1.5.6.zip`, 21 files, 47,296 bytes, SHA-256 `9b3ef7826bb4f944b7a6d18eaae1c61a753dfc200f65381442dd36e98819885c`, byte-identical to the build from `e5bbe82`; every packaged file equals the commit's.
+- Live smoke on the unzipped package itself (fresh headless Chrome 154): Settings 9/9 and its confirm and Undo 4/4; favicons and titles 7/7; protection following Chrome's new tab IDs 3/3, including Chrome's own discard; closed-window records 3/3; Discard immediately and closing the last tab 5/5; moves 7/7 plus the real-drag out-and-back 2/2; scale and rapid actions 5/5; download pause and Chrome's own idle-worker stop 5/5; the real popup's Protect this tab 2/2; Restore tab by a real click and Clear 4/4; storage full as above. Failures on the way were in the ignored test scripts (a stale out-and-back step, an incremental log counter, the new confirm step, script order, headless focus); each was fixed and rerun.
+
+#### Astra handoff (pre-release; exact release values follow in the post-release entry)
+
+- Release: 1.5.6. The Chrome Web Store still shows 1.5.1.3; submission is manual.
+- Exact main SHA: this commit, once dev and main are fast-forwarded to it.
+- Exact tag: `v1.5.6`, annotated, on this commit.
+- Final package: `chrome-window-parker-v1.5.6.zip`, 21 files, 47,296 bytes.
+- SHA-256: `9b3ef7826bb4f944b7a6d18eaae1c61a753dfc200f65381442dd36e98819885c`.
+- Automated tests: 392/392.
+- Major defects: protection lost when Chrome unloads a tab; closed-window records kept. Both fixed.
+- UI/UX refinements: "Found and fixed" 3 and 4.
+- Real-Chrome/native tests: "Evidence by phase" and the matrix.
+- Environment limitations: the matrix's NOT TESTABLE row.
+- Convergence status: clean pass after `e5bbe82`; later commits are docs, Store artwork, the capture tool and this entry.
+- GitHub release status: created after promotion; see the post-release entry.
+- Highest-value challenges:
+  - `init()` ordering around `replaced()` and `dropClosed()` versus events Chrome delivers after the window snapshot.
+  - `closed()` forgetting records of owned pages versus pages moved to another window and awaiting cleanup.
+  - Clean up's claim that exactly the same pages stay excluded (a property test over sample URLs, not a proof).
