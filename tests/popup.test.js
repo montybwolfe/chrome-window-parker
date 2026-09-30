@@ -24,3 +24,13 @@ test('popup keeps close available for paused inactive leftovers and refreshes co
   assert(!messages.includes('configure'));
  }finally{Object.assign(globalThis,original);}
 });
+
+test('popup Settings icon opens Settings exactly as the old Settings link did',async()=>{
+ const original={document:globalThis.document,chrome:globalThis.chrome};const elements=new Map();let opened=0;
+ const el=id=>{if(!elements.has(id))elements.set(id,{disabled:true,textContent:'',classList:{add(){},remove(){}},addEventListener(type,fn){this[type]=fn;}});return elements.get(id);};
+ globalThis.document={getElementById:el};
+ globalThis.chrome={tabs:Object.fromEntries(['onUpdated','onCreated','onRemoved','onActivated','onAttached','onDetached'].map(k=>[k,{addListener(){}}])),
+  runtime:{openOptionsPage:async()=>{opened++;},async sendMessage(){return {ok:true,data:{enabled:true,parkingTabs:0,currentTab:null,windows:[]}};}}};
+ try{await import(`../popup.js?settings=${Math.random()}`);await flush();await el('options').click();assert.equal(opened,1);}
+ finally{Object.assign(globalThis,original);}
+});

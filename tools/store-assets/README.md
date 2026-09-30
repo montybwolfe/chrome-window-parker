@@ -16,6 +16,8 @@ node tools/store-assets/verify.mjs
 
 **compose.mjs** renders the designs in `compositions/` around those captures at 2× and halves them, writing opaque PNGs (the Store icon keeps its transparency). It records the SHA-256 of every output and input in `store-listing/sources/assets.json`.
 
+**icons.mjs** renders the extension's own icons (`icons/parker-timer-<size>.png`) from `icons/parker-timer.svg` at the sizes you give it, for example `node tools/store-assets/icons.mjs 16 24`. See [Icons](../../docs/ICONS.md).
+
 **verify.mjs** checks sizes and transparency, that each image matches its record, and that nothing it was made from has changed since. It also checks that the captured UI still matches the extension's current pages, so stale screenshots can't slip into a release. `npm test` runs the same checks except that last one.
 
 ## Assets
