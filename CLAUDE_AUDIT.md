@@ -305,3 +305,12 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 - Store handoff: ZIP; screenshots 1 and 5; marquee promo; description (one new bullet); Privacy tab (favicon justification, web-history line). Test instructions and other fields unchanged.
 - Not changed: parking, dwell, restore, discard, download, Clear, last-window, moved-page and sync logic; `SYNCABLE`; popup; main, dev, agent/codex and `CODEX_AUDIT.md`.
 - Open: headless only, so there was no macOS Mission Control or Window-menu look, no 1.5×/2× physical-display check of favicon sharpness, and no macOS-pasteboard paste. Adaptive favicons (e.g. GitHub) show the variant Chrome stored under the system theme at load time, which can differ from a forced Window Parker theme; the hairline keeps them visible.
+
+### 2026-09-30 — 1.5.6 final hardening pass (in progress; checkpoint)
+
+- Base: `dev @ d28267f` (v1.5.5.3 `9c7199d` plus the workflow-only Ultra bootstrap). The four 1.5.6 commits were rebased onto it and lease-pushed with Monty's approval: `d783b51→1b4e215`, `e3ea633→285d6d2`, `f2872ab→4abb6ad`, `1269303→504ed95`; trees identical apart from dev's five workflow files; 377/377 before and after.
+- Ultra: no local `agent/ultra` branch or Ultra worktree exists on this Mac, although the bootstrap entry describes one; `origin/agent/ultra` `1c4e3a1` is tree-identical to dev. Recorded only; not touched.
+- Environment: Chrome 154.0.8037.58, macOS 27.0 (M1 Pro, built-in 2× Retina), Node 24.21, Python 3.9.6. No Docker, VM or container runtime; only Chrome and Safari installed. Computer Use (Full Control) grants Chrome READ tier only (screenshots; no clicks, keys or drags), with clipboard read/write and system keys.
+- Live harness: disposable Chrome profiles over the CDP pipe (`Extensions.loadUnpacked`), popup-type driver window, local test site; kept in ignored `work/hardening-1.5.6/` with the coverage matrix and findings.
+- Found and fixed (this pass): Chrome 154 gives a tab a new ID when it discards it, through `tabs.discard` and Chrome's own discard (`chrome://discards` Urgent Discard), and fires `tabs.onReplaced`; protection kept the dead ID and was silently lost. See the fix commit for the ordering evidence.
+- Checkpoint: phases 0 complete; 1 in progress. Next: headful core-parking checks (real focus), then phases 2–25 in order.
