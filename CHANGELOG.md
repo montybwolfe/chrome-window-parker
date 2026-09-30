@@ -7,7 +7,7 @@
 - **Settings shows the installed version**, quietly, in its top corner.
 - **Fixed** a protected tab losing its protection when Chrome unloaded it to save memory. Chrome gives an unloaded tab a new ID; protection now follows the tab.
 - **Safer Settings.** Restore defaults asks before replacing your settings, and Clean up can be undone.
-- **Small fixes.** Protect this tab is offered only on web pages, the only tabs that park; the parking page reads more naturally; and a very long site address gets a clear message.
+- **Small fixes.** Protect this tab is offered only on web pages, the only tabs that park; the parking page reads more naturally; text boxes have clearer edges, and screen readers hear their units; and a very long site address gets a clear message.
 
 ## 1.5.5.3
 
