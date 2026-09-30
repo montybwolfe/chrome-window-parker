@@ -32,7 +32,8 @@ export function validateSettings(input) {
   s.exclusions = [...new Set(s.exclusions.map(line => {
     if (typeof line !== 'string') throw new Error('Excluded sites must be text.');
     const rule = line.trim();
-    if (!rule || rule.length > 1000 || /\s/.test(rule)) throw new Error('Put one site on each line, without spaces.');
+    if (!rule || /\s/.test(rule)) throw new Error('Put one site on each line, without spaces.');
+    if (rule.length > 1000) throw new Error('A site can be at most 1,000 characters long.');
     if (rule.includes('://') ? !/^(https?|\*):\/\/[^/]+(?:\/.*)?$/i.test(rule) : !/^(\*\.)?[a-z0-9.-]+(?::\d+)?$/i.test(rule))
       throw new Error(`“${rule}” isn’t a website. Enter one such as example.com, or a full address such as https://example.com/work/*.`);
     return rule;

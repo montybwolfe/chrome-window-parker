@@ -132,7 +132,7 @@ input[type=radio] { flex: none; width: 16px; height: 16px; margin: 3px 0 0; acce
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 /* A hairline in the opposite tone keeps white icons visible on light pages and black ones on dark. */
 .favicon { width: 20px; height: 20px; vertical-align: -1px; margin-right: 10px; filter: drop-shadow(0 0 .6px var(--icon-edge)); }
-.parked .hint { font-size: 13px; }
+.parked .hint, .parked #status { font-size: 13px; text-wrap: balance; }
 .parked #detail { margin-top: 18px; }
 .quiet-note { margin-top: 5px; }
 /* An intrinsic width avoids depending on Chrome's initial popup viewport. */

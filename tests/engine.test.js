@@ -160,3 +160,13 @@ test('unauthorized messages and malformed settings cannot mutate state',async()=
   await assert.rejects(()=>h.p.message({type:'configure',settings:{enabled:false}},{id:'test',url:h.p.parkingURL,tab:{id:100}}));
   await assert.rejects(()=>h.p.configure({delayMinutes:NaN}));assert(h.p.settings.enabled);
 });
+
+test('only web pages are offered for protection: they are the only tabs that park or unload',async()=>{
+  const h=harness(2,3);h.tab(100).url='chrome://newtab/';h.tab(101).url='chrome-extension://other/page.html';h.tab(102).url='file:///notes.txt';
+  await h.restart();const sender={id:'test',url:'chrome-extension://test/popup.html'};
+  const status=await h.p.message({type:'status',includeTabs:true},sender);
+  assert.equal(status.currentTab,null,'the selected chrome:// page cannot be protected from the popup');
+  assert.deepEqual(status.tabs.map(t=>t.id),[200,201,202],'the tab list shows web pages only');
+  h.tab(100).url='https://example.com/0/0';
+  assert.deepEqual((await h.p.message({type:'status'},sender)).currentTab,{id:100,protected:false});
+});
