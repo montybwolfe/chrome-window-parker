@@ -8,7 +8,7 @@
 
 **The parked tab is still loaded.** In Let Chrome decide mode, Chrome's Memory Saver decides when to unload background tabs; parking only makes that possible. Discard immediately unloads them straight away.
 
-**A window didn't come back.** Stay in it for the return delay (2 seconds by default), or click Restore tab. If automatic parking is paused, windows don't restore by themselves, but you can always click a tab.
+**A window didn't come back.** Stay in it for the restore delay (2 seconds by default), or click Restore tab. If automatic parking is paused, windows don't restore by themselves, but you can always click a tab.
 
 **What does Clear parked tabs do?** It returns every parked window to a normal tab and removes the parking pages. It doesn't unload or reload anything else.
 
