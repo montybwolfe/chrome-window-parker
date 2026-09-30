@@ -4,6 +4,7 @@
   --background: #fafafa; --text: #22252a; --muted: #62666e; --line: #e1e3e6;
   --control: #fff; --control-border: #c4c8ce; --button: #f2f3f4;
   --accent: #245bc4; --accent-hover: #194aa6; --error: #a52a23;
+  --icon-edge: rgb(0 0 0 / .2);
   background: var(--background); color: var(--text);
 }
 * { box-sizing: border-box; }
@@ -59,8 +60,9 @@ select { appearance: none; width: 100%; padding: 0 32px 0 10px; cursor: pointer;
 .field-head > label { font-weight: 500; }
 .field-action { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .settings-page .field-action .hint { font-size: 12px; }
-/* Metadata in the page's top corner, outside the content (and the Store crops). */
-.version-tag { position: absolute; top: 14px; right: 18px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* Quiet build metadata in the page's top-right corner: outside the content and
+   the header, and outside the Store's Settings crops. */
+.version-tag { position: absolute; top: 7px; right: 10px; margin: 0; font-size: 11px; line-height: 16px; color: var(--muted); font-variant-numeric: tabular-nums; }
 textarea { display: block; width: 100%; min-height: 108px; max-height: 320px; padding: 10px 12px; resize: vertical; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .field > .hint { margin: 7px 0; }
 summary { cursor: pointer; width: fit-content; }
@@ -125,9 +127,11 @@ input[type=radio] { flex: none; width: 16px; height: 16px; margin: 3px 0 0; acce
 .page-footer { margin-top: 24px; color: var(--muted); font-size: 12px; }
 .parking-body { min-height: 100vh; display: grid; place-items: center; padding: 32px 24px; }
 .parked { width: min(100%, 440px); text-align: center; margin-top: -6vh; }
-.parked-icon { display: block; margin: 0 auto 14px; }
-.parked h1 { font-size: 22px; }
-.previous-title { font-size: 15px; line-height: 1.5; font-weight: 500; margin: 14px 0 18px; overflow-wrap: anywhere; }
+.parked-state { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 16px; }
+.parked h1.previous-title { font-size: 24px; line-height: 1.3; letter-spacing: -.35px; margin: 0 0 24px; text-wrap: balance; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+/* A hairline in the opposite tone keeps white icons visible on light pages and black ones on dark. */
+.favicon { width: 20px; height: 20px; vertical-align: -1px; margin-right: 10px; filter: drop-shadow(0 0 .6px var(--icon-edge)); }
 .parked .hint { font-size: 13px; }
 .parked #detail { margin-top: 18px; }
 .quiet-note { margin-top: 5px; }
@@ -154,7 +158,7 @@ button.text-button { padding: 2px 0 2px 8px; border: 0; min-height: 28px; backgr
   .unit-control input { width: 73px; }
 }
 @media (max-width: 340px) { .preference-row { grid-template-columns: 1fr; gap: 6px; } }
-:root[data-theme="dark"] { color-scheme: dark; --background: #202124; --text: #e7e8eb; --muted: #a6aab2; --line: #383b40; --control: #282a2f; --control-border: #545860; --button: #303238; --accent: #8bb3ff; --accent-hover: #a8c6ff; --error: #ffaaa1; }
+:root[data-theme="dark"] { color-scheme: dark; --background: #202124; --text: #e7e8eb; --muted: #a6aab2; --line: #383b40; --control: #282a2f; --control-border: #545860; --button: #303238; --accent: #8bb3ff; --accent-hover: #a8c6ff; --error: #ffaaa1; --icon-edge: rgb(255 255 255 / .38); }
 :root[data-theme="dark"] button.primary { color: #16233b; }
 :root[data-theme-pending] body { visibility: hidden; }
 

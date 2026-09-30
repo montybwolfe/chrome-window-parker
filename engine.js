@@ -814,8 +814,8 @@ export class Parker {
       if (!this.token(tab) || (sender.url.includes('#') && this.token(tab) !== sender.url.split('#')[1])) return {gone: true};
       if (msg.type === 'restore') { const restored = await this.restore(tab.windowId); await this.schedule(); return {restored}; }
       if (msg.type === 'parked-info') {
-        const w = await this.getWindow(tab.windowId);
-        return {windowId: tab.windowId, title: this.records[this.token(tab)]?.title || 'Your previous tab',
+        const w = await this.getWindow(tab.windowId), record = this.records[this.token(tab)];
+        return {windowId: tab.windowId, title: record?.title || 'Your previous tab', url: record?.url || '',
           sleeping: w?.tabs.filter(t => this.real(t) && t.discarded).length || 0, enabled: this.settings.enabled,
           dwellSeconds: this.settings.dwellSeconds};
       }
