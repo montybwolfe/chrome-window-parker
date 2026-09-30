@@ -12,7 +12,7 @@ export class Parker {
     this.shellEpoch = 0; this.detachedTabs = new Map(); this.clearRequests = 0;
     this.loaded = false; this.departedAt = null;
     this.policy = syncFlags(); this.customized = syncFlags(); this.syncNotice = null;
-    this.owners = {}; this.retries = 0; this.retryTimer = null; this.deferred = false;
+    this.owners = {}; this.retries = 0; this.retryTimer = null; this.deferred = false; this.replacements = [];
     this.parkingURL = api.runtime.getURL('parked.html');
   }
   log(...args) { if (this.settings.debug) console.debug('[Chrome Window Parker]', ...args); }
@@ -90,6 +90,10 @@ export class Parker {
     for (const s of Object.values(this.states)) if (!Number.isFinite(s.retryAt)) s.retryAt = 0;
     this.protectedIds = Array.isArray(session.runtimeState?.protectedIds) ?
       session.runtimeState.protectedIds.filter(Number.isInteger) : [];
+    // Tabs Chrome replaced while this state loaded (see replaced()). Protection is
+    // not pruned against this window snapshot: the event reporting a replacement
+    // can arrive after it, and closed tabs are dropped by removed().
+    for (const [addedId, removedId] of this.replacements.splice(0)) this.follow(addedId, removedId);
     const owners = session.runtimeState?.owners;
     const pages = new Set(windows.flatMap(w => (w.tabs || []).map(t => this.token(t))).filter(Boolean));
     this.owners = Object.fromEntries(Object.entries(owners && typeof owners === 'object' ? owners : {}).filter(([token, id]) =>
@@ -124,8 +128,6 @@ export class Parker {
       if (this.shellEpoch === epoch && this.detachedTabs.get(tabId) === source &&
           (!tab || (tab.windowId !== source && owner?.tabs.some(t => t.id === tabId)))) this.detachedTabs.delete(tabId);
     }
-    const ids = new Set(windows.flatMap(w => w.tabs || []).map(t => t.id));
-    this.protectedIds = this.protectedIds.filter(id => ids.has(id));
     // Recover an interrupted restoration or clean up an older reusable page.
     for (const w of windows) {
       await this.cleanupStray(w.id);
@@ -158,6 +160,17 @@ export class Parker {
     // a discard batch even if the parking page becomes active again afterwards.
     if (activatedId !== undefined && activatedId !== this.states[windowId]?.parkingId)
       this.selectionEpoch.set(windowId, (this.selectionEpoch.get(windowId) || 0) + 1);
+  }
+  // Chrome gives a tab a new ID when it unloads it, whether Memory Saver or
+  // Discard immediately did so. Protection and the remembered previous tab follow
+  // the tab. A worker woken by the change keeps it until init() has loaded state.
+  replaced(addedId, removedId) {
+    if (!this.loaded) this.replacements.push([addedId, removedId]);
+    else this.follow(addedId, removedId);
+  }
+  follow(addedId, removedId) {
+    this.protectedIds = this.protectedIds.map(id => id === removedId ? addedId : id);
+    for (const s of Object.values(this.states)) if (s.previousId === removedId) s.previousId = addedId;
   }
   async focusChanged(id, at, epoch) {
     const old = this.states[this.focusedState];

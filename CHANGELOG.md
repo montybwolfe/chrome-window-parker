@@ -5,6 +5,7 @@
 - **Parked windows show what they hold.** The parking page now leads with your tab's own icon and title, so you can tell parked windows apart at a glance, for example in Mission Control. The parking tab keeps the Window Parker icon. The icon is Chrome's own saved copy, using the new favicon permission, which adds no install warning.
 - **Clean up for excluded sites** replaces Sort A–Z. It sorts the list and removes duplicates, such as a site added twice or with different capitals, without changing which pages are excluded.
 - **Settings shows the installed version**, quietly, in its top corner.
+- **Fixed** a protected tab losing its protection when Chrome unloaded it to save memory. Chrome gives an unloaded tab a new ID; protection now follows the tab.
 
 ## 1.5.5.3
 

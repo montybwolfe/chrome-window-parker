@@ -115,3 +115,47 @@ test('cold worker with no focus change keeps the still-focused used window quali
     release();await drain();assert.equal(state(1).qualified,true);
   });
 });
+
+// Chrome gives a tab a new ID when it unloads it (Memory Saver, or Discard
+// immediately) and reports tabs.onReplaced. "cold": it happened while the worker
+// was stopped and the event that wakes it arrives before state loads; "late": the
+// same, but the event arrives after state loads (Chrome 154 does both);
+// "starting": it happens while a starting worker loads state; "warm": running.
+const replaceTab = (h, from, to) => { const t = h.tab(from); t.id = to; t.discarded = true; };
+for (const when of ['cold', 'late', 'starting', 'warm'])
+test(`${when} worker: protection follows a tab Chrome unloads and gives a new ID`, async () => {
+  const h = harness(2, 3); await h.restart();
+  h.p.protectedIds.push(101); await h.p.save();
+  if (when === 'cold' || when === 'late') replaceTab(h, 101, 999);
+  await coldWorker(h, async ({focus, release, drain, alarm, parked}) => {
+    if (when === 'late') { release(); await drain(); }
+    if (when === 'starting' || when === 'warm') replaceTab(h, 101, 999);
+    h.api.tabs.onReplaced.emit(999, 101); release(); await drain();
+    assert.deepEqual(h.session.runtimeState.protectedIds, [999]);
+    // Selecting it later reloads it, and it still keeps its window awake.
+    await h.api.tabs.update(999, {active: true}); await drain();
+    focus(2); await drain(); await h.advance(16 * 60000); await alarm();
+    assert(!parked(1), 'the protected tab still keeps its window awake');
+  }, {warm: when === 'warm'});
+});
+
+for (const when of ['cold', 'warm'])
+test(`${when} worker: the remembered tab follows its new ID beside another copy of its page`, async () => {
+  const h = harness(2, 3), [first, , second] = h.windows[0].tabs;
+  first.active = false; second.active = true; second.url = first.url; second.title = first.title;
+  await h.restart(); await h.parkAll(); assert.equal(h.p.states[1].previousId, 102);
+  // Chrome unloads the selected copy, then it is dragged to the front.
+  const unloadAndMove = () => {
+    replaceTab(h, 102, 997);
+    const w = h.windows[0], moved = w.tabs.splice(w.tabs.findIndex(t => t.id === 997), 1)[0];
+    w.tabs.unshift(moved); w.tabs.forEach((t, i) => { t.index = i; });
+  };
+  if (when === 'cold') unloadAndMove();
+  await coldWorker(h, async ({focus, release, drain, parked}) => {
+    if (when === 'warm') unloadAndMove();
+    h.api.tabs.onReplaced.emit(997, 102); h.api.tabs.onMoved.emit(997, {windowId: 1, fromIndex: 2, toIndex: 0});
+    release(); await drain();
+    focus(1); await drain(); await h.advance(2000); await drain();
+    assert(!parked(1)); assert(h.tab(997).active, 'the tab that was selected comes back, not the other copy');
+  }, {warm: when === 'warm'});
+});
