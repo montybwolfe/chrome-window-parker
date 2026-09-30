@@ -57,7 +57,6 @@ select { appearance: none; width: 100%; padding: 0 32px 0 10px; cursor: pointer;
 .unit-control span { color: var(--muted); font-size: 13px; }
 .section-note { margin-top: 10px; }
 .field { margin-top: 22px; }
-.field > label { display: block; margin-bottom: 6px; font-weight: 500; }
 .field-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 12px; margin-bottom: 6px; }
 .field-head > label { font-weight: 500; }
 .field-action { display: flex; align-items: center; gap: 10px; margin-left: auto; }
