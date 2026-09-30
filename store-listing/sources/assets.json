@@ -21,7 +21,7 @@
       "width": 1280,
       "height": 800,
       "alpha": false,
-      "sha256": "d354f119336c3cf3dd8b96392999dd1d59b059b06a8482b0d89953d505ea3536",
+      "sha256": "cf355a00d8722d961a9a679a05974a9b88a38fbfef2dc275112ac4007be5df83",
       "inputs": {
         "tools/store-assets/compositions/shot-2-popup.html": "9d83b1c94e4d0439afa24f8504d6688b896aabf9ee92fb4bb46c953834ea6ba0",
         "tools/store-assets/compositions/style.css": "3f430633f9c0116c98c2cc59353d70bf6d1a56c7d283144adfeb2ff4273b8229",
@@ -59,7 +59,7 @@
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
         "store-listing/sources/ui/settings-light.png": "e9d5c86bba2ab63561e2ef9ceafc1a521aa552377f78ca78a184d83fbb2be22e",
-        "store-listing/sources/ui/capture.json": "26ffd5b350a147f97e33a1988d91d24816f6443ca3f8176df50660a29e59d1d8"
+        "store-listing/sources/ui/capture.json": "b2fd375d6d54dac7f22cc6474c097fcb8b6afccb65d469f4c5bac4db5e4778bd"
       }
     },
     {

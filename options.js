@@ -63,7 +63,7 @@ $('settings').addEventListener('submit', event => {
 });
 $('reset').addEventListener('click', () => {
   if (asking) { closeChoice(); syncLocked(false); }
-  save(() => request('reset'), 'Defaults restored. Sync is now off on this computer; your other computers keep their settings.');
+  save(async () => { const settings = await request('reset'); status('', 'syncStatus'); return settings; }, 'Defaults restored. Sync is now off on this computer; your other computers keep their settings.');
 });
 // Excluded sites. A pasted home-page address becomes the plain website (see
 // simplifyRule), for whole lines only, so pasting into part of a line stays as is.
@@ -127,8 +127,8 @@ function named(keys) {
 }
 function reason(key, code) {
   return {'too-large': `${syncNames[key]} is too long to sync, so it stays on this computer.`,
-    'too-often': 'Chrome is limiting sync changes right now. Try again in a minute.'}[code] ||
-    'Chrome sync isn’t available right now. Try again later.';
+    'too-often': `${syncNames[key]} couldn’t sync because Chrome is limiting changes. Try again in a minute.`}[code] ||
+    `${syncNames[key]} couldn’t sync because Chrome sync isn’t available right now. Try again later.`;
 }
 const reasons = failed => [...new Set(failed.map(({key, reason: code}) => reason(key, code)))].join(' ');
 // A partly synced group shows a dash (indeterminate); clicking it syncs the rest.
@@ -201,7 +201,7 @@ function askChoice(conflicts, pending, changed) {
     `${syncNames[conflicts[0].key]} is different on this computer and in your synced settings. Which should your computers use?` :
     'Some settings are different on this computer and in your synced settings. Choose which to use for each one.';
   const radios = [];
-  $('syncChoices').replaceChildren(...conflicts.map(({key, local, synced}) => {
+  $('syncChoices').replaceChildren(...conflicts.map(({key, local, synced, unusable}) => {
     const set = document.createElement('fieldset'), legend = document.createElement('legend');
     set.className = 'sync-conflict'; legend.textContent = syncNames[key];
     if (single) legend.className = 'visually-hidden';
@@ -215,7 +215,7 @@ function askChoice(conflicts, pending, changed) {
     for (const [use, text] of options) {
       const label = document.createElement('label'), radio = document.createElement('input'), span = document.createElement('span');
       label.className = 'check-row'; radio.type = 'radio'; radio.name = `sync-${key}`; radio.value = use; span.textContent = text;
-      radio.addEventListener('change', () => { asking.choices[key] = {use, local, synced}; readyToApply(); });
+      radio.addEventListener('change', () => { asking.choices[key] = {use, local, synced, ...(synced === null ? {unusable} : {})}; readyToApply(); });
       label.append(radio, span); set.append(label); radios.push(radio);
     }
     return set;

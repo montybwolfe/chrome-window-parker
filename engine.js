@@ -658,7 +658,9 @@ export class Parker {
     // values (and other devices) are left alone. Afterwards nothing counts as
     // chosen here, as on a new installation, so turning sync on adopts shared values.
     await this.setPolicy(syncFlags());
-    return this.configure({...DEFAULTS}, undefined, syncFlags());
+    const settings = await this.configure({...DEFAULTS}, undefined, syncFlags());
+    this.syncNotice = null;
+    return settings;
   }
   async setAppearance(appearance) {
     // A header control that applies immediately. Presentation only, so it never
@@ -689,7 +691,7 @@ export class Parker {
   // key per setting, so devices that share different subsets never collide.
   syncReason(error) {
     const text = String(error?.message || error);
-    return /QUOTA_BYTES/i.test(text) ? 'too-large' : /MAX_WRITE_OPERATIONS/i.test(text) ? 'too-often' : 'unavailable';
+    return /QUOTA_?BYTES/i.test(text) ? 'too-large' : /MAX_?WRITE_?OPERATIONS/i.test(text) ? 'too-often' : 'unavailable';
   }
   async readSync(keys) {
     try { return await this.api.storage.sync.get(keys); }
@@ -713,8 +715,9 @@ export class Parker {
     try { return validateSettings({...this.settings, [key]: value})[key]; } catch { return null; }
   }
   async setPolicy(policy) {
-    this.policy = syncFlags(policy);
-    await this.api.storage.local.set({syncPolicy: this.policy});
+    const next = syncFlags(policy);
+    await this.api.storage.local.set({syncPolicy: next});
+    this.policy = next;
     return {policy: this.policy, settings: this.settings};
   }
   // Share local changes to opted-in settings. If Chrome refuses (for example a
@@ -767,13 +770,17 @@ export class Parker {
     keys = this.syncKeys(keys).filter(key => !this.policy[key]);
     const values = keys.length ? await this.readSync(keys) : {};
     if (!values) return {status: 'error', reason: 'unavailable'};
+    // Keep the original unusable value in a conflict too: two different future
+    // values both validate to null, but an old answer must not overwrite the newer one.
     const adopt = {}, share = [], mine = [], on = [], conflicts = [];
     for (const key of keys) {
       const local = this.settings[key], synced = this.validSynced(key, values[key]), choice = choices?.[key];
       if (synced === undefined) share.push(key);
       else if (sameValue(synced, local)) on.push(key);
       else if (synced !== null && !this.customized[key]) adopt[key] = synced;
-      else if (!choice || !sameValue(choice.local, local) || !sameValue(choice.synced, synced)) conflicts.push({key, local, synced});
+      else if (!choice || !sameValue(choice.local, local) || !sameValue(choice.synced, synced) ||
+        (synced === null && !sameValue(choice.unusable, values[key])))
+        conflicts.push({key, local, synced, ...(synced === null ? {unusable: values[key]} : {})});
       else if (choice.use === 'synced' && synced !== null) adopt[key] = synced;
       else if (choice.use === 'local') { share.push(key); mine.push(key); }
       else if (choice.use !== 'off') throw new Error('Choose which value to keep.');
@@ -782,8 +789,8 @@ export class Parker {
     if (Object.keys(adopt).length) await this.applySettings({...this.settings, ...adopt}, false);
     // Keeping this device's value over a synced one is a choice made here.
     if (mine.some(key => !this.customized[key])) {
-      this.customized = {...this.customized, ...Object.fromEntries(mine.map(key => [key, true]))};
-      await this.api.storage.local.set({customized: this.customized});
+      const customized = {...this.customized, ...Object.fromEntries(mine.map(key => [key, true]))};
+      await this.api.storage.local.set({customized}); this.customized = customized;
     }
     const failed = await this.share(share), shared = share.filter(key => !failed.some(f => f.key === key));
     const enabled = [...on, ...Object.keys(adopt), ...shared];
