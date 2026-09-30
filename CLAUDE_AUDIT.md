@@ -372,3 +372,30 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
   - `init()` ordering around `replaced()` and `dropClosed()` versus events Chrome delivers after the window snapshot.
   - `closed()` forgetting records of owned pages versus pages moved to another window and awaiting cleanup.
   - Clean up's claim that exactly the same pages stay excluded (a property test over sample URLs, not a proof).
+
+### 2026-10-01 — v1.5.6 released: dev, main, tag and GitHub release
+
+- Integrated (authorized for this release): dev `d28267f..0b63649` and main `9c7199d..0b63649`, exact fast-forwards pushed without force; 392/392 and `verify.mjs` 9/9 in each worktree. main also gained dev's workflow-only `d28267f`.
+- Released: annotated tag `v1.5.6` on `0b63649`; GitHub release "Chrome Window Parker v1.5.6" with `chrome-window-parker-v1.5.6.zip` and `RELEASE-SHA256.txt`. The ZIP was rebuilt from main and matched the gated build byte for byte.
+- Verified publicly (read-only, signed out): release page 200; both assets downloaded anonymously; ZIP 47,296 bytes, 21 files, manifest 1.5.6, SHA-256 equal to the checksum file and to GitHub's asset digest; `releases/latest` is v1.5.6; origin main = dev = agent/claude = `0b63649`; the public PRIVACY.md (the Store's policy URL) shows the 1.5.6 text, effective 1 October 2026.
+- Not done (manual): the Chrome Web Store upload and submission. The public listing still shows 1.5.1.3.
+- This entry is on agent/claude only.
+
+#### Astra handoff (final)
+
+- Release: 1.5.6, https://github.com/montybwolfe/chrome-window-parker/releases/tag/v1.5.6
+- Exact main SHA: `0b636495b4078d0532a859982fb005b6e2fcff0d` (dev too).
+- Exact tag: `v1.5.6`, annotated (tag object `88d2d75e0335be8f844d2f190590b5e0bb97cd2e`).
+- Final package: `chrome-window-parker-v1.5.6.zip`, 21 files, 47,296 bytes.
+- SHA-256: `9b3ef7826bb4f944b7a6d18eaae1c61a753dfc200f65381442dd36e98819885c`.
+- Automated tests: 392/392 on agent/claude, dev and main.
+- Major defects (fixed): protection lost when Chrome unloads a protected tab (`7d27041`); a closed parked window's record kept in storage (`0a556b7`).
+- UI/UX refinements: Restore defaults asks first; Clean up can be undone; plainer parking-page wording and failure note; Protect this tab only on web pages; RTL titles; 3:1 field edges; units announced; popup landmark; High Contrast theme marker.
+- Real-Chrome/native tests: disposable Chrome 154, headful and headless, including the unzipped release package; Mission Control, 1.5× and 2× icons, the real pasteboard; storage full (known limitation). Details in the entry above.
+- Environment limitations: no physical tab drag, toolbar click or Cmd+V keystroke (Computer Use is read-only for Chrome); no Spaces switching, real sleep, VoiceOver, two-computer sync, browser relaunch, Windows or Linux.
+- Convergence status: converged; clean pass after `e5bbe82`, with only docs, artwork, capture tooling and the audit after it.
+- GitHub release status: published and Latest; assets verified anonymously.
+- Highest-value challenges:
+  - `init()` ordering around `replaced()` and `dropClosed()` versus events Chrome delivers after the window snapshot.
+  - `closed()` forgetting records of owned pages versus pages moved to another window and awaiting cleanup.
+  - Clean up's claim that exactly the same pages stay excluded (property-tested over sample URLs, not proven).
