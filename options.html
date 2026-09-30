@@ -46,22 +46,32 @@
 <h2 id="sync-heading">Sync</h2>
 <p class="hint" id="syncHelp">Keep chosen settings the same on your other computers. This uses Chrome sync, so it works where you’re signed in to Chrome with sync on. Choose separately on each computer; changes here apply right away.</p>
 <fieldset class="sync-list" id="syncList" aria-describedby="syncHelp" disabled><legend class="visually-hidden">Settings to sync</legend>
-<label class="check-row"><input type="checkbox" data-sync="delayMinutes"><span>Park windows after</span></label>
-<label class="check-row"><input type="checkbox" data-sync="dwellSeconds"><span>Restore delay</span></label>
-<label class="check-row"><input type="checkbox" data-sync="sleepingMode"><span>Tab sleeping</span></label>
-<label class="check-row"><input type="checkbox" data-sync="appearance"><span>Theme</span></label>
-<label class="check-row"><input type="checkbox" data-sync="discardPinned"><span>Pinned tabs</span></label>
-<label class="check-row"><input type="checkbox" data-sync="protectAudio"><span>Audio tabs</span></label>
-<label class="check-row"><input type="checkbox" data-sync="exclusions"><span>Sites to exclude</span></label>
+<label class="check-row sync-all"><input type="checkbox" data-sync-group="all"><span>Sync all settings</span></label>
+<div class="sync-tree">
+<label class="check-row sync-group-row"><input type="checkbox" data-sync-group="parking"><span>Parking</span></label>
+<div class="sync-children" role="group" aria-label="Parking">
+<label class="check-row"><input type="checkbox" data-sync="sleepingMode" data-group="parking"><span>Tab sleeping</span></label>
+<label class="check-row"><input type="checkbox" data-sync="delayMinutes" data-group="parking"><span>Park windows after</span></label>
+<label class="check-row"><input type="checkbox" data-sync="dwellSeconds" data-group="parking"><span>Restore delay</span></label>
+</div>
+<label class="check-row sync-group-row"><input type="checkbox" data-sync-group="protection"><span>Tab protection</span></label>
+<div class="sync-children" role="group" aria-label="Tab protection">
+<label class="check-row"><input type="checkbox" data-sync="discardPinned" data-group="protection"><span>Pinned tabs</span></label>
+<label class="check-row"><input type="checkbox" data-sync="protectAudio" data-group="protection"><span>Audio tabs</span></label>
+<label class="check-row"><input type="checkbox" data-sync="exclusions" data-group="protection"><span>Sites to exclude</span></label>
+</div>
+<label class="check-row sync-group-row"><input type="checkbox" data-sync="appearance"><span>Theme</span></label>
+</div>
 </fieldset>
 <div class="sync-choice" id="syncChoice" role="group" aria-labelledby="syncChoiceText" hidden><p id="syncChoiceText"></p>
-<div class="actions"><button type="button" id="useSynced"></button><button type="button" id="useLocal"></button><button type="button" class="text-button" id="cancelSync">Cancel</button></div></div>
+<div id="syncChoices"></div>
+<div class="actions"><button type="button" class="primary" id="applySync">Apply</button><button type="button" class="text-button" id="cancelSync">Cancel</button></div></div>
 <p class="hint section-note">Pausing, protected tabs, debug logging and anything about your windows and tabs stay on this computer.</p>
 <p id="syncStatus" role="status" aria-live="polite"></p>
 </section>
 <fieldset class="settings-fields" disabled>
 <section class="settings-section compact" aria-labelledby="diagnostics-heading"><h2 id="diagnostics-heading">Diagnostics</h2><label class="check-row"><input id="debug" type="checkbox"><span>Enable debug logging</span></label></section>
-<div class="form-footer"><div class="actions"><button class="primary" id="save" type="submit">Save settings</button><button id="reset" type="button">Reset settings</button></div><p id="status" role="status" aria-live="polite"></p></div>
+<div class="form-footer"><div class="actions"><button class="primary" id="save" type="submit">Save settings</button><button id="reset" type="button">Restore defaults</button></div><p id="status" role="status" aria-live="polite"></p></div>
 </fieldset>
 </form>
 <section class="support-section" aria-labelledby="support-heading"><h2 id="support-heading">Support</h2>

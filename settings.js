@@ -8,7 +8,9 @@ export const DEFAULTS = Object.freeze({
 // Pausing, debug logging and all window/tab state always stay on this device.
 export const SYNCABLE = Object.freeze(['delayMinutes', 'dwellSeconds', 'sleepingMode', 'discardPinned',
   'protectAudio', 'exclusions', 'appearance']);
-export function syncPolicy(input) {
+// One true/false per syncable setting, used for this device's sync choices and
+// for which values were chosen on this device. Missing or invalid means false.
+export function syncFlags(input) {
   return Object.fromEntries(SYNCABLE.map(key => [key, input?.[key] === true]));
 }
 export const sameValue = (a, b) => JSON.stringify(a) === JSON.stringify(b);

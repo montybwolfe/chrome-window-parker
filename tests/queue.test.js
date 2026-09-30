@@ -98,10 +98,12 @@ test('page teardown cancels pending refresh and removes all tab listeners',async
  finally{Object.assign(globalThis,previous);}
 });
 
-for(const action of ['none','mode','pause','protect','clear','focus','select','download','sync','sync-other'])test(`real worker queue: bulk discard with ${action} after first candidate`,async()=>{
+for(const action of ['none','mode','pause','protect','clear','focus','select','download','sync','sync-other','enable-sync'])test(`real worker queue: bulk discard with ${action} after first candidate`,async()=>{
  const h=harness();h.local.settings={sleepingMode:'immediate'};
  // A synced change to a setting this device syncs behaves like a local change; others are ignored.
  if(action.startsWith('sync'))h.local.syncPolicy={sleepingMode:action==='sync',delayMinutes:true};
+ // Turning sync on here adopts a different shared value that was never chosen here.
+ if(action==='enable-sync')h.sync.sleepingMode='chrome';
  for(const [ns,names] of Object.entries({windows:['onFocusChanged','onRemoved','onCreated'],tabs:['onActivated','onRemoved','onCreated','onAttached','onDetached','onMoved','onReplaced','onUpdated'],alarms:['onAlarm'],downloads:['onCreated','onChanged'],runtime:['onStartup','onInstalled','onMessage']}))for(const name of names)h.api[ns][name]=event();
  const old={chrome:globalThis.chrome,now:Date.now,setTimeout:globalThis.setTimeout,clearTimeout:globalThis.clearTimeout,error:console.error};const errors=[];
  const create=h.api.tabs.create,update=h.api.tabs.update,remove=h.api.tabs.remove;
@@ -121,12 +123,14 @@ for(const action of ['none','mode','pause','protect','clear','focus','select','d
    if(action==='select')await h.api.tabs.update(201,{active:true});
    if(action==='download'){h.hooks.downloading=true;h.api.downloads.onCreated.emit({id:1,state:'in_progress'});}
    if(action.startsWith('sync'))h.api.storage.onChanged.emit({sleepingMode:{oldValue:'immediate',newValue:'chrome'}},'sync');
+   if(action==='enable-sync')pending=send({type:'sync-enable',keys:['sleepingMode']});
   };
   h.jump(16*60000);h.api.alarms.onAlarm.emit({name:'parking'});
   for(let i=0;i<6;i++)assert((await send({type:'settings'})).ok);
   if(pending)assert((await pending).ok);
   assert.deepEqual(h.calls.filter(c=>c[0]==='discard').map(c=>c[1]),['none','sync-other'].includes(action)?[200,201,202]:[200]);assert.deepEqual(errors,[]);
   if(action.startsWith('sync'))assert.equal((await send({type:'settings'})).data.sleepingMode,action==='sync'?'chrome':'immediate');
+  if(action==='enable-sync')assert.equal((await send({type:'settings'})).data.sleepingMode,'chrome');
   if(action==='clear'){assert(h.tab(200).active);assert(!h.tab(201).discarded);assert(!h.tab(202).discarded);assert.equal(h.windows[1].tabs.length,3);}
   if(action==='select'){h.jump(3000);h.api.alarms.onAlarm.emit({name:'dwell-recovery'});await send({type:'settings'});assert(h.tab(201).active);assert(h.tab(200).discarded);}
  }finally{globalThis.chrome=old.chrome;Date.now=old.now;globalThis.setTimeout=old.setTimeout;globalThis.clearTimeout=old.clearTimeout;console.error=old.error;}
