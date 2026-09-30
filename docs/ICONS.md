@@ -6,7 +6,7 @@ There's one design: the blue timer in [`icons/parker-timer.svg`](../icons/parker
 | --- | --- |
 | Extension icons (`manifest.json`) | `icons/parker-timer-16.png`, `-32`, `-48`, `-128` |
 | Toolbar button | `icons/parker-timer-16.png`, `-24`, `-32`, for 1×, 1.5× and 2× (Retina) screens |
-| Popup, Settings and parked-page headers | `icons/parker-timer-128.png`, shown at 28–40px |
+| Popup and Settings headers, and the parking page's "Window parked" line | `icons/parker-timer-128.png`, shown at 18–40px |
 | Page favicons | `icons/parker-timer-32.png` |
 | Chrome Web Store | `store-listing/store-icon-128.png`: the timer at 96×96 inside 16px of transparent padding |
 | Larger artwork | `docs/assets/parker-timer-256.png`, `-512`, `-1024` |
