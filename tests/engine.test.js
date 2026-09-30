@@ -120,7 +120,7 @@ test('permission, network and destructive API audit',()=>{
   assert.equal(manifest.manifest_version,3);assert.deepEqual(manifest.permissions,['tabs','storage','alarms','downloads']);assert.equal(manifest.host_permissions,undefined);assert.equal(manifest.content_scripts,undefined);
   const code=readdirSync(root).filter(f=>f.endsWith('.js')).map(f=>readFileSync(new URL(f,root),'utf8')).join('\n');
   assert(!/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/.test(code));
-  assert.equal((code.match(/this\.api\.tabs\.remove\(/g)||[]).length,2); // restoration and verified empty-shell cleanup
+  assert.equal((code.match(/this\.api\.tabs\.remove\(/g)||[]).length,3); // restoration, verified empty-shell and moved-page cleanup
   assert(!/this\.api\.windows\.(update|create|remove)|this\.api\.tabs\.(move|group|ungroup)/.test(code));
 });
 

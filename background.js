@@ -26,6 +26,7 @@ chrome.tabs.onActivated.addListener(({windowId, tabId}) => {
   parker.signalTab(windowId, tabId);
   enqueue(async () => {
     await parker.activated(windowId, tabId); await parker.cleanupEmptyParked(windowId);
+    await parker.cleanupStray(windowId);
   });
 });
 chrome.tabs.onRemoved.addListener((id, info) => {
@@ -46,6 +47,8 @@ chrome.tabs.onAttached.addListener((id, info) => {
   parker.signalTab(info.newWindowId);
   enqueue(async () => {
     if (source !== undefined) await parker.cleanupEmptyParked(source);
+    // A parking page moved into this window (by drag or the tab menu) is removed.
+    await parker.cleanupStray(info.newWindowId);
     await parker.save(); await parker.sweep();
   });
 });
@@ -66,7 +69,7 @@ chrome.tabs.onReplaced.addListener((addedId, removedId) => {
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
   if (change.url || change.status) parker.shellEpoch++;
   if (parker.token(tab) && (change.url || change.status === 'complete'))
-    enqueue(() => parker.cleanupEmptyParked(tab.windowId));
+    enqueue(async () => { await parker.cleanupEmptyParked(tab.windowId); await parker.cleanupStray(tab.windowId); });
   if (!parker.token(tab) && (change.url || change.status === 'loading')) parker.signalTab(tab.windowId);
   if (change.url && tab.active && !parker.token(tab)) {
     enqueue(() => parker.activated(tab.windowId, id));
@@ -78,6 +81,7 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
 chrome.alarms.onAlarm.addListener(alarm => enqueue(() => {
   if (alarm.name === 'parking') return parker.sweep();
   if (alarm.name === 'dwell-recovery') return parker.startDwell();
+  if (alarm.name === 'cleanup-retry') return parker.tidy();
 }));
 chrome.downloads.onCreated.addListener(() => {
   parker.safetyEpoch++; // Stop a batch even if its last download check just finished.
