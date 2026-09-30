@@ -142,7 +142,7 @@ test('choices count only while both values are still the ones the user saw', asy
 test('a shared value this version can’t use is never replaced without asking', async () => {
   for (const chosen of [false, true]) {
     const h = await ready({sleepingMode: 'chrome'}, {customized: {sleepingMode: chosen}, sync: {sleepingMode: 'smart'}}); // e.g. a newer version
-    const seen = {local: 'chrome', synced: null};
+    const seen = {local: 'chrome', synced: null, unusable: 'smart'};
     assert.deepEqual(await h.p.syncEnable(['sleepingMode']), {status: 'conflict', conflicts: [{key: 'sleepingMode', ...seen}]});
     await assert.rejects(() => h.p.syncEnable(['sleepingMode'], {sleepingMode: {use: 'synced', ...seen}}), /Choose/);
     assert.equal((await h.p.syncEnable(['sleepingMode'], {sleepingMode: {use: 'off', ...seen}})).status, 'on');
@@ -363,4 +363,32 @@ test('sync messages accept only lists of syncable settings', async () => {
   assert.equal((await h.p.message({type: 'sync-enable', keys: ['delayMinutes']}, sender)).status, 'on');
   assert.equal((await h.p.message({type: 'sync-disable', keys: ['delayMinutes']}, sender)).policy.delayMinutes, false);
   assert.deepEqual(writes(h), [{delayMinutes: 15}]);
+});
+
+test('failed local policy persistence cannot enable sync in memory', async () => {
+  const h = await ready({}, {sync: {delayMinutes: 15}});
+  h.hooks.localSet = values => { if ('syncPolicy' in values) throw new Error('Local storage refused'); };
+  await assert.rejects(() => h.p.syncEnable(['delayMinutes']), /Local storage refused/);
+  assert.equal(h.p.policy.delayMinutes, false);
+  h.sync.delayMinutes = 60;
+  await h.p.syncChanged({delayMinutes: {newValue: 60}});
+  assert.equal(h.p.settings.delayMinutes, 15, 'failed opt-in must not consume later synced data');
+});
+
+test('an unusable synced value changed during a conflict must be confirmed again', async () => {
+  const h = await ready({}, {sync: {sleepingMode: 'future-mode-a'}});
+  const {conflicts: [seen]} = await h.p.syncEnable(['sleepingMode']);
+  h.sync.sleepingMode = 'future-mode-b';
+  const result = await h.p.syncEnable(['sleepingMode'], {sleepingMode: {...seen, use: 'local'}});
+  assert.equal(result.status, 'conflict');
+  assert.equal(h.sync.sleepingMode, 'future-mode-b');
+  assert.equal(h.p.policy.sleepingMode, false);
+});
+
+test('Chrome quota error spellings map to an actionable size or rate explanation', async () => {
+  const h = await ready();
+  for (const text of ['QUOTA_BYTES_PER_ITEM quota exceeded', 'Resource::kQuotaBytesPerItem quota exceeded'])
+    assert.equal(h.p.syncReason(new Error(text)), 'too-large');
+  for (const text of ['MAX_WRITE_OPERATIONS_PER_MINUTE quota exceeded', 'Resource::kMaxWriteOperationsPerMinute quota exceeded'])
+    assert.equal(h.p.syncReason(new Error(text)), 'too-often');
 });

@@ -360,7 +360,7 @@ test('sync: failures are explained, and the boxes show only what really syncs',a
   assert.equal(p.el('syncStatus').textContent,'Sites to exclude is too long to sync, so it stays on this computer.');
   p.h.hooks.syncGet=()=>{throw new Error('Sync is unavailable');};
   await p.click(p.box('dwellSeconds'));
-  assert.equal(p.el('syncStatus').textContent,'Chrome sync isn’t available right now. Try again later.');
+  assert.equal(p.el('syncStatus').textContent,'Restore delay couldn’t sync because Chrome sync isn’t available right now. Try again later.');
   assert.equal(p.box('dwellSeconds').checked,false);assert.equal(p.el('syncList').disabled,false);
 });
 
@@ -419,4 +419,42 @@ test('changes from another page or computer update only fields you have not edit
   assert.equal(p.el('delayMinutes').value,30);assert.equal(p.el('sleepingMode').value,'immediate');
   assert.equal(p.el('sleepingHelp').textContent,'Unload eligible tabs as soon as their window is parked.');
   assert.equal(p.el('dwellSeconds').value,'5','your edit is kept');assert.deepEqual(p.checked(),['light']);
+});
+
+test('sync: changing incompatible data requires a fresh UI choice before replacement', async t => {
+  const p = await load(await page(t, {sync: {sleepingMode: 'future-a'}}), 'changed-unusable');
+  await p.click(p.box('sleepingMode'));
+  await p.pick('Tab sleeping', 'Use this computer');
+  p.h.sync.sleepingMode = 'future-b';
+  await p.el('applySync').fire('click'); await flush(); await flush();
+  assert.equal(p.h.sync.sleepingMode, 'future-b');
+  assert.match(p.el('syncChoiceText').textContent, /changed while you were choosing/);
+  assert.equal(p.el('applySync').disabled, true);
+  await p.pick('Tab sleeping', 'Use this computer');
+  await p.el('applySync').fire('click'); await flush(); await flush();
+  assert.equal(p.h.sync.sleepingMode, 'chrome');
+  assert.equal(p.box('sleepingMode').checked, true);
+});
+
+test('sync: rate-limited group failures name each affected setting', async t => {
+  const p = await load(await page(t), 'named-failures');
+  p.h.hooks.syncSet = values => { if ('delayMinutes' in values || 'sleepingMode' in values) throw new Error('MAX_WRITE_OPERATIONS_PER_MINUTE'); };
+  await p.click(p.group('parking'));
+  const text = p.el('syncStatus').textContent;
+  assert.match(text, /Park windows after couldn’t sync/);
+  assert.match(text, /Tab sleeping couldn’t sync/);
+  assert.equal(p.box('dwellSeconds').checked, true);
+  assert.equal(p.box('delayMinutes').checked, false);
+  assert.equal(p.box('sleepingMode').checked, false);
+});
+
+test('Restore defaults clears obsolete sync success and failure messages', async t => {
+  const p = await load(await page(t), 'reset-sync-status');
+  await p.click(p.group('all'));
+  assert.match(p.el('syncStatus').textContent, /now sync/);
+  p.h.p.syncNotice = [{key: 'exclusions', reason: 'too-large'}];
+  await p.el('reset').fire('click'); await flush(); await flush();
+  assert.equal(p.el('syncStatus').textContent, '');
+  assert.equal(p.h.p.syncNotice, null);
+  assert.equal(p.tree().all, 'off');
 });
