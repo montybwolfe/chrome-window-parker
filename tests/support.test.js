@@ -78,7 +78,7 @@ test('popup: Parking on, then Report a bug, Buy me a coffee and Settings as same
  assert(read('README.md').includes(`<a href="${SUPPORT_URL}"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" width="217"></a>`));
 });
 test('permission list and restrictive CSP remain unchanged; no external resources or payment integration',()=>{
- const m=JSON.parse(read('manifest.json'));assert.deepEqual(m.permissions,['tabs','storage','alarms','downloads']);assert.equal(m.host_permissions,undefined);assert.equal(m.content_scripts,undefined);
+ const m=JSON.parse(read('manifest.json'));assert.deepEqual(m.permissions,['tabs','storage','alarms','downloads','favicon']);assert.equal(m.host_permissions,undefined);assert.equal(m.content_scripts,undefined);
  assert.equal(m.content_security_policy.extension_pages,"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'");
  for(const f of ['popup.html','options.html','parked.html'])assert(!/<(?:script|img|iframe)[^>]+(?:src|href)="https?:/.test(read(f)));
  assert.equal(m.version,'1.5.5.3');assert(!/stripe|payment|entitlement/i.test(read('support.js')));

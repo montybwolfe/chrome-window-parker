@@ -8,7 +8,8 @@
     "tabs",
     "storage",
     "alarms",
-    "downloads"
+    "downloads",
+    "favicon"
   ],
   "incognito": "not_allowed",
   "background": {

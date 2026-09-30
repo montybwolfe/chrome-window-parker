@@ -12,7 +12,7 @@ assert manifest['manifest_version'] == 3
 assert re.fullmatch(r'(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){0,3}', manifest['version'])
 assert all(int(part) <= 65535 for part in manifest['version'].split('.'))
 assert any(int(part) for part in manifest['version'].split('.'))
-assert manifest['permissions'] == ['tabs', 'storage', 'alarms', 'downloads']
+assert manifest['permissions'] == ['tabs', 'storage', 'alarms', 'downloads', 'favicon']
 assert not manifest.get('host_permissions') and not manifest.get('content_scripts')
 assert len(manifest['description']) <= 132
 files = [

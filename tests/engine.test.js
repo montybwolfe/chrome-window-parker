@@ -117,7 +117,7 @@ test('ignore incognito and popup windows',async()=>{
 });
 test('permission, network and destructive API audit',()=>{
   const root=new URL('../',import.meta.url);const manifest=JSON.parse(readFileSync(new URL('manifest.json',root)));
-  assert.equal(manifest.manifest_version,3);assert.deepEqual(manifest.permissions,['tabs','storage','alarms','downloads']);assert.equal(manifest.host_permissions,undefined);assert.equal(manifest.content_scripts,undefined);
+  assert.equal(manifest.manifest_version,3);assert.deepEqual(manifest.permissions,['tabs','storage','alarms','downloads','favicon']);assert.equal(manifest.host_permissions,undefined);assert.equal(manifest.content_scripts,undefined);
   const code=readdirSync(root).filter(f=>f.endsWith('.js')).map(f=>readFileSync(new URL(f,root),'utf8')).join('\n');
   assert(!/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/.test(code));
   assert.equal((code.match(/this\.api\.tabs\.remove\(/g)||[]).length,3); // restoration, verified empty-shell and moved-page cleanup
