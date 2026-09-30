@@ -25,6 +25,11 @@ h2 { font-size: 13px; font-weight: 600; margin-bottom: 16px; }
 .settings-page .hint { font-size: 13px; }
 .settings-page .app-header { flex-wrap: wrap; gap: 14px; }
 .settings-page .app-header p { margin-top: 2px; }
+/* A small icon before each section heading. The heading text stays its name;
+   the icon is decoration (aria-hidden) and sized in the markup too. */
+.settings-page h2 { display: flex; align-items: center; gap: 8px; }
+.heading-icon { flex: none; color: var(--accent); }
+.settings-section.compact .heading-icon { width: 14px; height: 14px; color: inherit; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .check-row { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 13px 0; }
@@ -153,24 +158,22 @@ button.text-button { padding: 2px 0 2px 8px; border: 0; min-height: 28px; backgr
   :root:not([data-theme]) { background: #202124; color-scheme: dark; }
 }
 
-.popup-links { display: flex; align-items: center; gap: 12px; }
-.popup-links .text-button { padding-left: 0; }
-/* Small icon-only control (Report a bug in the popup). */
-button.icon-button { display: inline-grid; place-items: center; width: 28px; height: 28px; min-height: 28px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--muted); }
+/* The popup's footer actions: Report a bug, Buy me a coffee and Settings, as
+   same-sized icon buttons. Their names are in aria-label and title. */
+.popup-links { display: flex; align-items: center; gap: 4px; margin-right: -6px; }
+button.icon-button { display: inline-grid; place-items: center; width: 30px; height: 30px; min-height: 30px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--muted); }
 button.icon-button:hover { color: var(--text); background: var(--button); }
-.icon-button svg { width: 17px; height: 17px; }
-.popup-links .icon-button { margin-right: -4px; }
+button.icon-button:focus-visible { outline-offset: 0; }
+.icon-button svg { width: 18px; height: 18px; }
 .support-section { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 24px; }
 .support-section h2 { margin-bottom: 8px; }
 .support-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; margin-top: 6px; }
 .support-section .text-button { padding-left: 0; font-size: 13px; }
 .bug-link { display: inline-flex; align-items: center; gap: 6px; }
 .bug-link svg { flex: none; width: 16px; height: 16px; }
-/* Buy me a coffee: a small cup and a plain label. In the popup it stays quieter than Settings. */
+/* Buy me a coffee in Settings: a small cup and a plain label. */
 .coffee-link { display: inline-flex; align-items: center; gap: 5px; }
 .coffee-link svg { flex: none; width: 16px; height: 16px; }
-.popup-links .coffee-link { color: var(--muted); }
-.popup-links .coffee-link:hover { color: var(--text); }
 #supportStatus:empty { display: none; }
 #supportStatus { margin-top: 8px; font-size: 12px; }
 

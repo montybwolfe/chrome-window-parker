@@ -54,20 +54,24 @@ for(const [input,detail] of [['mouse',1],['keyboard',0]])test(`deliberate ${inpu
   assert.match(read(name+'.js'),/bindIssues\(\$\('reportBug'\)/);assert(!read(name+'.html').includes(ISSUES_URL));
  }
 });
-test('popup and Settings: a quiet Buy me a coffee link with a cup, clearly distinct from Report a bug',()=>{
- for(const name of ['popup','options']){
-  const html=read(name+'.html'),coffee=html.match(/<button class="text-button coffee-link" id="support"[^>]*>.*?<\/button>/)?.[0];
-  assert(coffee,name);
-  assert.match(coffee,/aria-label="Buy me a coffee \(opens in a new tab\)"/,'the accessible name starts with the visible label');
-  assert.match(coffee,/title="Support Chrome Window Parker on Buy Me a Coffee"/);
-  assert.match(coffee,/<svg viewBox="0 0 24 24" aria-hidden="true"[^>]*>.*<\/svg><span>Buy me a coffee<\/span><\/button>$/,'an inline cup: no image request');
-  assert(!/<button[^>]*>Support( development)?<\/button>/.test(html),`${name}: no vague "Support" control`);
-  assert.match(html,/id="reportBug"[^>]*aria-label="Report a bug on GitHub \(opens in a new tab\)"/);
- }
- const links=read('popup.html').match(/<div class="popup-links">(.*?)<\/div>/)[1];
- assert.deepEqual([...links.matchAll(/<button[^>]*id="(\w+)"/g)].map(m=>m[1]),['reportBug','support','options'],'bug, coffee, then Settings');
+test('popup: Parking on, then Report a bug, Buy me a coffee and Settings as same-sized icon buttons; Settings keeps full labels',()=>{
+ const popup=read('popup.html'),options=read('options.html');
+ const footer=popup.match(/<div class="popup-links">(.*?)<\/div><\/div>/)[1];
+ const buttons=[...footer.matchAll(/<button class="icon-button" id="(\w+)" type="button" aria-label="([^"]+)" title="([^"]+)"><svg viewBox="0 0 24 24" aria-hidden="true"[^>]*>.*?<\/svg><\/button>/g)].map(m=>m.slice(1));
+ assert.deepEqual(buttons,[['reportBug','Report a bug on GitHub (opens in a new tab)','Report a bug'],
+   ['support','Buy me a coffee (opens in a new tab)','Buy me a coffee'],['options','Settings','Settings']],'bug, coffee, then Settings');
+ assert.equal(footer.replace(/<svg.*?<\/svg>/g,'').replace(/<[^>]+>/g,''),'','no visible text beside the icons');
+ assert(!/Settings…|Settings\.\.\./.test(popup),'no ellipsis');assert.match(popup,/<span id="mode" class="hint">/);
+ // Settings has room for the full, labelled versions, and no Settings button of its own.
+ const coffee=options.match(/<button class="text-button coffee-link" id="support"[^>]*>.*?<\/button>/)?.[0];
+ assert.match(coffee,/aria-label="Buy me a coffee \(opens in a new tab\)"/,'the accessible name starts with the visible label');
+ assert.match(coffee,/<svg viewBox="0 0 24 24" aria-hidden="true"[^>]*>.*<\/svg><span>Buy me a coffee<\/span><\/button>$/,'an inline cup: no image request');
+ assert.match(options,/<button class="text-button bug-link" id="reportBug"[^>]*>.*?<span>Report a bug<\/span><\/button>/);
+ assert(!/id="options"/.test(options));
+ for(const html of [popup,options])assert(!/<button[^>]*>Support( development)?<\/button>/.test(html),'no vague "Support" control');
  const css=read('ui.css');
- assert.match(css,/\.popup-links \.coffee-link \{ color: var\(--muted\); \}/,'quieter than Settings');
+ assert.match(css,/button\.icon-button \{[^}]*width: 30px; height: 30px; min-height: 30px/,'the same hit area for each');
+ assert.match(css,/button\.icon-button:hover \{[^}]*color: var\(--text\)/);assert.match(css,/button\.icon-button:focus-visible \{ outline-offset: 0; \}/);
  assert.match(css,/\.popup-footer \{[^}]*white-space: nowrap/,'one line');
  assert.match(css,/html\.popup-root \{ width: 360px; min-width: 360px; \}/,'the fixed width the footer is laid out for');
  // The README's graphical button goes to the same page as the extension's link.

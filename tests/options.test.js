@@ -57,6 +57,21 @@ test('theme is a compact labelled three-state icon control; bug report is a smal
   for(const page of ['options.html','popup.html','parked.html'])assert(!/\sstyle=/.test(read(page)),'CSP forbids inline styles');
 });
 
+test('section headings keep their names; each has a small decorative icon drawn in the page',()=>{
+  const headings=[...html.matchAll(/<h2 id="([\w-]+)">(<svg class="heading-icon"[^>]*>.*?<\/svg>)([^<]+)<\/h2>/g)].map(m=>[m[1],m[3],m[2]]);
+  assert.deepEqual(headings.map(h=>h[1]),['Parking','Tab protection','Sync','Diagnostics','Support']);
+  assert.equal((html.match(/<h2\b/g)||[]).length,headings.length,'every section heading');
+  for(const [id,,svg] of headings){
+    assert.match(svg,/^<svg class="heading-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor"/,id);
+    assert(!/href|src=|url\(|<text|<image/.test(svg),`${id}: no external or text content`);
+  }
+  // Headings are flex rows, so the icon never adds height; the quiet Diagnostics heading keeps a quiet icon.
+  assert.match(css,/\.settings-page h2 \{ display: flex; align-items: center; gap: 8px; \}/);
+  assert.match(css,/\.heading-icon \{ flex: none; color: var\(--accent\); \}/);
+  assert.match(css,/\.settings-section\.compact \.heading-icon \{ width: 14px; height: 14px; color: inherit; \}/);
+  assert.match(css,/:root\[data-theme="dark"\] \{[^}]*--accent: #8bb3ff/,'a lighter accent in dark mode');
+});
+
 test('a long individual-tab list scrolls inside its own bounded panel; body text is not shrunk',()=>{
   assert.match(html,/<div id="tabs" class="tab-list" role="group" aria-label="Open tabs">/);
   const rule=css.match(/\.tab-list \{([^}]+)\}/)[1];
