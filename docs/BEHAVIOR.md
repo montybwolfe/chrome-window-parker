@@ -96,7 +96,7 @@ Recovery records are deleted when their window closes or returns to normal. Reco
 | --- | --- |
 | `tabs` | Tab addresses and titles for exclusions and recovery; selecting tabs; optional discard requests. It doesn't give access to page contents. Chrome describes it as "Read your browsing history". |
 | `storage` | Settings, recovery records, session state and, if you turn it on, synced settings. |
-| `alarms` | Parking checks and return-delay recovery while the worker is stopped. |
+| `alarms` | Parking checks and restore-delay recovery while the worker is stopped. |
 | `favicon` | Showing your previous tab's icon on the parking page, from Chrome's own saved copy of site icons. Nothing is downloaded. With `tabs` already granted, Chrome shows no extra install warning for it. |
 | `downloads` | Checking whether a download is in progress. Chrome describes it as "Manage your downloads"; downloads are never started, opened, changed or deleted. |
 
