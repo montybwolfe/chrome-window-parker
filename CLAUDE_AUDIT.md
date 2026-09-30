@@ -285,3 +285,12 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
 - Open:
   - Not tested: real two-computer sync, a real clipboard paste (synthetic paste events were used), rendering on a 1.5× display, physical tab drags, headful Spaces, Windows and Linux.
   - The Store needs the new ZIP and screenshots 2, 3, 4 and 5.
+
+### 2026-09-30 — 1.5.6 (in progress): Clean up, Settings version, parked-window identity
+
+- Base: `dev @ 9c7199d` (v1.5.5.3 as released). agent/claude fast-forwarded from `1e557b5`, an ancestor with no unique commits; clean tree, no unexpected work. Baseline `npm test` 373/373.
+- Resume checkpoint (update at each phase boundary; consolidate when 1.5.6 is done):
+  - Phase 1 done, committed with this entry: `cleanUpRules` (settings.js) replaces Sort A–Z with **Clean up** plus muted helper "Sort A–Z · remove duplicates"; `#version` in Settings shows `v` + `chrome.runtime.getManifest().version`, absolutely placed in the page's top-right corner (outside the 88 px-cropped Store Settings shots). Stubs: `getManifest` in `tests/options.test.js` and the preview bridge (`serve.mjs` injects the manifest version). `npm test` 376/376.
+  - Clean up semantics: sorts with the unchanged `compareRules`; websites (no `://`) repeat when equal after the matcher's own normalisation (lowercase, strip leading `*.`), keeping a plain lowercase spelling if listed; a full home address is dropped only when `simplifyRule` of it is a listed website; every other full address repeats only when identical. Never rewrites a kept entry. Form edit only, as Sort A–Z was: Save (`configure` with `shown`) records intent and syncs, so a no-op changes nothing.
+  - Version bump to 1.5.6 is deferred to the release-candidate commit (before Store capture).
+  - Next: Phase 2, parked-window identity. Known facts: `parked.js` already sets `document.title` to `Parked · <title>`; CSP is `img-src 'self'`, so remote favicons can't load; candidate mechanism is Chrome's `_favicon` endpoint (needs the `favicon` permission — check its warning and Store impact first).

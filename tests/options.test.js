@@ -125,7 +125,7 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
   globalThis.matchMedia=query=>({matches:reduced&&/reduced-motion: reduce/.test(query)});
   globalThis.document={getElementById:el,createElement:tag=>node({tagName:tag.toUpperCase()}),get activeElement(){return all.find(n=>n.focused);},
     querySelectorAll:selector=>({'input[name=appearance]':themes,'.settings-fields':groups,'input[data-sync]':boxes,'input[data-sync-group]':groupBoxes})[selector]||[]};
-  globalThis.chrome={storage:{onChanged:{addListener:fn=>storageListeners.push(fn)}},runtime:{async sendMessage(msg){
+  globalThis.chrome={storage:{onChanged:{addListener:fn=>storageListeners.push(fn)}},runtime:{getManifest:()=>JSON.parse(read('manifest.json')),async sendMessage(msg){
     messages.push(structuredClone(msg));
     if(msg.type==='settings'&&fail)return {ok:false,error:'Worker unavailable'};
     if(msg.type==='status')return reply({tabs,protectedIds});
@@ -373,16 +373,16 @@ test('keyboard focus stays on Save settings, Restore defaults and Refresh list w
   }
 });
 
-test('excluded sites: Sort A–Z tidies the list without saving; the factory list is already in order',async t=>{
-  const p=await load(await page(t,{settings:{...DEFAULTS}}),'sites-sort');const sites=p.el('exclusions');
+test('excluded sites: Clean up sorts and removes repeats without saving; the factory list is already clean',async t=>{
+  const p=await load(await page(t,{settings:{...DEFAULTS}}),'sites-clean');const sites=p.el('exclusions');
   assert.equal(sites.value,'meet.google.com\nmusic.youtube.com\nteams.microsoft.com\nzoom.us');
-  const sent=p.messages.length;await p.el('sortSites').fire('click');
+  const sent=p.messages.length;await p.el('cleanUpSites').fire('click');
   assert.equal(sites.value,'meet.google.com\nmusic.youtube.com\nteams.microsoft.com\nzoom.us','nothing to change');
-  assert.equal(p.messages.length,sent,'sorting saves nothing');
+  assert.equal(p.messages.length,sent,'Clean up saves nothing');
   await p.el('settings').fire('submit');await flush();
   assert.equal(p.h.p.customized.exclusions,false,'saving an unchanged list is not a change made here');
-  sites.value='zoom.us\n  https://example.com/work/*\n\nmeet.google.com ';
-  await p.el('sortSites').fire('click');
+  sites.value='zoom.us\n  https://example.com/work/*\n\nmeet.google.com \nZoom.us\nhttps://meet.google.com/\nzoom.us';
+  await p.el('cleanUpSites').fire('click');
   assert.equal(sites.value,'https://example.com/work/*\nmeet.google.com\nzoom.us');assert.equal(p.messages.length,sent+2,'still unsaved');
   assert.deepEqual(p.stored().exclusions,DEFAULTS.exclusions);
   await p.el('settings').fire('submit');await flush();
@@ -390,6 +390,29 @@ test('excluded sites: Sort A–Z tidies the list without saving; the factory lis
   // Restore defaults brings back the same order a new installation has.
   await p.el('reset').fire('click');await flush();await flush();
   assert.equal(sites.value,DEFAULTS.exclusions.join('\n'));assert.equal(p.h.p.customized.exclusions,false);
+});
+
+test('excluded sites: Clean up of a synced list saves and syncs like any edit; nothing to clean changes nothing',async t=>{
+  const clean=['meet.google.com','zoom.us'];
+  const p=await load(await page(t,{settings:{...DEFAULTS,exclusions:clean},policy:{exclusions:true},sync:{exclusions:clean}}),'sites-clean-sync');
+  const sites=p.el('exclusions'),shared=structuredClone(p.h.sync);
+  await p.el('cleanUpSites').fire('click');await p.el('settings').fire('submit');await flush();
+  assert.equal(sites.value,'meet.google.com\nzoom.us');assert.deepEqual(p.h.sync,shared,'no write, so no change for other computers');
+  assert.equal(p.h.p.customized.exclusions,false,'not a change made here');
+  sites.value='zoom.us\nmeet.google.com\n*.zoom.us\nhttps://example.com/work/*';
+  await p.el('cleanUpSites').fire('click');await p.el('settings').fire('submit');await flush();
+  const cleaned=['https://example.com/work/*','meet.google.com','zoom.us'];
+  assert.deepEqual(p.stored().exclusions,cleaned);assert.deepEqual(p.h.sync.exclusions,cleaned,'reaches the other computers');
+  assert.equal(p.h.p.customized.exclusions,true);assert.equal(p.h.p.policy.exclusions,true);
+});
+
+test('Settings shows the installed version from the manifest as quiet text; the popup does not',async t=>{
+  const p=await load(await page(t),'version');
+  assert.equal(p.el('version').textContent,`v${JSON.parse(read('manifest.json')).version}`);
+  assert.match(html,/<p class="version-tag" id="version"><\/p>/,'no version written into the page');
+  assert(!/\d+\.\d+\.\d+/.test(read('options.js')),'no version constant in the script');
+  assert.match(css,/\.version-tag \{ position: absolute;/,'out of the layout flow, so it adds no height');
+  for(const file of ['popup.html','popup.js'])assert(!/getManifest|version/i.test(read(file)),file);
 });
 
 test('excluded sites: pasted home-page addresses on whole lines become websites; other pastes are left alone',async t=>{

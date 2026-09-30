@@ -1,7 +1,7 @@
 export const DEFAULTS = Object.freeze({
   enabled: true, delayMinutes: 15, dwellSeconds: 2, discardPinned: false,
   protectAudio: true, debug: false, sleepingMode: 'chrome', appearance: 'auto',
-  // Already in Sort A–Z order (compareRules), so sorting an untouched list changes nothing.
+  // Already in Sort A–Z order without repeats, so Clean up changes nothing here.
   exclusions: ['meet.google.com', 'music.youtube.com', 'teams.microsoft.com', 'zoom.us']
 });
 
@@ -63,6 +63,24 @@ export function compareRules(a, b) {
   const order = (x, y) => x < y ? -1 : x > y ? 1 : 0;
   const [x, y] = [parts(a), parts(b)];
   return order(x[0], y[0]) || order(x[1], y[1]) || order(a, b);
+}
+
+// Clean up for excluded sites: Sort A–Z, then keep one of any entries that
+// repeat each other, so exactly the same pages stay excluded. Websites (no ://)
+// repeat when they differ only in capitals or a leading *., which matching
+// ignores too; the plainest spelling stays. A home address such as
+// https://example.com/ repeats a listed example.com, which already covers it.
+// Any other full address repeats only when identical: capitals, paths, ports
+// and * count there, and www. or another subdomain is always a different site.
+export function cleanUpRules(rules) {
+  const site = rule => rule.includes('://') ? '' : rule.toLowerCase().replace(/^\*\./, '');
+  const sites = new Set(rules.map(site).filter(Boolean)), kept = new Map();
+  for (const rule of rules.toSorted(compareRules)) {
+    if (rule.includes('://') && sites.has(simplifyRule(rule))) continue;
+    const key = site(rule) || rule;
+    if (!kept.has(key) || rule === key) kept.set(key, rule);
+  }
+  return [...kept.values()].toSorted(compareRules);
 }
 
 export function matchesRule(url, rule) {

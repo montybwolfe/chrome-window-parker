@@ -1,7 +1,9 @@
-import {compareRules, simplifyRule} from './settings.js';
+import {cleanUpRules, simplifyRule} from './settings.js';
 import {bindIssues, bindSupport} from './support.js';
 import {request, report} from './ui.js';
 const $ = id => document.getElementById(id);
+// The installed version, from the manifest, so it can never go stale.
+$('version').textContent = `v${chrome.runtime.getManifest().version}`;
 const flags = ['enabled', 'discardPinned', 'protectAudio', 'debug'];
 const themes = [...document.querySelectorAll('input[name=appearance]')];
 const syncNames = {delayMinutes: 'Park windows after', dwellSeconds: 'Restore delay', sleepingMode: 'Tab sleeping',
@@ -78,11 +80,12 @@ sites.addEventListener('paste', event => {
   // insertText keeps Undo working; where it isn't available, insert directly.
   if (!document.execCommand?.('insertText', false, cleaned)) sites.setRangeText(cleaned, start, end, 'end');
 });
-// A tidying action only: it changes nothing else, saves nothing, and leaves a
-// list that is already in order exactly as it is.
-$('sortSites').addEventListener('click', () => {
-  const lines = sites.value.split('\n').map(line => line.trim()).filter(Boolean), sorted = lines.toSorted(compareRules);
-  if (!same(sorted, lines)) sites.value = sorted.join('\n');
+// Clean up sorts the list and removes repeats (see cleanUpRules). A tidying
+// action only: it changes nothing else, saves nothing, and leaves a list that
+// is already clean exactly as it is.
+$('cleanUpSites').addEventListener('click', () => {
+  const lines = sites.value.split('\n').map(line => line.trim()).filter(Boolean), cleaned = cleanUpRules(lines);
+  if (!same(cleaned, lines)) sites.value = cleaned.join('\n');
 });
 for (const input of themes) input.addEventListener('change', async () => {
   if (!input.checked || !saved) return;

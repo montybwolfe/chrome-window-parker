@@ -27,7 +27,7 @@
 <fieldset class="settings-fields" disabled>
 <label class="check-row"><input id="discardPinned" type="checkbox"><span>Allow parking when a pinned tab is selected</span></label>
 <label class="check-row"><input id="protectAudio" type="checkbox"><span>Skip windows whose selected tab is playing audio</span></label>
-<div class="field"><div class="field-head"><label for="exclusions">Sites to exclude</label><button class="small" type="button" id="sortSites" title="Sort the sites alphabetically">Sort A–Z</button></div>
+<div class="field"><div class="field-head"><label for="exclusions">Sites to exclude</label><span class="field-action"><span class="hint" id="cleanUpHelp">Sort A–Z · remove duplicates</span><button class="small" type="button" id="cleanUpSites" aria-label="Clean up sites to exclude" aria-describedby="cleanUpHelp">Clean up</button></span></div>
 <p class="hint" id="exclusionHelp">One website per line, such as <code>meet.google.com</code>. Paste a site’s home address to exclude the whole site. To exclude only part of a site, use a full address starting with <code>https://</code>, with <code>*</code> where anything can match, such as <code>https://example.com/work/*</code>.</p>
 <textarea id="exclusions" rows="4" spellcheck="false" aria-describedby="exclusionHelp exclusionBehavior" placeholder="meet.google.com&#10;calendar.google.com"></textarea>
 <div id="exclusionBehavior">
@@ -79,4 +79,5 @@
 <div class="support-links"><button class="text-button bug-link" id="reportBug" type="button" aria-label="Report a bug on GitHub (opens in a new tab)" title="Report a bug on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7.4a3 3 0 0 1 6 0"/><path d="M8 9h8a1 1 0 0 1 1 1v4a5 5 0 0 1-10 0v-4a1 1 0 0 1 1-1Z"/><path d="M12 12v7M7 12.5H4M17 12.5h3M7.5 16.5 5 18.5M16.5 16.5l2.5 2M7.4 10 5 8M16.6 10 19 8M10.2 4.6 9.2 3.2M13.8 4.6l1-1.4"/></svg><span>Report a bug</span></button><button class="text-button coffee-link" id="support" type="button" aria-label="Buy me a coffee (opens in a new tab)" title="Support Chrome Window Parker on Buy Me a Coffee"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10h11.5v4.25A5.75 5.75 0 0 1 10.25 20h0A5.75 5.75 0 0 1 4.5 14.25Z"/><path d="M16 11.5h1.25a2.75 2.75 0 0 1 0 5.5H16"/><path d="M8 6.5c.7-.6.7-1.4 0-2M11.75 6.5c.7-.6.7-1.4 0-2"/></svg><span>Buy me a coffee</span></button></div>
 <p id="supportStatus" role="status" aria-live="polite"></p></section>
 <footer class="page-footer">Works alongside Chrome Memory Saver. Nothing is sent to the developer.</footer>
+<p class="version-tag" id="version"></p>
 </main></body></html>
