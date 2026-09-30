@@ -507,3 +507,25 @@ test('Restore defaults asks first, naming what is lost; Cancel changes nothing',
   await p.el('reset').fire('click'); await flush(); await flush();
   assert.equal(p.sent('reset').length, 1); assert.deepEqual(p.stored().exclusions, DEFAULTS.exclusions);
 });
+
+test('screen readers hear units and hints: number boxes are described by their units, the main switch by its hint',()=>{
+  for(const [id,unit,text] of [['delayMinutes','delayUnit','minutes'],['dwellSeconds','dwellUnit','seconds']]){
+    assert.match(html,new RegExp(`<input id="${id}"[^>]*aria-describedby="${unit}"`),id);
+    assert.match(html,new RegExp(`<span id="${unit}">${text}</span>`),unit);
+  }
+  // The hint is the checkbox's description, not part of its name.
+  assert.match(html,/<input id="enabled" type="checkbox" aria-describedby="enabledHelp"><span>Enable automatic parking<span class="hint" id="enabledHelp" aria-hidden="true">/);
+});
+
+test('text boxes and menus have edges with at least 3:1 contrast, in light and dark',()=>{
+  const lum=hex=>{const [r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(c=>c<=0.03928?c/12.92:((c+0.055)/1.055)**2.4);return 0.2126*r+0.7152*g+0.0722*b;};
+  const contrast=(a,b)=>{const [x,y]=[lum(a),lum(b)].sort((p,q)=>q-p);return (x+0.05)/(y+0.05);};
+  const light=css.match(/:root \{([^}]+)\}/)[1],dark=css.match(/:root\[data-theme="dark"\] \{([^}]+)\}/)[1];
+  const token=(block,name)=>{const m=block.match(new RegExp(`--${name}: #([0-9a-f]{6}|[0-9a-f]{3})\\b`));assert(m,name);
+    return '#'+(m[1].length===3?[...m[1]].map(c=>c+c).join(''):m[1]);};
+  for(const block of [light,dark]){
+    const edge=token(block,'field-border');
+    for(const behind of [token(block,'background'),token(block,'control')])assert(contrast(edge,behind)>=3,`${edge} on ${behind}`);
+  }
+  assert.match(css,/input\[type=number\], select, textarea \{[^}]*border: 1px solid var\(--field-border\)/);
+});

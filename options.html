@@ -11,14 +11,14 @@
 <p id="loadError" class="error" role="alert" hidden></p>
 <form id="settings">
 <fieldset class="settings-fields" disabled>
-<label class="check-row enable-row"><input id="enabled" type="checkbox"><span>Enable automatic parking<span class="hint">Park idle windows. Return to your previous tab.</span></span></label>
+<label class="check-row enable-row"><input id="enabled" type="checkbox" aria-describedby="enabledHelp"><span>Enable automatic parking<span class="hint" id="enabledHelp" aria-hidden="true">Park idle windows. Return to your previous tab.</span></span></label>
 <section class="settings-section" aria-labelledby="timing-heading">
 <h2 id="timing-heading"><svg class="heading-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="4.5" width="15" height="15" rx="3.5"/><path d="M10 16.5v-9h3.1a2.75 2.75 0 0 1 0 5.5H10"/></svg>Parking</h2>
 <div class="preference-row"><label for="sleepingMode">Tab sleeping</label><div class="select-wrap"><select id="sleepingMode" aria-describedby="sleepingHelp"><option value="chrome">Let Chrome decide</option><option value="immediate">Discard immediately</option></select></div></div>
 <p class="hint section-note" id="sleepingHelp">Chrome decides when background tabs are unloaded.</p>
 <div class="preference-row"><label for="delayPreset">Park windows after</label><div class="select-wrap"><select id="delayPreset"><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="custom">Custom…</option></select></div></div>
-<div class="preference-row" id="customLabel" hidden><label for="delayMinutes">Custom parking delay</label><div class="unit-control"><input id="delayMinutes" type="number" min="1" max="10080" step="0.5" required><span>minutes</span></div></div>
-<div class="preference-row"><label for="dwellSeconds">Restore after focusing for</label><div class="unit-control"><input id="dwellSeconds" type="number" min="0.5" max="20" step="0.5" required><span>seconds</span></div></div>
+<div class="preference-row" id="customLabel" hidden><label for="delayMinutes">Custom parking delay</label><div class="unit-control"><input id="delayMinutes" type="number" min="1" max="10080" step="0.5" required aria-describedby="delayUnit"><span id="delayUnit">minutes</span></div></div>
+<div class="preference-row"><label for="dwellSeconds">Restore after focusing for</label><div class="unit-control"><input id="dwellSeconds" type="number" min="0.5" max="20" step="0.5" required aria-describedby="dwellUnit"><span id="dwellUnit">seconds</span></div></div>
 <p class="hint section-note">Passing through a desktop won’t wake its window.</p>
 </section>
 </fieldset>
