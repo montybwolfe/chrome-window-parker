@@ -6,7 +6,7 @@ This is the detailed version: what the extension does, what it deliberately does
 
 A window parks when it hasn't been used for the parking delay (15 minutes by default). "Used" means you stayed focused on it for the return delay, selected a tab in it, or navigated its selected tab. Mouse movement, typing and page contents are never watched. A focused window never parks.
 
-To park a window, the extension adds a small parking page at the end of that window (unpinned and ungrouped) and selects it. Your previous tab becomes an ordinary background tab. Nothing else changes: windows aren't moved, focused, resized or recreated, and real tabs are never moved or closed.
+To park a window, the extension adds a small parking page at the end of that window (unpinned and ungrouped) and selects it. Your previous tab becomes an ordinary background tab, and the parking page shows its title and icon. The icon is Chrome's own saved copy of the site's icon, so nothing is downloaded; the parking tab itself keeps the Window Parker icon. Nothing else changes: windows aren't moved, focused, resized or recreated, and real tabs are never moved or closed.
 
 A window is skipped if its selected tab is pinned, playing audio, excluded, loading, already asleep, marked not discardable by Chrome, in a split view, or isn't a normal web page. Skipped windows are checked again after at least a minute. Incognito isn't supported, and popup, app and developer-tools windows are ignored.
 
@@ -32,7 +32,7 @@ Changing the mode takes effect on the next parking cycle. It doesn't unload or w
 
 **Site exclusions.** A website such as `meet.google.com` covers that site and addresses that end in it, such as `team.meet.google.com`, but not lookalikes such as `meet.google.com.evil.example`. Websites match the standard web ports; add the port for an address such as `localhost:3000`. For part of a site, use a full address with `*` meaning "any text", for example `https://example.com/work/*` (full addresses are case-sensitive).
 
-Pasting a site's home address on a line of its own, such as `https://www.example.com/` or `http://localhost:3000/`, adds just the website (`www.example.com`, `localhost:3000`); an address with a path, query, `#` or `*` is kept exactly as pasted. **Sort A–Z** orders the list by website, ignoring `http://` and `https://`, then by the rest of the address. It doesn't change any entry or save anything; the built-in list already starts in that order.
+Pasting a site's home address on a line of its own, such as `https://www.example.com/` or `http://localhost:3000/`, adds just the website (`www.example.com`, `localhost:3000`); an address with a path, query, `#` or `*` is kept exactly as pasted. **Clean up** orders the list by website, ignoring `http://` and `https://`, then by the rest of the address, and removes duplicates: an entry listed twice, a website written with different capitals or a leading `*.`, and a home address such as `https://example.com/` when `example.com` is also listed. Everything else stays exactly as written, including other subdomains such as `www.`, ports, paths and `*`, so the same pages are excluded. It doesn't save anything; the built-in list is already clean.
 
 If an excluded site is the selected tab, that window doesn't park. An excluded background tab doesn't stop its window parking, but Discard immediately skips it. Chrome's own Memory Saver can still unload it.
 
@@ -95,6 +95,7 @@ Recovery records are deleted when their window closes or returns to normal. Up t
 | `tabs` | Tab addresses and titles for exclusions and recovery; selecting tabs; optional discard requests. It doesn't give access to page contents. Chrome describes it as "Read your browsing history". |
 | `storage` | Settings, recovery records, session state and, if you turn it on, synced settings. |
 | `alarms` | Parking checks and return-delay recovery while the worker is stopped. |
+| `favicon` | Showing your previous tab's icon on the parking page, from Chrome's own saved copy of site icons. Nothing is downloaded. With `tabs` already granted, Chrome shows no extra install warning for it. |
 | `downloads` | Checking whether a download is in progress. Chrome describes it as "Manage your downloads"; downloads are never started, opened, changed or deleted. |
 
 There are no host permissions, content scripts or remote code, and extension pages can't make network connections. Report a bug and Buy me a coffee open a fixed web page in a new tab only when you click them.

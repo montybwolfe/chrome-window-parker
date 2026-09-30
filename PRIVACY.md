@@ -5,6 +5,7 @@ Chrome Window Parker runs entirely in your browser. There's no Chrome Window Par
 ## What it uses on your computer
 
 - **Your open windows and tabs.** To tell which windows are idle and which tab to bring back, it reads the address, title and state of open tabs, and notices when windows gain focus and tabs change. It doesn't read page contents, keystrokes, cookies or passwords, and it doesn't have Chrome's history permission, so it can't read your browsing history.
+- **Site icons.** The parking page shows your previous tab's icon, which it gets from Chrome's own saved copy of site icons on your computer. It doesn't download icons or send addresses anywhere.
 - **Downloads.** It only checks whether a Chrome download is in progress, so it can pause parking. It never starts, opens, changes or deletes downloads, and keeps no download details.
 - **Settings and recovery details.** Your settings, and a small record of each parked window's previous tab (its address, title and position), are kept in Chrome's extension storage on your computer so parking survives a restart. Temporary window and tab state is kept in session storage, which Chrome clears when it closes.
 - **Debug logs.** Debug logging is off by default. When you turn it on, logs stay in Chrome's extension console and use IDs rather than page titles or full addresses.

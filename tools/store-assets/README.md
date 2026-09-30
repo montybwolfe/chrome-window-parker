@@ -30,4 +30,6 @@ node tools/store-assets/verify.mjs
 | `store-listing/store-icon-128.png` | 128×128 | Timer at 96×96 with 16px transparent padding, as the Store asks |
 | `docs/assets/buy-me-a-coffee-cover-1600x400.png` | 1600×400 | Support-page banner |
 
-The browser frame in the screenshots is simplified context. Everything inside it is a real capture of the extension, with made-up tab names.
+The browser frame in the screenshots is simplified context. Everything inside it is a real capture of the extension, with made-up tab names. The first made-up page in each window has a plain made-up site icon (`ICONS` in capture.mjs, drawn the same way in `compositions/style.css`), so the parking page shows one as it would for a real site.
+
+Settings shows its version, small, in the page's top-right corner. That corner is outside the Settings crops, so a version bump alone doesn't change screenshots 3 and 4, though `settings-light.png` itself shows the version it was captured with.

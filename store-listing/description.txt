@@ -2,6 +2,7 @@ Keep lots of Chrome windows open? Each one keeps its selected tab awake, even if
 
 Chrome Window Parker parks windows you aren't using. After 15 minutes (you can change this), it switches the window to a small parking page, so the tab you were on becomes a background tab that Chrome can put to sleep. Come back and stay a couple of seconds, and your tab returns.
 
+• The parking page shows your tab's icon and title, so you can tell parked windows apart.
 • Your windows stay put. Tab order, pins and groups don't change.
 • Swiping quickly past a desktop won't wake its windows.
 • Let Chrome decide when tabs sleep, or unload a parked window's tabs straight away.
