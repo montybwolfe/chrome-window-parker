@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Chrome Window Parker",
-  "version": "1.5.5",
+  "version": "1.5.5.1",
   "minimum_chrome_version": "120",
   "description": "Parks idle Chrome windows so their tabs can sleep, and brings your tab back when you return.",
   "permissions": [

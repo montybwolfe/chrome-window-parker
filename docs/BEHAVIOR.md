@@ -50,6 +50,12 @@ If you close the last real tab in a parked window, or move it to another window,
 
 It's careful about it. It only removes pages it can match to its own recovery records, re-checks the window twice before each removal, waits until a dragged tab has landed, and stops if a tab is created, moved, selected or navigated in the meantime. Pages it can't verify are left for Clear parked tabs. Chrome has no "remove only if nothing changed" call, so a change in the last instant can still race a removal.
 
+## Moving a parking page
+
+A parking page belongs to the window it was made for. If you drag it out into a window of its own, or move it into another window, it's removed there (with the same checks), and a window left holding only that page closes. The window it came from keeps all its tabs and simply isn't parked any more; it parks again after the usual delay. Dragged back into its own window, the page stays.
+
+Chrome doesn't allow tab changes while you're still holding a dragged tab, so this cleanup, and closing an emptied parked window, happens as soon as you let go. After a browser restart or an update, a parking page belongs to whichever window it's in.
+
 ## Sync
 
 Sync is off by default and chosen per setting, separately on each computer. The syncable settings are the parking delay, return delay, tab sleeping mode, theme, the pinned and audio tab options, and site exclusions.
