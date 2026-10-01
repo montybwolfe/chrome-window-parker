@@ -399,3 +399,39 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
   - `init()` ordering around `replaced()` and `dropClosed()` versus events Chrome delivers after the window snapshot.
   - `closed()` forgetting records of owned pages versus pages moved to another window and awaiting cleanup.
   - Clean up's claim that exactly the same pages stay excluded (property-tested over sample URLs, not proven).
+
+### 2026-10-01 — 1.5.6.1: Settings save themselves
+
+- Base: released `v1.5.6` (`main` = `dev` = `0b63649`) plus the audit-only `21f74ac`. Candidate: `1f5a231` (autosave: code, tests, docs, reviewer text), then this commit (version 1.5.6.1, changelog, capture records, this entry).
+- Scope: began as "Unsaved changes." plus a transient "Settings saved."; Monty then asked first whether Save is needed at all. Decided against it, from the code and live probes:
+  - No atomicity: `validateSettings` checks each field on its own, and `configure(settings, shown)` already applies only fields that differ from what the page showed (the popup's pause and sync already change one setting at a time).
+  - Runtime: a configure stops an in-flight park or discard batch and restarts dwell, as any settings change does; no setting acts on windows already parked.
+  - Writes: `storage.sync` allows 120 writes a minute and Chrome fires `change` on every arrow-key step of a number box (probe), so numbers wait 500 ms. Boxes and menus change at human pace.
+  - In-between values are unsafe (typing 30 passes through a 3-minute delay), so nothing saves on `input`. `change` fires on Enter, on leaving a box and on switching windows (probes; the last headful).
+  - The page already mixed models: theme, sync and tab protection applied at once, the rest waited for Save, and edits were lost silently if Settings closed.
+- Changed (`options.js`, `options.html`, `ui.css`; engine, worker and settings rules untouched):
+  - Each setting saves through `configure` with `shown`, one request at a time. No-op changes are never sent, so local intent is still marked only for real changes.
+  - Numbers use Chrome's own checks (required, min, max, step). An invalid value is put back with a note in Parking (`#parkingStatus`); the custom delay box stays open, keeping focus.
+  - The site list is checked with `validateSettings` before sending. An invalid list stays as typed, with `aria-invalid`, an error edge and a note under it (`#sitesStatus`, part of its description), while the previous list stays in use. Leaving the box retries it even unedited, since Chrome then fires no `change`.
+  - A failed save (storage full, worker unavailable) puts controls back to the values in use; the list keeps its text.
+  - Leaving the page (`visibilitychange`) sends what was being typed; a configure sent while the tab closes is applied (probe).
+  - The page refreshes its copy of the settings from `storage.local` reads after each save and each notice, not from notice payloads. In the harness, an old notice arriving after a newer reply had flipped a checkbox back. A queued change counts as edited.
+  - Restore defaults keeps its question, drops queued changes, and ignores the `change` Chrome fires when locking a box being edited (probe). Its message clears after 8 s; no timer clears a newer message.
+  - Clean up saves like any edit; Undo in the box restores the text, saved on leaving it.
+  - Footer: "Changes are saved automatically." beside a small Restore defaults. `#status` keeps one line (`1lh`; it was 18 px under 19.5 px text). The Enter suppression for the immediate lists went with the submit path.
+- Tests: the options harness now models Chrome's number validity, page visibility, mocked timers and the worker's serial queue. 7 tests rewritten and 13 added: 392 → 405. Mutation: 24 single-point breaks of the new logic each fail at least one test.
+- Live, headless Chrome 154 in disposable profiles, on the worktree and then the unzipped ZIP: core 40/40, site list 18/18 (a real 1-minute park: the window whose selected tab is excluded stays awake, the other parks), external, sync and failure 20/20 (a second Settings page, the popup's pause, sync sharing, a storage refusal injected into the worker), visual 8/8 (light, dark, forced colours, 420 px, 200 % zoom, Tab order) and a stopped worker 5/5. No console errors.
+- Store: a fresh capture and compose in a scratch copy changed only `settings-light.png` (footer, version label). Screenshots 2–5 re-rendered with 20–67 px of frame anti-aliasing noise (at most 2/255) and keep their bytes; screenshot 1, the promos, icon and cover were identical. Committed the new Settings capture, its fingerprints and the screenshot 3/4 input records; no image needs re-uploading. The reviewer instructions now say "then press Enter" (499 of 500 characters with CRLF).
+- Package: `chrome-window-parker-v1.5.6.1.zip`, 21 files, 48,989 bytes, SHA-256 `bf6fbef59206763206255948d23f13007ec0155db88dcf488c3d80cd9675a17c`. Against v1.5.6 only `manifest.json` (version), `options.html`, `options.js` and `ui.css` differ; permissions, CSP and host access are unchanged.
+- Not changed: engine, worker, popup, parked page, sync semantics, Store description, privacy fields and images, main, dev, tags, agent/codex, `CODEX_AUDIT.md` and Ultra.
+- Open: menu changes were synthetic `change` events; no VoiceOver, Windows or Linux check; window-switch `change` was probed headful only.
+
+#### Astra handoff
+
+- Target 1.5.6.1; candidate this commit (stack `1f5a231`, this commit); released baseline `v1.5.6` = `0b636495b4078d0532a859982fb005b6e2fcff0d`.
+- Highest-value challenges:
+  - The save points: Enter, leaving a box, switching windows, the 500 ms number pause, and the hidden-page flush, including its branch for a save already in flight.
+  - Storage reads as the page's copy of the truth, against `shown` merges when two pages edit at once.
+  - Local intent: a setting changed and changed back is now marked as chosen here, so turning its sync on later asks instead of adopting.
+  - Pinned, audio and debug failures report in the footer, far from their boxes (they need storage full or a dead worker).
+  - Restore defaults' 8 s message, the only message that fades.

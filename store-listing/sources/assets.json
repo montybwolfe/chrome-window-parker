@@ -43,7 +43,7 @@
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
-        "store-listing/sources/ui/settings-light.png": "978ccdd546f6527c29001c477d3fb33a0b84d12a4bb9b99a8f9b02f8a1cddd17"
+        "store-listing/sources/ui/settings-light.png": "68c607c337c42e0e80a432de0a18c396c0a9c54c6a19d681ac96c2404a747252"
       }
     },
     {
@@ -58,8 +58,8 @@
         "icons/parker-timer.svg": "2171484b679a8b91e41b6eabfafc3e13f8d28fd39add9abd87fc8fe038db1552",
         "tools/store-assets/compose.mjs": "ff768ae48d37964d9871d5c5eab036a7635d0c58bbb30d0e9e90855dcade8d98",
         "tools/store-assets/png.mjs": "b2d6173ae64c086fe2f907e2000b69d607a41c4b932045cbfbb3402865dbde3d",
-        "store-listing/sources/ui/settings-light.png": "978ccdd546f6527c29001c477d3fb33a0b84d12a4bb9b99a8f9b02f8a1cddd17",
-        "store-listing/sources/ui/capture.json": "d21a0d56a37f8f5d87f10fb239a05a0857b80ff44b9143a8c8646e7adbc0c05f"
+        "store-listing/sources/ui/settings-light.png": "68c607c337c42e0e80a432de0a18c396c0a9c54c6a19d681ac96c2404a747252",
+        "store-listing/sources/ui/capture.json": "9abc3d3dddd2cdf71af0784d0f7ddee9754c6cee92c2161045730d6c43397026"
       }
     },
     {

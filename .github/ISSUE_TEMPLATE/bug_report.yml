@@ -24,7 +24,7 @@ body:
     attributes:
       label: Versions
       description: Chrome Window Parker version, Chrome version and operating system.
-      placeholder: 1.5.6, Chrome 154, macOS 26
+      placeholder: 1.5.6.1, Chrome 154, macOS 26
     validations:
       required: true
   - type: dropdown
