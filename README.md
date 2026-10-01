@@ -1,6 +1,6 @@
 <h1 align="center"><picture><img src="icons/parker-timer-128.png" width="36" height="36" alt="" align="top"></picture> Chrome Window Parker</h1>
 
-<p align="center"><a href="https://chromewebstore.google.com/detail/chrome-window-parker/agdejolopcplaedpollnlgpboldnfbfi"><picture><source media="(prefers-color-scheme: light)" srcset="docs/assets/chrome-web-store-badge-no-border.png"><img src="docs/assets/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206"></picture></a><br><a href="https://github.com/montybwolfe/chrome-window-parker/issues">Report a bug</a></p>
+<p align="center"><a href="https://chromewebstore.google.com/detail/chrome-window-parker/agdejolopcplaedpollnlgpboldnfbfi"><picture><source media="(prefers-color-scheme: light)" srcset="docs/assets/chrome-web-store-badge-no-border.png"><img src="docs/assets/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206"></picture></a><br>🐞 <a href="https://github.com/montybwolfe/chrome-window-parker/issues">Report a bug</a></p>
 
 If you keep lots of Chrome windows open (one per project, spread across desktops), each one keeps its selected tab awake, even when you haven't looked at it for hours. Chrome's Memory Saver sleeps background tabs, but never the selected one.
 
