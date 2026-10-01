@@ -1,5 +1,5 @@
 No login needed.
-1. Toolbar icon > gear (Settings): set "Park windows after" to Custom, 1 minute. Save settings.
+1. Toolbar icon > gear (Settings): set "Park windows after" to Custom, 1 minute, then press Enter.
 2. Open a second window with some pages; return to the first.
 3. Within 2 minutes it shows "Window parked". Focus it for 2 seconds (or click Restore tab): the tab returns.
 Pinned, audible or excluded tabs keep a window awake.

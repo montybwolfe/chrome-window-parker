@@ -1,4 +1,4 @@
-import {cleanUpRules, simplifyRule} from './settings.js';
+import {cleanUpRules, simplifyRule, validateSettings} from './settings.js';
 import {bindIssues, bindSupport} from './support.js';
 import {request, report} from './ui.js';
 const $ = id => document.getElementById(id);
@@ -9,7 +9,7 @@ const themes = [...document.querySelectorAll('input[name=appearance]')];
 const syncNames = {delayMinutes: 'Park windows after', dwellSeconds: 'Restore delay', sleepingMode: 'Tab sleeping',
   appearance: 'Theme', discardPinned: 'Pinned tabs', protectAudio: 'Audio tabs', exclusions: 'Sites to exclude'};
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-let saving = false, saved = null;
+let saved = null, resetting = false, fade;
 // Settings unlock together. Individual-tab protection applies immediately and
 // stays usable even if settings cannot be loaded.
 function locked(value) { for (const group of document.querySelectorAll('.settings-fields')) group.disabled = value; }
@@ -38,36 +38,127 @@ function show(key, value) {
   else { $(key).value = value; if (key === 'sleepingMode') sleepingHelp(); }
 }
 function fill(s) { for (const key of Object.keys(s)) show(key, s[key]); saved = s; }
-function status(text, target = 'status') { $(target).classList.remove('error'); $(target).textContent = text; }
+function status(text, target = 'status') {
+  if (target === 'status') clearTimeout(fade);
+  $(target).classList.remove('error'); $(target).textContent = text;
+}
+function problem(text, target) { status(text, target); $(target).classList.add('error'); }
 // Disabling a focused button drops keyboard focus to the page; put it back.
 const refocus = element => { if (element && document.activeElement !== element) element.focus?.(); };
-async function save(operation, success) {
-  if (saving) return;
-  const focused = document.activeElement;
-  saving = true; locked(true); status('Saving…');
-  try { fill(await operation()); status(success); }
-  catch (error) { report(error); }
-  finally { saving = false; locked(false); if (['save', 'reset'].includes(focused?.id)) refocus(focused); }
-  // A save can switch sync off for a setting Chrome refused; say so, separately.
-  await refreshSync().catch(error => report(error, 'syncStatus'));
+
+// Settings save themselves, one at a time, so what the page shows is what's in
+// use. Only what changed is sent, so a value changed meanwhile on another page
+// or computer is kept (see configure). Boxes and menus save straight away. A
+// number saves when you press Enter or leave it, a moment later, because the
+// arrow keys change it a step at a time. The site list saves when you leave it.
+// Nothing invalid or half-typed is saved.
+const numbers = ['delayMinutes', 'dwellSeconds'];
+// Each part of the page says what went wrong next to it.
+const line = key => ['enabled', 'sleepingMode', ...numbers].includes(key) ? 'parkingStatus' : key === 'exclusions' ? 'sitesStatus' : 'status';
+const limits = {delayMinutes: 'The parking delay must be between 1 minute and 7 days, in steps of half a minute, so it wasn’t changed.',
+  dwellSeconds: 'The restore delay must be between 0.5 and 20 seconds, in steps of half a second, so it wasn’t changed.'};
+const pending = new Map();
+let sending = false, flying = {}, wait = null;
+// The settings as stored. Chrome's change notices and replies can arrive in
+// any order, but reads are answered in order, so the page never steps back to
+// an older copy by reading after each one.
+const stored = async () => (await chrome.storage.local.get('settings')).settings;
+// Chrome's own messages can lack a full stop.
+const sentence = text => /[.!?]$/.test(text) ? text : `${text}.`;
+// Show the value in use again. A number box that's showing keeps showing, so it keeps the focus.
+function putBack(key) {
+  if (key === 'dwellSeconds' || (key === 'delayMinutes' && !$('customLabel').hidden)) $(key).value = saved[key];
+  else show(key, saved[key]);
 }
+// Check a change and queue it. Returns false if it can't be saved, and says why.
+function queue(key) {
+  if (!saved || resetting) return false;
+  status('', line(key));
+  if (numbers.includes(key) && !$(key).validity.valid) { pending.delete(key); putBack(key); problem(limits[key], line(key)); return false; }
+  if (key === 'exclusions') {
+    // A list that can't be used stays as you typed it, to fix or copy.
+    try { validateSettings({...saved, exclusions: formValue(key)}); $(key).ariaInvalid = null; }
+    catch (error) { pending.delete(key); $(key).ariaInvalid = 'true'; problem(`${sentence(error.message)} The previous list is still in use.`, line(key)); return false; }
+  }
+  pending.set(key, formValue(key));
+  return true;
+}
+// Nothing was saved. Settings show the values in use again, except the site
+// list, which keeps your text to try again or copy.
+function unsaved(changes, error) {
+  const keys = Object.keys(changes);
+  for (const key of keys) if (key !== 'exclusions' && !pending.has(key) && same(formValue(key), changes[key])) putBack(key);
+  for (const target of new Set(keys.map(line)))
+    problem(target === 'sitesStatus' ? `${sentence(error.message)} The previous list is still in use.` : error.message, target);
+}
+function keep(key, pause = 0) {
+  if (!queue(key)) return;
+  clearTimeout(wait); wait = null;
+  if (pause) wait = setTimeout(() => { wait = null; send(); }, pause);
+  else send();
+}
+// One request at a time, so each compares with what's really saved.
+async function send() {
+  if (sending || !saved) return;
+  const changes = Object.fromEntries([...pending].filter(([key, value]) => !same(value, saved[key])));
+  pending.clear();
+  const keys = Object.keys(changes);
+  if (!keys.length) return;
+  sending = true; flying = changes;
+  try {
+    const reply = await request('configure', {settings: {...saved, ...changes}, shown: saved});
+    // It was saved: a read that fails can't undo that, so fall back to the reply.
+    const result = await stored().catch(() => null) || reply;
+    // Saving drops repeated sites; show the list as saved.
+    for (const key of keys) if (!pending.has(key) && same(formValue(key), changes[key]) && !same(result[key], changes[key])) show(key, result[key]);
+    refreshFields(result);
+    // Chrome can refuse to sync a value, which turns its sync off; say so there.
+    if (keys.some(key => policy[key])) await refreshSync().catch(error => report(error, 'syncStatus'));
+  } catch (error) { unsaved(changes, error); }
+  finally {
+    sending = false; flying = {};
+    if (pending.size && wait === null) send();
+  }
+}
+for (const key of ['enabled', 'sleepingMode', ...numbers, 'discardPinned', 'protectAudio', 'exclusions', 'debug'])
+  $(key).addEventListener('change', () => keep(key, numbers.includes(key) ? 500 : 0));
 $('delayPreset').addEventListener('change', () => {
   $('customLabel').hidden = $('delayPreset').value !== 'custom';
-  if ($('delayPreset').value !== 'custom') $('delayMinutes').value = $('delayPreset').value;
+  if ($('delayPreset').value !== 'custom') { $('delayMinutes').value = $('delayPreset').value; keep('delayMinutes'); }
 });
-$('settings').addEventListener('submit', event => {
-  event.preventDefault();
-  // The theme control saves itself; everything else here is saved together.
-  const settings = Object.fromEntries(Object.keys(saved).map(key => [key, key === 'appearance' ? saved.appearance : formValue(key)]));
-  // Only fields changed from what this page shows are saved, so a value that
-  // changed meanwhile elsewhere is kept, and only real changes count as chosen here.
-  save(() => request('configure', {settings, shown: saved}), 'Settings saved.');
+// Leaving the page (closing it, say) saves what you were typing, as leaving the
+// box would, without waiting for a save in progress.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'hidden' || !saved || resetting) return;
+  const base = {...saved, ...flying};
+  for (const key of [...numbers, 'exclusions']) if (!pending.has(key) && !same(formValue(key), base[key])) queue(key);
+  clearTimeout(wait); wait = null;
+  if (!sending) { send(); return; }
+  const changes = Object.fromEntries([...pending].filter(([key, value]) => !same(value, base[key])));
+  pending.clear();
+  if (Object.keys(changes).length) request('configure', {settings: {...base, ...changes}, shown: base}).catch(error => unsaved(changes, error));
 });
-$('reset').addEventListener('click', () => {
+// Nothing here submits: Enter in a box saves it like leaving it.
+$('settings').addEventListener('submit', event => event.preventDefault());
+// A confirmation clears after a few seconds. A newer message cancels that, so
+// it never clears an error.
+function briefly(text) { status(text); fade = setTimeout(() => status(''), 8000); }
+$('reset').addEventListener('click', async () => {
   // A custom site list has no undo, so ask first.
   if (!confirm('Restore all settings to their defaults? Your excluded sites go back to the built-in list, and sync turns off on this computer.')) return;
   if (asking) { closeChoice(); syncLocked(false); }
-  save(async () => { const settings = await request('reset'); status('', 'syncStatus'); return settings; }, 'Defaults restored. Sync is now off on this computer; your other computers keep their settings.');
+  // The defaults replace any change still waiting to be saved.
+  resetting = true; pending.clear(); clearTimeout(wait); wait = null;
+  const focused = document.activeElement;
+  locked(true);
+  try {
+    fill(await request('reset'));
+    $('exclusions').ariaInvalid = null;
+    for (const target of ['parkingStatus', 'sitesStatus', 'syncStatus']) status('', target);
+    briefly('Defaults restored. Sync is now off on this computer; your other computers keep their settings.');
+  } catch (error) { problem(error.message, 'status'); }
+  finally { resetting = false; locked(false); if (focused?.id === 'reset') refocus(focused); }
+  await refreshSync().catch(error => report(error, 'syncStatus'));
 });
 // Excluded sites. A pasted home-page address becomes the plain website (see
 // simplifyRule), for whole lines only, so pasting into part of a line stays as is.
@@ -82,31 +173,33 @@ sites.addEventListener('paste', event => {
   // insertText keeps Undo working; where it isn't available, insert directly.
   if (!document.execCommand?.('insertText', false, cleaned)) sites.setRangeText(cleaned, start, end, 'end');
 });
-// Clean up sorts the list and removes repeats (see cleanUpRules). A tidying
-// action only: it changes nothing else, saves nothing, and leaves a list that
-// is already clean exactly as it is. The new list replaces the old one as an
-// edit, so Undo brings the old list back; focus stays on the button.
+// Chrome reports a change only if you edited the list since entering it, so a
+// list that couldn't be saved is tried again whenever you leave it.
+sites.addEventListener('blur', () => {
+  if (!pending.has('exclusions') && !same(formValue('exclusions'), {...saved, ...flying}.exclusions)) keep('exclusions');
+});
+// Clean up sorts the list and removes repeats (see cleanUpRules), and saves it
+// like any edit. It changes nothing else, and leaves a list that is already
+// clean exactly as it is. The new list replaces the old one as an edit, so Undo
+// in the box brings the old list back (saved when you leave the box); focus
+// stays on the button.
 $('cleanUpSites').addEventListener('click', () => {
   const lines = sites.value.split('\n').map(line => line.trim()).filter(Boolean), cleaned = cleanUpRules(lines);
   if (same(cleaned, lines)) return;
   sites.focus(); sites.select();
   if (!document.execCommand?.('insertText', false, cleaned.join('\n'))) sites.value = cleaned.join('\n');
   sites.scrollTop = 0; $('cleanUpSites').focus();
+  keep('exclusions');
 });
 for (const input of themes) input.addEventListener('change', async () => {
   if (!input.checked || !saved) return;
   try { saved = {...saved, appearance: (await request('appearance', {appearance: input.value})).appearance}; }
-  catch (error) { show('appearance', saved.appearance); report(error); }
+  catch (error) { show('appearance', saved.appearance); problem(error.message, 'status'); }
 });
 // Another Settings page, the popup or a synced computer changed something.
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local' || !saved) return;
-  const next = changes.settings?.newValue;
-  if (next) {
-    for (const key of Object.keys(next))
-      if (!same(next[key], saved[key]) && same(formValue(key), saved[key])) show(key, next[key]);
-    saved = next;
-  }
+  if (changes.settings) stored().then(settings => { if (settings) refreshFields(settings); }).catch(() => {});
   if (changes.syncPolicy?.newValue) renderSync(changes.syncPolicy.newValue);
 });
 
@@ -155,9 +248,11 @@ async function refreshSync() {
   renderSync(next);
   if (notice?.length) { status(reasons(notice), 'syncStatus'); $('syncStatus').classList.add('error'); }
 }
-// Show new values in fields you haven't edited, and remember them as saved.
+// Show new values in fields you haven't edited, and remember them as saved. A
+// change you made that is still waiting to be saved counts as edited.
 function refreshFields(settings) {
-  for (const key of Object.keys(settings)) if (!same(settings[key], saved[key]) && same(formValue(key), saved[key])) show(key, settings[key]);
+  for (const key of Object.keys(settings))
+    if (!same(settings[key], saved[key]) && same(formValue(key), saved[key]) && !pending.has(key)) show(key, settings[key]);
   saved = settings;
 }
 const syncs = (keys, verb) => `${named(keys)} now ${verb}${keys.length > 1 ? '' : 's'}`;
@@ -285,12 +380,6 @@ async function refresh() {
 }
 $('refresh').addEventListener('click', refresh);
 $('individual').addEventListener('toggle', () => { if ($('individual').open) refresh(); });
-// These lists sit inside the form but apply immediately: Enter on one of their
-// checkboxes or choices must not implicitly submit (save) the settings form.
-// Enter still presses a button (Apply, Cancel).
-for (const id of ['tabs', 'syncList', 'syncChoice']) $(id).addEventListener('keydown', event => {
-  if (event.key === 'Enter' && event.target?.tagName !== 'BUTTON') event.preventDefault();
-});
 request('settings').then(async s => {
   fill(s); locked(false); syncLocked(false);
   try { await refreshSync(); } catch (error) { report(error, 'syncStatus'); }
