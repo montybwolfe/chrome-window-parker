@@ -32,10 +32,12 @@ test('all shipped surfaces use the timer assets; raster dimensions match declara
 
 test('README: Google\'s Chrome Web Store badge, unmodified, and every Store link goes to the listing',()=>{
  const {store_url}=JSON.parse(text('store-listing/fields.json')),readme=text('README.md');
- assert(readme.includes(`<a href="${store_url}"><img src="docs/assets/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206"></a>`));
+ // Without its border on GitHub's light theme (the white background it's made for); the bordered badge otherwise.
+ assert(readme.includes(`<a href="${store_url}"><picture><source media="(prefers-color-scheme: light)" srcset="docs/assets/chrome-web-store-badge-no-border.png"><img src="docs/assets/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206"></picture></a>`));
  assert.deepEqual([...new Set(readme.match(/https:\/\/chromewebstore\.google\.com\/[^\s)"<>]+/g))],[store_url]);
- // Google's guidelines allow resizing only: this is its 340×96 bordered badge, byte for byte.
- assert.equal(createHash('sha256').update(readFileSync(new URL('docs/assets/chrome-web-store-badge.png',root))).digest('hex'),'fbf289fca885e58a1507cc8c69a9df68f35e83e683825b3ad6cd617b0a17d79c');
+ // Google's guidelines allow resizing only: these are its 340×96 badges, byte for byte.
+ for(const [file,sha] of [['chrome-web-store-badge.png','fbf289fca885e58a1507cc8c69a9df68f35e83e683825b3ad6cd617b0a17d79c'],['chrome-web-store-badge-no-border.png','f49e4bff319083c20b3386f23547315773631e155e389ed42550295e4913e12d']])
+  assert.equal(createHash('sha256').update(readFileSync(new URL(`docs/assets/${file}`,root))).digest('hex'),sha,file);
 });
 
 test('Store reviewer instructions fit the 500-character Test instructions field',()=>{

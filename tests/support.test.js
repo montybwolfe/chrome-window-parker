@@ -75,7 +75,7 @@ test('popup: Parking on, then Report a bug, Buy me a coffee and Settings as same
  assert.match(css,/\.popup-footer \{[^}]*white-space: nowrap/,'one line');
  assert.match(css,/html\.popup-root \{ width: 360px; min-width: 360px; \}/,'the fixed width the footer is laid out for');
  // The README's graphical button goes to the same page as the extension's link.
- assert(read('README.md').includes(`<a href="${SUPPORT_URL}"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" width="217"></a>`));
+ assert(read('README.md').includes(`<p align="center"><a href="${SUPPORT_URL}"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" width="206"></a></p>`));
 });
 test('permission list and restrictive CSP remain unchanged; no external resources or payment integration',()=>{
  const m=JSON.parse(read('manifest.json'));assert.deepEqual(m.permissions,['tabs','storage','alarms','downloads','favicon']);assert.equal(m.host_permissions,undefined);assert.equal(m.content_scripts,undefined);
