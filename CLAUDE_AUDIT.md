@@ -435,3 +435,22 @@ Owned by Claude after this initial bootstrap. Follow the shared audit rules in [
   - Local intent: a setting changed and changed back is now marked as chosen here, so turning its sync on later asks instead of adopting.
   - Pinned, audio and debug failures report in the footer, far from their boxes (they need storage full or a dead worker).
   - Restore defaults' 8 s message, the only message that fades.
+
+### 2026-10-01 — New baseline: v1.5.6.1 as released, plus the README presentation
+
+- Baseline: `main` = `dev` = `4dd099220047ba603c206a09869d5d3150a5d6ef`, checked against the live remote. This is where ordinary Claude work now starts.
+- Release: annotated `v1.5.6.1` (tag object `bf55217`) targets `69956260f1f2b7da42dcb83c1257e4c2bbf02b72`, the candidate in the entry above. Astra reviewed it, fast-forwarded dev and main to it, tagged it and published the GitHub release, which is Latest (its record is in `CODEX_AUDIT.md` on agent/codex). The ZIP, 21 files, 48,989 bytes, SHA-256 `bf6fbef5…a17c` (GitHub's asset digest), rebuilds byte for byte from the tag and from the baseline.
+- After the tag, four README commits were fast-forwarded into dev and main with Monty's approval: `6ac406e`, `0e9b570`, `eb5632f`, `4dd0992`. They are deliberate, not drift:
+  - The 36 px icon sits inside a centred title.
+  - Google's official medium Chrome Web Store badge is centred at 206 px and linked to the listing. A `<picture>` shows the borderless badge on GitHub's light theme and the bordered one elsewhere. Both are Google's files, unmodified, in `docs/assets`, with their SHA-256 pinned by `tests/assets.test.js`.
+  - 🐞 Report a bug has its own centred paragraph, with the emoji outside the link. The emoji is Monty's choice. GitHub strips `aria-hidden`, so screen readers announce it.
+  - Help and development stays left-aligned. The Buy Me a Coffee button is centred at 206 px, with the same destination.
+  - The closing line reads "This is an independent project…".
+  - No shipped file changed. One test was added (405 → 406).
+- Lane: agent/claude was already exactly at the baseline (same commit and tree, nothing unique), so no reset, rebase or merge was needed. This entry is the lane's only difference from dev.
+- Verified on the baseline:
+  - `npm test` 406/406, and `verify.mjs` 9/9 including the UI check.
+  - `git fsck --full` is clean, and every local Markdown link resolves.
+  - GitHub's rendered README on main keeps the theme switch, the three centred paragraphs and the emoji.
+- Not changed: product code, version, tags, GitHub releases, Store material, main, dev, agent/codex, `CODEX_AUDIT.md` and agent/ultra.
+- Open: the public Chrome Web Store listing still shows 1.5.1.3. Uploads and submission are Monty's. The other known limits are as in the 1.5.6 and 1.5.6.1 entries.
