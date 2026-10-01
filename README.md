@@ -1,6 +1,8 @@
 <h1 align="center"><picture><img src="icons/parker-timer-128.png" width="36" height="36" alt="" align="top"></picture> Chrome Window Parker</h1>
 
-<p align="center"><a href="https://chromewebstore.google.com/detail/chrome-window-parker/agdejolopcplaedpollnlgpboldnfbfi"><picture><source media="(prefers-color-scheme: light)" srcset="docs/assets/chrome-web-store-badge-no-border.png"><img src="docs/assets/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206"></picture></a><br>🐞 <a href="https://github.com/montybwolfe/chrome-window-parker/issues">Report a bug</a></p>
+<p align="center"><a href="https://chromewebstore.google.com/detail/chrome-window-parker/agdejolopcplaedpollnlgpboldnfbfi"><picture><source media="(prefers-color-scheme: light)" srcset="docs/assets/chrome-web-store-badge-no-border.png"><img src="docs/assets/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206"></picture></a></p>
+
+<p align="center">🐞 <a href="https://github.com/montybwolfe/chrome-window-parker/issues">Report a bug</a></p>
 
 If you keep lots of Chrome windows open (one per project, spread across desktops), each one keeps its selected tab awake, even when you haven't looked at it for hours. Chrome's Memory Saver sleeps background tabs, but never the selected one.
 
@@ -36,4 +38,4 @@ Chrome Window Parker is free and open source ([MIT](LICENSE)). If it's useful to
 
 <p align="center"><a href="https://buymeacoffee.com/montybwolfe"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" width="206"></a></p>
 
-It's an independent project, not affiliated with or endorsed by Google.
+This is an independent project, not affiliated with or endorsed by Google.
