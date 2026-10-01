@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.6.1
+
+- **Settings save themselves.** Each change applies as soon as you make it, so there's no Save settings button and nothing to forget. A number saves when you press Enter or leave its box, and the site list when you leave it, so a half-typed value never takes effect. Closing Settings keeps what you typed.
+- **Mistakes are explained where they happen.** A number that can't be used goes back to the one in use, with a note under Parking. A site list that can't be used stays as you typed it, marked, while the previous list stays in use.
+
 ## 1.5.6
 
 - **Parked windows show what they hold.** The parking page now leads with your tab's own icon and title, so you can tell parked windows apart at a glance, for example in Mission Control. The parking tab keeps the Window Parker icon. The icon is Chrome's own saved copy, using the new favicon permission, which adds no install warning.
