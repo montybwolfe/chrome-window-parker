@@ -32,7 +32,7 @@ Changing the mode takes effect on the next parking cycle. It doesn't unload or w
 
 **Site exclusions.** A website such as `meet.google.com` covers that site and addresses that end in it, such as `team.meet.google.com`, but not lookalikes such as `meet.google.com.evil.example`. Websites match the standard web ports; add the port for an address such as `localhost:3000`. Website names with accented or non-Latin letters aren't supported yet. For part of a site, use a full address with `*` meaning "any text", for example `https://example.com/work/*` (full addresses are case-sensitive).
 
-Pasting a site's home address on a line of its own, such as `https://www.example.com/` or `http://localhost:3000/`, adds just the website (`www.example.com`, `localhost:3000`); an address with a path, query, `#` or `*` is kept exactly as pasted. **Clean up** orders the list by website, ignoring `http://` and `https://`, then by the rest of the address, and removes duplicates: an entry listed twice, a website written with different capitals or a leading `*.`, and a home address such as `https://example.com/` when `example.com` is also listed. Everything else stays exactly as written, including other subdomains such as `www.`, ports, paths and `*`, so the same pages are excluded. It doesn't save anything; the built-in list is already clean.
+Pasting a site's home address on a line of its own, such as `https://www.example.com/` or `http://localhost:3000/`, adds just the website (`www.example.com`, `localhost:3000`); an address with a path, query, `#` or `*` is kept exactly as pasted. **Clean up** orders the list by website, ignoring `http://` and `https://`, then by the rest of the address, and removes duplicates: an entry listed twice, a website written with different capitals or a leading `*.`, and a home address such as `https://example.com/` when `example.com` is also listed. Everything else stays exactly as written, including other subdomains such as `www.`, ports, paths and `*`, so the same pages are excluded. The cleaned list is saved like any other change, and Undo in the box brings back the old one. The built-in list is already clean.
 
 If an excluded site is the selected tab, that window doesn't park. An excluded background tab doesn't stop its window parking, but Discard immediately skips it. Chrome's own Memory Saver can still unload it.
 
@@ -57,6 +57,10 @@ It's careful about it. It only removes pages it can match to its own recovery re
 A parking page belongs to the window it was made for. If you drag it out into a window of its own, or move it into another window, it's removed there (with the same checks), and a window left holding only that page closes. The window it came from keeps all its tabs and simply isn't parked any more; it parks again after the usual delay. Dragged back into its own window, the page stays.
 
 Chrome doesn't allow tab changes while you're still holding a dragged tab, so this cleanup, and closing an emptied parked window, happens as soon as you let go. After a browser restart or an update, a parking page belongs to whichever window it's in.
+
+## Settings
+
+Settings saves each change as you make it; there's no Save button. A checkbox or menu saves straight away, a number when you press Enter or leave its box, and the site list when you leave it, so a half-typed value never takes effect. Closing Settings saves what you were typing. A number that can't be used goes back to the value in use, with a note. A site list that can't be used stays as you typed it, marked, and the previous list stays in use until you fix it. Each change is saved on its own, so a setting changed meanwhile on another computer or Settings page is kept.
 
 ## Sync
 
@@ -112,4 +116,4 @@ There are no host permissions, content scripts or remote code, and extension pag
 
 ## Debug logs
 
-Turn on **Debug logging** in Settings and save, then open `chrome://extensions`, find Chrome Window Parker and click **service worker**. Set the console to Verbose to see parking, restoring, skips and Chrome refusals. Logs use IDs and reasons, not page titles or addresses. Close that console before testing sleep or restarts, because it keeps the worker running.
+Turn on **Debug logging** in Settings, then open `chrome://extensions`, find Chrome Window Parker and click **service worker**. Set the console to Verbose to see parking, restoring, skips and Chrome refusals. Logs use IDs and reasons, not page titles or addresses. Close that console before testing sleep or restarts, because it keeps the worker running.

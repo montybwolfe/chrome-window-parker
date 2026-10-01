@@ -6,12 +6,13 @@ import {harness} from './helpers.js';
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const html=read('options.html'), css=read('ui.css');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 
-test('Settings order: tab protection (with individual tabs), sync, diagnostics, save/reset, then support',()=>{
+test('Settings order: tab protection (with individual tabs), sync, diagnostics, Restore defaults, then support',()=>{
   const at=marker=>{const i=html.indexOf(marker);assert(i>=0,marker);return i;};
   const order=['id="enabled"','id="timing-heading"','id="protection-heading"','id="discardPinned"','id="protectAudio"',
     'id="exclusions"','Calls, video and unsaved work','id="individual"','id="sync-heading"','id="syncList"',
-    'id="diagnostics-heading"','id="save"','id="reset"','id="support-heading"','id="reportBug"','id="support"'];
+    'id="diagnostics-heading"','id="reset"','id="support-heading"','id="reportBug"','id="support"'];
   assert.deepEqual(order.map(at),order.map(at).toSorted((a,b)=>a-b));
   // Individual tabs sit inside Tab protection; neither they nor the sync choices are
   // in a settings fieldset that locks while settings load or save.
@@ -40,7 +41,7 @@ test('sync: "Sync all settings", then Parking and Tab protection groups as on th
   assert.match(html,/<input type="checkbox" data-sync="appearance"><span>Theme<\/span>/);
   assert.match(html,/<label class="check-row sync-all"><input type="checkbox" data-sync-group="all"><span>Sync all settings<\/span><\/label>/);
   for(const name of ['Parking','Tab protection'])assert.match(html,new RegExp(`<div class="sync-children" role="group" aria-label="${name}">`));
-  assert.match(html,/<button id="reset" type="button">Restore defaults<\/button>/);assert(!html.includes('Reset settings'));
+  assert.match(html,/<button class="small" id="reset" type="button">Restore defaults<\/button>/);assert(!html.includes('Reset settings'));
 });
 
 test('theme is a compact labelled three-state icon control; bug report is a small labelled control',()=>{
@@ -94,8 +95,11 @@ test('the tab list shows that it scrolls: edge fades and a chevron, without addi
 
 // The page runs against the real worker engine (tests/helpers.js), so sync
 // requests use the real rules. Tab listing and protection are simulated.
+const timed=new WeakSet();
 async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync={},policy={},customized={},tabs=[{id:11,windowId:1,title:'Research'},{id:12,windowId:2,title:'x'.repeat(400)}],reduced=false}={}){
-  const elements=new Map(),messages=[],storageListeners=[];
+  // A number waits a moment before saving; tests move the clock themselves.
+  if(!timed.has(t)){t.mock.timers.enable({apis:['setTimeout']});timed.add(t);}
+  const elements=new Map(),messages=[],storageListeners=[],pageListeners={};
   const events=()=>({on:{},addEventListener(type,fn){(this.on[type]||=[]).push(fn);},
     fire(type,e={}){return Promise.all((this.on[type]||[]).map(fn=>fn({preventDefault(){},isTrusted:true,detail:1,...e})));}});
   const node=(props={})=>{const n={...events(),disabled:false,hidden:false,checked:false,indeterminate:false,value:'',textContent:'',title:'',className:'',children:[],
@@ -107,6 +111,11 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
     Object.assign(n,{scrollHeight:0,clientHeight:0,scrollTop:0,offsetWidth:0,clientWidth:0});all.push(n);return n;};
   const all=[];
   const el=id=>{if(!elements.has(id))elements.set(id,node({id}));return elements.get(id);};
+  // Chrome's own checks on the number boxes (required, min, max, step), from their attributes.
+  for(const id of ['delayMinutes','dwellSeconds']){
+    const tag=html.match(new RegExp(`<input id="${id}"[^>]*>`))[0],[min,max,step]=['min','max','step'].map(a=>Number(tag.match(new RegExp(` ${a}="([^"]+)"`))[1]));
+    Object.defineProperty(el(id),'validity',{get(){const v=this.value===''?NaN:Number(this.value);return {valid:v>=min&&v<=max&&Number.isInteger((v-min)/step)};}});
+  }
   const themes=['light','dark','auto'].map(value=>node({value,name:'appearance'}));
   const groups=[1,2,3,4].map(()=>node({disabled:true}));
   // In page order, as options.html lists them.
@@ -119,7 +128,7 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
   const set=h.api.storage.local.set;h.api.storage.local.set=async values=>{await set(values);
     const changes=Object.fromEntries(Object.entries(values).map(([k,v])=>[k,{newValue:structuredClone(v)}]));
     setImmediate(()=>storageListeners.forEach(fn=>fn(changes,'local')));};
-  let protectedIds=[];
+  let protectedIds=[],queue=Promise.resolve();
   const reply=data=>({ok:true,data:structuredClone(data)});
   const old={document:globalThis.document,chrome:globalThis.chrome,ResizeObserver:globalThis.ResizeObserver,matchMedia:globalThis.matchMedia,confirm:globalThis.confirm};
   // Restore defaults asks first; answer OK unless a test says otherwise.
@@ -127,13 +136,15 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
   const resizers=[];globalThis.ResizeObserver=class{constructor(fn){resizers.push(fn);}observe(){}};
   globalThis.matchMedia=query=>({matches:reduced&&/reduced-motion: reduce/.test(query)});
   globalThis.document={getElementById:el,createElement:tag=>node({tagName:tag.toUpperCase()}),get activeElement(){return all.find(n=>n.focused);},
+    visibilityState:'visible',addEventListener:(type,fn)=>(pageListeners[type]||=[]).push(fn),
     querySelectorAll:selector=>({'input[name=appearance]':themes,'.settings-fields':groups,'input[data-sync]':boxes,'input[data-sync-group]':groupBoxes})[selector]||[]};
-  globalThis.chrome={storage:{onChanged:{addListener:fn=>storageListeners.push(fn)}},runtime:{getManifest:()=>JSON.parse(read('manifest.json')),async sendMessage(msg){
+  globalThis.chrome={storage:{onChanged:{addListener:fn=>storageListeners.push(fn)},local:{get:async()=>({settings:structuredClone(h.local.settings)})}},runtime:{getManifest:()=>JSON.parse(read('manifest.json')),async sendMessage(msg){
     messages.push(structuredClone(msg));
     if(msg.type==='settings'&&fail)return {ok:false,error:'Worker unavailable'};
     if(msg.type==='status')return reply({tabs,protectedIds});
     if(msg.type==='protect'){protectedIds=msg.protected?[msg.tabId]:[];return reply({protected:msg.protected});}
-    try{return reply(await h.p.message(structuredClone(msg),{id:'test',url:'chrome-extension://test/options.html'}));}
+    const run=queue.then(()=>h.p.message(structuredClone(msg),{id:'test',url:'chrome-extension://test/options.html'}));queue=run.catch(()=>{});
+    try{return reply(await run);}
     catch(error){return {ok:false,error:error.message};}
   }},tabs:{create:async()=>({})}};
   t.after(()=>Object.assign(globalThis,old));
@@ -148,9 +159,13 @@ async function page(t,{settings={...DEFAULTS,appearance:'dark'},fail=false,sync=
     note:set.children.find(c=>c.className==='hint')?.textContent,
     options:set.children.filter(c=>c.className==='check-row').map(label=>({radio:label.children[0],text:label.children[1].textContent}))}));
   const pick=async(name,text)=>{const radio=choices().find(c=>c.name===name).options.find(o=>o.text.startsWith(text)).radio;radio.checked=true;await radio.fire('change');};
-  const remote=settings=>storageListeners.forEach(fn=>fn({settings:{newValue:settings}},'local'));
+  // Another page or computer: the worker stores the change, then Chrome tells every page.
+  const remote=async settings=>{await h.p.applySettings(validateSettings(settings),false);await flush();await flush();await flush();};
   const sent=type=>messages.filter(m=>m.type===type);
-  const p={h,el,themes,groups,boxes,box,group,click,tree,choices,pick,messages,sent,choose,remote,stored:()=>h.p.settings,resize:()=>resizers.forEach(fn=>fn()),
+  // A change as Chrome reports it: a box or menu when it changes; a number or text box on Enter or when you leave it.
+  const change=async(id,value)=>{const n=el(id);if(typeof value==='boolean')n.checked=value;else n.value=value;await n.fire('change');await flush();await flush();};
+  const hide=async()=>{globalThis.document.visibilityState='hidden';for(const fn of pageListeners.visibilitychange||[])fn();await flush();await flush();};
+  const p={h,el,themes,groups,boxes,box,group,click,tree,choices,pick,messages,sent,choose,remote,change,hide,tick:ms=>t.mock.timers.tick(ms),stored:()=>h.p.settings,resize:()=>resizers.forEach(fn=>fn()),
     confirms,answer:value=>{answer=value;},
     checked:()=>themes.filter(r=>r.checked).map(r=>r.value)};
   return p;
@@ -164,11 +179,11 @@ test('theme control reflects the saved value and applies each choice immediately
     p.choose(value);await p.themes.find(r=>r.value===value).fire('change');await flush();
     assert.deepEqual(p.messages.at(-1),{type:'appearance',appearance:value});assert.equal(p.stored().appearance,value);
   }
-  // Saving the form keeps the theme the header already saved, and says what the page showed.
-  p.el('delayMinutes').value='30';await p.el('settings').fire('submit');await flush();
+  // A change saves itself, keeps the theme the header already saved, and says what the page showed.
+  await p.change('delayPreset','30');
   const saved=p.sent('configure').at(-1);assert.equal(saved.settings.appearance,'dark');assert.equal(saved.settings.delayMinutes,30);
   assert.deepEqual(Object.keys(saved.settings).toSorted(),Object.keys(DEFAULTS).toSorted());
-  assert.equal(saved.shown.delayMinutes,15,'the value the page showed before the edit');assert.equal(p.messages.at(-1).type,'sync-state');
+  assert.equal(saved.shown.delayMinutes,15,'the value the page showed before the edit');
   assert.equal(p.stored().delayMinutes,30);assert.equal(p.h.p.customized.delayMinutes,true);
   // Restore defaults: defaults here, sync off here, nothing chosen here, shared values untouched.
   await p.click(p.group('all'));assert.deepEqual(p.tree(),{all:'on',parking:'on',protection:'on',theme:'on'});
@@ -189,14 +204,6 @@ test('individual tabs: refresh lists every tab, checkboxes protect immediately a
   const [box,text]=rows[1].children;assert.equal(text.children[0].className,'tab-title');
   assert.equal(text.children[0].textContent.length,400);assert.equal(rows[1].title.length,400);
   assert.equal(text.children[1].textContent,'Window 2');assert.equal(box.disabled,false);
-  // Enter on a checkbox or choice in these lists must not submit (save) the settings form;
-  // Space still toggles, and Enter still presses a button.
-  for(const id of ['tabs','syncList','syncChoice']){
-    const prevented=[];for(const key of ['Enter',' '])await p.el(id).fire('keydown',{key,target:{tagName:'INPUT'},preventDefault(){prevented.push(key);}});
-    assert.deepEqual(prevented,['Enter'],id);
-  }
-  const pressed=[];await p.el('syncChoice').fire('keydown',{key:'Enter',target:{tagName:'BUTTON'},preventDefault(){pressed.push('Enter');}});
-  assert.deepEqual(pressed,[],'Apply and Cancel still work with Enter');
   box.checked=true;await box.fire('change');
   assert.deepEqual(p.messages.at(-1),{type:'protect',tabId:12,protected:true});
   assert.equal(p.el('tabStatus').textContent,'Tab protection updated.');
@@ -360,45 +367,49 @@ test('sync: failures are explained, and the boxes show only what really syncs',a
   assert.equal(p.el('syncStatus').textContent,'Pinned tabs and Audio tabs now sync. Sites to exclude is too long to sync, so it stays on this computer.');
   assert(p.el('syncStatus').classes.has('error'));
   assert.deepEqual(p.tree(),{all:'some',parking:'off',protection:'some',theme:'off'});assert.equal(p.box('exclusions').checked,false);
-  p.h.p.syncNotice=[{key:'exclusions',reason:'too-large'}];await p.el('settings').fire('submit');await flush();
-  assert.equal(p.el('syncStatus').textContent,'Sites to exclude is too long to sync, so it stays on this computer.');
+  // Saving a synced setting shares it, and says what Chrome refused.
+  p.h.p.syncNotice=[{key:'exclusions',reason:'too-large'}];await p.change('discardPinned',true);
+  assert.equal(p.h.sync.discardPinned,true);assert.equal(p.el('syncStatus').textContent,'Sites to exclude is too long to sync, so it stays on this computer.');
   p.h.hooks.syncGet=()=>{throw new Error('Sync is unavailable');};
   await p.click(p.box('dwellSeconds'));
   assert.equal(p.el('syncStatus').textContent,'Chrome sync isn’t available right now. Try again later.');
   assert.equal(p.box('dwellSeconds').checked,false);assert.equal(p.el('syncList').disabled,false);
 });
 
-test('keyboard focus stays on Save settings, Restore defaults and Refresh list while they work',async t=>{
+test('keyboard focus stays on Restore defaults and Refresh list while they work',async t=>{
   const p=await load(await page(t),'focus');
   // Chrome drops focus from a button that is disabled while it works.
-  for(const [id,run] of [['save',()=>p.el('settings').fire('submit')],['reset',()=>p.el('reset').fire('click')],['refresh',()=>p.el('refresh').fire('click')]]){
+  for(const [id,run] of [['reset',()=>p.el('reset').fire('click')],['refresh',()=>p.el('refresh').fire('click')]]){
     p.el(id).focus();const done=run();p.el(id).focused=false;await done;await flush();await flush();
     assert(p.el(id).focused,id);
   }
 });
 
-test('excluded sites: Clean up sorts and removes repeats without saving; the factory list is already clean',async t=>{
+test('excluded sites: Clean up sorts, removes repeats and saves like any edit; Undo brings the old list back; the factory list is already clean',async t=>{
   const p=await load(await page(t,{settings:{...DEFAULTS}}),'sites-clean');const sites=p.el('exclusions');
   assert.equal(sites.value,'meet.google.com\nmusic.youtube.com\nteams.microsoft.com\nzoom.us');
-  const sent=p.messages.length;await p.el('cleanUpSites').fire('click');
+  const sent=p.messages.length;await p.el('cleanUpSites').fire('click');await flush();
   assert.equal(sites.value,'meet.google.com\nmusic.youtube.com\nteams.microsoft.com\nzoom.us','nothing to change');
-  assert.equal(p.messages.length,sent,'Clean up saves nothing');
-  await p.el('settings').fire('submit');await flush();
-  assert.equal(p.h.p.customized.exclusions,false,'saving an unchanged list is not a change made here');
-  sites.value='zoom.us\n  https://example.com/work/*\n\nmeet.google.com \nZoom.us\nhttps://meet.google.com/\nzoom.us';
+  assert.equal(p.messages.length,sent,'nothing to save');assert.equal(p.h.p.customized.exclusions,false);
+  // A list you're still typing in (not saved yet) is cleaned up, then saved.
+  const typed='zoom.us\n  https://example.com/work/*\n\nmeet.google.com \nZoom.us\nhttps://meet.google.com/\nzoom.us';sites.value=typed;
   // In Chrome the new list replaces the whole old one as an edit, so Undo brings the old list back.
   const commands=[];globalThis.document.execCommand=(command,ui,text)=>{commands.push([command,text,sites.selectionStart,sites.selectionEnd,sites.focused]);
     sites.setRangeText(text,sites.selectionStart,sites.selectionEnd);return true;};
-  const length=sites.value.length;p.el('cleanUpSites').focus();await p.el('cleanUpSites').fire('click');delete globalThis.document.execCommand;
+  const length=sites.value.length;p.el('cleanUpSites').focus();await p.el('cleanUpSites').fire('click');delete globalThis.document.execCommand;await flush();await flush();
   assert.deepEqual(commands,[['insertText','https://example.com/work/*\nmeet.google.com\nzoom.us',0,length,true]]);
   assert(p.el('cleanUpSites').focused,'focus stays on the button');
-  assert.equal(sites.value,'https://example.com/work/*\nmeet.google.com\nzoom.us');assert.equal(p.messages.length,sent+2,'still unsaved');
-  // Without that editing command, the text is simply replaced.
-  sites.value='zoom.us\nmeet.google.com\nZOOM.us\nhttps://example.com/work/*';await p.el('cleanUpSites').fire('click');
   assert.equal(sites.value,'https://example.com/work/*\nmeet.google.com\nzoom.us');
-  assert.deepEqual(p.stored().exclusions,DEFAULTS.exclusions);
-  await p.el('settings').fire('submit');await flush();
-  assert.deepEqual(p.stored().exclusions,['https://example.com/work/*','meet.google.com','zoom.us']);assert.equal(p.h.p.customized.exclusions,true);
+  assert.deepEqual(p.stored().exclusions,['https://example.com/work/*','meet.google.com','zoom.us'],'saved');assert.equal(p.h.p.customized.exclusions,true);
+  assert.deepEqual(p.sent('configure').at(-1).shown.exclusions,DEFAULTS.exclusions,'compared with the list in use');
+  // Undo in the box puts the old text back; leaving the box saves it. A site listed twice is saved once, as the box then shows.
+  sites.value=typed;await sites.fire('change');await flush();await flush();
+  const undone=['zoom.us','https://example.com/work/*','meet.google.com','Zoom.us','https://meet.google.com/'];
+  assert.deepEqual(p.stored().exclusions,undone);assert.equal(sites.value,undone.join('\n'));
+  // Without that editing command, the text is simply replaced, and saved.
+  sites.value='zoom.us\nmeet.google.com\nZOOM.us\nhttps://example.com/work/*';await p.el('cleanUpSites').fire('click');await flush();await flush();
+  assert.equal(sites.value,'https://example.com/work/*\nmeet.google.com\nzoom.us');
+  assert.deepEqual(p.stored().exclusions,['https://example.com/work/*','meet.google.com','zoom.us']);
   // Restore defaults brings back the same order a new installation has.
   await p.el('reset').fire('click');await flush();await flush();
   assert.equal(sites.value,DEFAULTS.exclusions.join('\n'));assert.equal(p.h.p.customized.exclusions,false);
@@ -408,11 +419,12 @@ test('excluded sites: Clean up of a synced list saves and syncs like any edit; n
   const clean=['meet.google.com','zoom.us'];
   const p=await load(await page(t,{settings:{...DEFAULTS,exclusions:clean},policy:{exclusions:true},sync:{exclusions:clean}}),'sites-clean-sync');
   const sites=p.el('exclusions'),shared=structuredClone(p.h.sync);
-  await p.el('cleanUpSites').fire('click');await p.el('settings').fire('submit');await flush();
+  await p.el('cleanUpSites').fire('click');await flush();
   assert.equal(sites.value,'meet.google.com\nzoom.us');assert.deepEqual(p.h.sync,shared,'no write, so no change for other computers');
+  assert.equal(p.sent('configure').length,0,'nothing to save');
   assert.equal(p.h.p.customized.exclusions,false,'not a change made here');
   sites.value='zoom.us\nmeet.google.com\n*.zoom.us\nhttps://example.com/work/*';
-  await p.el('cleanUpSites').fire('click');await p.el('settings').fire('submit');await flush();
+  await p.el('cleanUpSites').fire('click');await flush();await flush();
   const cleaned=['https://example.com/work/*','meet.google.com','zoom.us'];
   assert.deepEqual(p.stored().exclusions,cleaned);assert.deepEqual(p.h.sync.exclusions,cleaned,'reaches the other computers');
   assert.equal(p.h.p.customized.exclusions,true);assert.equal(p.h.p.policy.exclusions,true);
@@ -443,14 +455,14 @@ test('excluded sites: pasted home-page addresses on whole lines become websites;
   sites.value='zoom.us\nwww.';assert(!await paste('https://example.com/',12));
   sites.value='zoom.us';assert(!await paste('https://example.com/',0),'before existing text on the line');
   assert(!await paste('',0),'nothing pasted');
-  // Pasting changes only the text box: nothing is saved or counted as changed until Save.
+  // Pasting changes only the text box: nothing is saved or counted as changed until you leave it.
   assert(!p.messages.some(m=>m.type==='configure'));assert.equal(p.h.p.customized.exclusions,false);
 });
 
 test('changes from another page or computer update only fields you have not edited',async t=>{
   const p=await load(await page(t),'remote');
-  p.el('dwellSeconds').value='5'; // an unsaved edit
-  p.remote({...p.stored(),delayMinutes:30,dwellSeconds:9,sleepingMode:'immediate',appearance:'light'});
+  p.el('dwellSeconds').value='5'; // still being typed
+  await p.remote({...p.stored(),delayMinutes:30,dwellSeconds:9,sleepingMode:'immediate',appearance:'light'});
   assert.equal(p.el('delayMinutes').value,30);assert.equal(p.el('sleepingMode').value,'immediate');
   assert.equal(p.el('sleepingHelp').textContent,'Unload eligible tabs as soon as their window is parked.');
   assert.equal(p.el('dwellSeconds').value,'5','your edit is kept');assert.deepEqual(p.checked(),['light']);
@@ -532,4 +544,229 @@ test('text boxes and menus have edges with at least 3:1 contrast, in light and d
 
 test('in High Contrast (forced colours) the chosen theme is still marked, in system colours',()=>{
   assert.match(css,/@media \(forced-colors: active\) \{ \.theme-option:has\(input:checked\) \{ forced-color-adjust: none; background: Highlight; color: HighlightText; \} \}/);
+});
+
+// Settings save themselves; there is no Save button. Chrome fires change when a
+// box or menu changes, and when you press Enter in or leave a number or text box.
+test('there is no Save button: the footer says settings save themselves, beside a quieter Restore defaults',async t=>{
+  assert(!/id="save"|type="submit"|Save settings/.test(html),'no Save button');
+  assert.match(html,/<div class="form-footer"><p class="hint">Changes are saved automatically\.<\/p><button class="small" id="reset" type="button">Restore defaults<\/button><p id="status" role="status" aria-live="polite"><\/p><\/div>/);
+  // Problems are said beside what they're about, in lines that take no room while empty.
+  for(const id of ['parkingStatus','sitesStatus'])assert.match(html,new RegExp(`<p id="${id}" role="status" aria-live="polite"></p>`),id);
+  assert(html.indexOf('id="parkingStatus"')<html.indexOf('aria-labelledby="protection-heading"'),'in Parking');
+  assert.match(html,/<textarea id="exclusions"[^>]*aria-describedby="sitesStatus [^"]*"[^>]*><\/textarea>\n<p id="sitesStatus"/,'right under the list, and part of its description');
+  assert.match(css,/#syncStatus:empty, #parkingStatus:empty, #sitesStatus:empty \{ min-height: 0; margin-top: 0; \}/);
+  assert.match(css,/#status\.error, #tabStatus\.error, #syncStatus\.error, #parkingStatus\.error, #sitesStatus\.error, \.error \{ color: var\(--error\); \}/);
+  assert.match(css,/textarea\[aria-invalid="true"\] \{ border-color: var\(--error\); \}/);
+  assert.match(css,/\.settings-page #status \{ min-height: 1lh; \}/,'its message appearing or clearing moves nothing');
+  for(const file of ['options.html','options.js'])assert(!/Settings saved|Unsaved changes|Saving…/.test(read(file)),file);
+  // Enter never submits anything.
+  const p=await load(await page(t),'no-submit');let prevented=false;
+  await p.el('settings').fire('submit',{preventDefault(){prevented=true;}});assert(prevented);assert.equal(p.sent('configure').length,0);
+});
+
+test('each box and menu saves itself when it changes, sending only that setting; the worker uses it at once',async t=>{
+  const p=await load(await page(t,{settings:{...DEFAULTS}}),'autosave-boxes');
+  const cases=[['discardPinned',true],['protectAudio',false],['debug',true],['sleepingMode','immediate'],['enabled',false],['enabled',true]];
+  for(const [key,value] of cases){
+    const before=structuredClone(p.stored());await p.change(key,value);
+    const request=p.sent('configure').at(-1);
+    assert.deepEqual(Object.keys(request.settings).filter(k=>!same(request.settings[k],request.shown[k])),[key],`${key}: only it differs from what the page showed`);
+    assert.deepEqual(p.stored(),{...before,[key]:value},`${key}: in use, nothing else changed`);assert.equal(p.h.local.settings[key],value,`${key}: stored`);
+  }
+  assert.equal(p.sent('configure').length,cases.length,'one request per change');
+  // Only portable settings changed here count as this computer's own choices.
+  assert.deepEqual(Object.keys(p.h.p.customized).filter(k=>p.h.p.customized[k]).toSorted(),['discardPinned','protectAudio','sleepingMode']);
+  assert.equal(p.el('sleepingHelp').textContent,'Unload eligible tabs as soon as their window is parked.');
+  // A preset delay saves at once, and the worker reschedules parking with it.
+  await p.change('delayPreset','30');
+  assert.equal(p.stored().delayMinutes,30);assert.equal(p.h.alarms.get('parking').when,1_000_000+30*60000);
+  // Custom… only shows the box: nothing changes until you enter a number.
+  const sent=p.messages.length;await p.change('delayPreset','custom');
+  assert.equal(p.el('customLabel').hidden,false);assert.equal(p.messages.length,sent);
+  // Choosing what's already in use sends nothing.
+  await p.change('sleepingMode','immediate');await p.change('discardPinned',true);assert.equal(p.messages.length,sent);
+});
+
+test('a number saves on Enter or leaving the box, a moment later, so arrow-key steps save once; typing alone saves nothing',async t=>{
+  const p=await load(await page(t),'autosave-number');const box=p.el('dwellSeconds');
+  box.value='3';await box.fire('input');await flush();p.tick(1000);await flush();assert.equal(p.sent('configure').length,0,'typing');
+  // The arrow keys change it a step at a time, each with a change event.
+  for(const value of ['2.5','3','3.5'])await p.change('dwellSeconds',value);
+  p.tick(499);await flush();assert.equal(p.sent('configure').length,0,'still in the pause');
+  p.tick(1);await flush();await flush();
+  assert.equal(p.sent('configure').length,1,'one save for the steps');assert.equal(p.stored().dwellSeconds,3.5);assert.equal(p.h.p.customized.dwellSeconds,true);
+  // Back to the value in use within the pause: nothing to save.
+  await p.change('dwellSeconds','4');await p.change('dwellSeconds','3.5');p.tick(500);await flush();await flush();
+  assert.equal(p.sent('configure').length,1,'a no-op is never sent');
+  // A box or menu changed meanwhile saves at once, with the number.
+  await p.change('dwellSeconds','5');await p.change('discardPinned',true);
+  assert.equal(p.sent('configure').length,2);assert.equal(p.stored().dwellSeconds,5);assert.equal(p.stored().discardPinned,true);
+  // The custom parking delay works the same way.
+  await p.change('delayPreset','custom');await p.change('delayMinutes','7.5');p.tick(500);await flush();await flush();
+  assert.equal(p.stored().delayMinutes,7.5);assert.equal(p.el('delayPreset').value,'custom');
+});
+
+test('a number that can’t be used is never saved: the value in use comes back, and Parking says why',async t=>{
+  const p=await load(await page(t),'autosave-bad-number');const box=p.el('dwellSeconds'),note=p.el('parkingStatus');
+  for(const value of ['','0.3','25','1.3','-1']){
+    await p.change('dwellSeconds',value);p.tick(500);await flush();
+    assert.equal(p.sent('configure').length,0,JSON.stringify(value));assert.equal(box.value,2,'the value in use is back');
+    assert.equal(note.textContent,'The restore delay must be between 0.5 and 20 seconds, in steps of half a second, so it wasn’t changed.');assert(note.classes.has('error'));
+  }
+  assert.equal(p.stored().dwellSeconds,2);
+  // A corrected number saves, and the message goes.
+  await p.change('dwellSeconds','5');assert.equal(note.textContent,'');p.tick(500);await flush();await flush();assert.equal(p.stored().dwellSeconds,5);
+  // The custom delay box stays open, keeping the focus, while the value in use comes back.
+  await p.change('delayPreset','custom');const delay=p.el('delayMinutes');delay.focus();await p.change('delayMinutes','0');
+  assert.equal(delay.value,15);assert.equal(p.el('customLabel').hidden,false);assert(delay.focused);
+  assert.equal(note.textContent,'The parking delay must be between 1 minute and 7 days, in steps of half a minute, so it wasn’t changed.');
+  p.tick(500);await flush();assert.equal(p.stored().delayMinutes,15);assert.equal(p.sent('configure').length,1);
+});
+
+test('the site list saves when you leave it; a list that can’t be used stays as typed and marked, and the list in use is kept',async t=>{
+  const p=await load(await page(t),'autosave-sites');const sites=p.el('exclusions'),note=p.el('sitesStatus');
+  sites.value+='\nexample.com';await sites.fire('input');assert.equal(p.sent('configure').length,0,'typing saves nothing');
+  await sites.fire('change');await flush();await flush();
+  assert.deepEqual(p.stored().exclusions,[...DEFAULTS.exclusions,'example.com']);assert.equal(p.h.p.customized.exclusions,true);
+  // Something that isn't a site: kept as typed, marked, and nothing changes.
+  const before=structuredClone(p.h.local.settings);sites.value+='\nfoo bar';await sites.fire('change');await flush();await flush();
+  assert.equal(p.sent('configure').length,1);assert.deepEqual(p.h.local.settings,before);
+  assert(sites.value.endsWith('\nfoo bar'));assert.equal(sites.ariaInvalid,'true');assert(note.classes.has('error'));
+  assert.equal(note.textContent,'Put one site on each line, without spaces. The previous list is still in use.');
+  // Fixing it saves it and clears the mark and the message.
+  sites.value=sites.value.replace('foo bar','foo.example');await sites.fire('change');await flush();await flush();
+  assert.deepEqual(p.stored().exclusions,[...DEFAULTS.exclusions,'example.com','foo.example']);assert.equal(sites.ariaInvalid,null);assert.equal(note.textContent,'');
+  // The engine's other checks apply too.
+  sites.value=Array.from({length:201},(_,i)=>`s${i}.example`).join('\n');await sites.fire('change');await flush();
+  assert.equal(note.textContent,'You can exclude up to 200 sites. The previous list is still in use.');assert.equal(p.sent('configure').length,2);
+});
+
+test('a failed save is said beside the setting, and the page shows what is in use again; the site list keeps your text',async t=>{
+  const p=await load(await page(t),'autosave-fail');
+  const before=structuredClone({settings:p.h.local.settings,customized:p.h.local.customized});
+  // Storage full: Chrome refuses the write.
+  p.h.hooks.localSet=values=>{if(values.settings)throw new Error('Resource::kQuotaBytes quota exceeded');};
+  await p.change('discardPinned',true);
+  assert.equal(p.el('discardPinned').checked,false,'shows what is in use');
+  assert.equal(p.el('status').textContent,'Resource::kQuotaBytes quota exceeded');assert(p.el('status').classes.has('error'));
+  await p.change('sleepingMode','immediate');
+  assert.equal(p.el('sleepingMode').value,'chrome');assert.equal(p.el('sleepingHelp').textContent,'Chrome decides when background tabs are unloaded.');
+  assert.equal(p.el('parkingStatus').textContent,'Resource::kQuotaBytes quota exceeded');
+  await p.change('dwellSeconds','6');p.tick(500);await flush();await flush();
+  assert.equal(p.el('dwellSeconds').value,2);assert.equal(p.el('parkingStatus').textContent,'Resource::kQuotaBytes quota exceeded');
+  await p.change('exclusions','zoom.us\nmy.example');
+  assert.equal(p.el('exclusions').value,'zoom.us\nmy.example','kept, to try again or copy');
+  assert.equal(p.el('sitesStatus').textContent,'Resource::kQuotaBytes quota exceeded. The previous list is still in use.');
+  assert.deepEqual({settings:p.h.local.settings,customized:p.h.local.customized},before,'nothing changed');
+  assert.equal(p.h.p.settings.discardPinned,false,'the worker still uses the old values');
+  // Once Chrome can save again, the next change goes through and the message goes.
+  delete p.h.hooks.localSet;await p.change('discardPinned',true);
+  assert.equal(p.stored().discardPinned,true);assert.equal(p.el('status').textContent,'');
+  // Leaving the list tries it again, even unedited (Chrome then reports no change).
+  await p.el('exclusions').fire('blur');await flush();await flush();
+  assert.deepEqual(p.stored().exclusions,['zoom.us','my.example']);assert.equal(p.el('sitesStatus').textContent,'');
+  // An ordinary edit and leaving it saves once: change, then blur.
+  p.el('exclusions').value+='\nmore.example';await p.el('exclusions').fire('change');await p.el('exclusions').fire('blur');await flush();await flush();
+  assert.deepEqual(p.stored().exclusions,['zoom.us','my.example','more.example']);
+  assert.equal(p.sent('configure').filter(m=>m.settings.exclusions?.includes('more.example')).length,1,'saved once');
+});
+
+test('quick changes are saved one request at a time; the last wins and the page never undoes your click',async t=>{
+  const p=await load(await page(t),'autosave-rapid');const box=p.el('discardPinned');
+  // Watch what the page itself writes to the box.
+  let state=box.checked;const writes=[];Object.defineProperty(box,'checked',{get:()=>state,set:v=>{writes.push(v);state=v;},configurable:true});
+  const click=()=>{state=!state;return box.fire('change');};
+  // Five clicks before any reply arrives: on, off, on, off, on.
+  for(let i=0;i<5;i++)click();
+  for(let i=0;i<8;i++)await flush();
+  assert.equal(p.stored().discardPinned,true);assert.equal(state,true);
+  assert.equal(p.sent('configure').length,1,'the clicks made while saving end where the first did, so nothing more is sent');
+  // Off and on again while the first is saving: both are saved, in order.
+  click();click();click();for(let i=0;i<8;i++)await flush();
+  assert.equal(p.stored().discardPinned,false);assert.equal(state,false);
+  assert.deepEqual(p.sent('configure').map(m=>m.settings.discardPinned),[true,false]);
+  click();click();for(let i=0;i<8;i++)await flush();
+  assert.equal(p.stored().discardPinned,false,'on then off: back where it was');assert.deepEqual(p.sent('configure').map(m=>m.settings.discardPinned),[true,false,true,false]);
+  assert.deepEqual(writes,[],'Chrome reporting each save never changes the box under you');
+});
+
+test('a change from another page or computer is shown and never saved back; a change still waiting to be saved is kept',async t=>{
+  const p=await load(await page(t),'autosave-remote');
+  await p.change('dwellSeconds','6'); // waiting for its pause
+  // A synced computer changes two settings, as the worker applies it.
+  await p.h.p.applySettings({...p.h.p.settings,delayMinutes:30,dwellSeconds:9},false);await flush();await flush();
+  assert.equal(p.el('delayMinutes').value,30);assert.equal(p.el('delayPreset').value,'30');assert.equal(p.el('dwellSeconds').value,'6','your change is kept');
+  assert.equal(p.sent('configure').length,0,'nothing is written back');
+  p.tick(500);await flush();await flush();
+  const request=p.sent('configure').at(-1);assert.equal(request.shown.dwellSeconds,9,'compared with the newer value');
+  assert.deepEqual(Object.keys(request.settings).filter(k=>!same(request.settings[k],request.shown[k])),['dwellSeconds']);
+  assert.equal(p.stored().dwellSeconds,6);assert.equal(p.stored().delayMinutes,30);
+  assert.equal(p.h.p.customized.delayMinutes,false,'a synced value is not a choice made here');assert.equal(p.h.p.customized.dwellSeconds,true);
+  for(let i=0;i<4;i++)await flush();assert.equal(p.sent('configure').length,1,'no echo');
+});
+
+test('leaving the page saves what you were typing, and a number still in its pause, straight away',async t=>{
+  const p=await load(await page(t),'autosave-hide');
+  p.el('dwellSeconds').value='6';await p.el('dwellSeconds').fire('input'); // typed, not yet left
+  p.el('exclusions').value+='\nexample.com';
+  p.el('delayMinutes').value='0'; // half-typed in a hidden box: never saved
+  await p.hide();
+  assert.equal(p.sent('configure').length,1,'together');assert.equal(p.stored().dwellSeconds,6);
+  assert.deepEqual(p.stored().exclusions,[...DEFAULTS.exclusions,'example.com']);assert.equal(p.stored().delayMinutes,15);
+});
+
+test('leaving the page while a change is being saved sends the rest at once, without undoing the first',async t=>{
+  const p=await load(await page(t),'autosave-hide-saving');
+  let release=null;p.h.hooks.localSet=values=>{if(values.settings&&!release)return new Promise(resolve=>{release=resolve;});};
+  p.el('discardPinned').checked=true;p.el('discardPinned').fire('change');await flush(); // saving, held by Chrome
+  await p.change('dwellSeconds','8'); // waiting for its pause
+  await p.hide();
+  const [first,second]=p.sent('configure');assert(second,'sent without waiting');
+  assert.equal(second.shown.discardPinned,true,'compared with the change being saved');assert.equal(second.settings.dwellSeconds,8);
+  assert.equal(first.settings.dwellSeconds,2);
+  release();for(let i=0;i<8;i++)await flush();
+  assert.equal(p.stored().discardPinned,true);assert.equal(p.stored().dwellSeconds,8);
+});
+
+test('Restore defaults replaces a change still waiting to be saved; Cancel leaves it to save; its message clears itself',async t=>{
+  const p=await load(await page(t),'autosave-reset');
+  await p.change('dwellSeconds','9');
+  p.answer(false);await p.el('reset').fire('click');await flush();
+  p.tick(500);await flush();await flush();assert.equal(p.stored().dwellSeconds,9,'Cancel changes nothing: the change still saves');
+  await p.change('dwellSeconds','7');p.el('exclusions').value='foo bar';await p.el('exclusions').fire('change');await flush();
+  assert.equal(p.el('exclusions').ariaInvalid,'true');
+  p.answer(true);await p.el('reset').fire('click');await flush();await flush();p.tick(500);await flush();await flush();
+  assert.equal(p.stored().dwellSeconds,DEFAULTS.dwellSeconds);assert.equal(p.el('dwellSeconds').value,DEFAULTS.dwellSeconds);
+  assert(!p.sent('configure').some(m=>m.settings.dwellSeconds===7),'never sent');
+  assert.equal(p.el('exclusions').value,DEFAULTS.exclusions.join('\n'));assert.equal(p.el('exclusions').ariaInvalid,null);assert.equal(p.el('sitesStatus').textContent,'');
+  const done='Defaults restored. Sync is now off on this computer; your other computers keep their settings.';
+  assert.equal(p.el('status').textContent,done);p.tick(7499);assert.equal(p.el('status').textContent,done);p.tick(1);assert.equal(p.el('status').textContent,'','8 seconds after it appeared');
+  // A message after it is never cleared by its timer.
+  await p.el('reset').fire('click');await flush();await flush();
+  p.h.hooks.localSet=values=>{if(values.settings)throw new Error('Chrome is busy.');};
+  await p.change('debug',true);assert.equal(p.el('status').textContent,'Chrome is busy.');
+  p.tick(8000);assert.equal(p.el('status').textContent,'Chrome is busy.','an error stays');
+  assert(!p.sent('configure').some(m=>m.settings.dwellSeconds===7),'the replaced change never goes out later either');
+});
+
+test('a change Chrome reports while Restore defaults is running is not saved over the defaults',async t=>{
+  const p=await load(await page(t),'autosave-reset-race');
+  await p.change('discardPinned',true);
+  // Chrome reports a change when it locks a box you were typing in, as Restore defaults does.
+  let release=null;p.h.hooks.localSet=values=>{if(values.settings&&!release)return new Promise(resolve=>{release=resolve;});};
+  const reset=p.el('reset').fire('click');await flush();
+  p.el('dwellSeconds').value='9';await p.el('dwellSeconds').fire('change');
+  release();await reset;await flush();await flush();p.tick(1000);await flush();await flush();
+  assert.equal(p.stored().dwellSeconds,DEFAULTS.dwellSeconds);assert.equal(p.stored().discardPinned,false);
+  assert(!p.sent('configure').some(m=>m.settings.dwellSeconds===9),'never sent');
+});
+
+test('reopening Settings shows exactly what was saved',async t=>{
+  const p=await load(await page(t),'autosave-reopen');
+  await p.change('discardPinned',true);await p.change('delayPreset','60');await p.change('dwellSeconds','4.5');p.tick(500);await flush();await flush();
+  await p.change('exclusions','zoom.us\nwork.example');
+  const q=await load(await page(t,{settings:structuredClone(p.h.local.settings)}),'autosave-reopen-2');
+  assert.equal(q.el('discardPinned').checked,true);assert.equal(q.el('delayPreset').value,'60');assert.equal(q.el('dwellSeconds').value,4.5);
+  assert.equal(q.el('exclusions').value,'zoom.us\nwork.example');assert.deepEqual(q.checked(),['dark']);
 });

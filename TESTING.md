@@ -8,7 +8,7 @@ Needs Node 20+ (Python 3 for packaging). There are no dependencies to install.
 npm test
 ```
 
-The tests cover parking and restoring, both sleeping modes, settings and sync, exclusions, keeping windows and tabs in place, Clear parked tabs, closing the last tab, moving a parking page to another window, and recovery after worker or browser restarts. Race tests cover focus changes, moved or closed tabs, new downloads, slow API calls, Chrome refusals and interrupted discard batches. UI tests cover the Settings layout and controls, the theme switch, sync choices and questions, pasting and cleaning up excluded sites, the popup, the parked page, and the Buy me a coffee and Report a bug links. The Store artwork is checked for sizes, transparency and matching sources.
+The tests cover parking and restoring, both sleeping modes, settings and sync, exclusions, keeping windows and tabs in place, Clear parked tabs, closing the last tab, moving a parking page to another window, and recovery after worker or browser restarts. Race tests cover focus changes, moved or closed tabs, new downloads, slow API calls, Chrome refusals and interrupted discard batches. UI tests cover the Settings layout and controls, saving each change as it's made, the theme switch, sync choices and questions, pasting and cleaning up excluded sites, the popup, the parked page, and the Buy me a coffee and Report a bug links. The Store artwork is checked for sizes, transparency and matching sources.
 
 Things that must always hold:
 
@@ -20,6 +20,7 @@ Things that must always hold:
 - **Clear parked tabs** never unloads tabs and restores at most one tab per window.
 - **Protection** follows a tab even when Chrome unloads it and gives it a new ID.
 - **Closing a parked window** deletes its recovery record, even while the worker is stopped.
+- **Settings** saves each change on its own, and never a half-typed or invalid value, so what it shows is what's in use.
 - **Sync** is off by default and chosen on each computer. Turning it on uses a different shared value only for a setting not changed on that computer; the others are asked about together before anything changes. A shared value this version can't use is never replaced without asking. Restore defaults never changes shared values. Pausing, protected tabs and window state never sync.
 
 ## Preview and packaging
@@ -37,7 +38,7 @@ The Store artwork has its own tools; see [tools/store-assets](tools/store-assets
 
 Use a separate Chrome profile with nothing important in it, and note the extension, Chrome and OS versions. Start with a 1-minute parking delay and 2-second restore delay, then try the defaults. Close the service worker's DevTools before testing sleep or restarts, because it keeps the worker running.
 
-1. **Install.** Load the unzipped package from `chrome://extensions` and check for errors. Save settings, reopen them, and check they stuck. Restore defaults asks first, then should bring back Let Chrome decide, Auto, 15 minutes, 2 seconds and the four built-in sites in A–Z order, and turn sync off.
+1. **Install.** Load the unzipped package from `chrome://extensions` and check for errors. Change a few settings, close Settings, reopen it and check they stuck: there's no Save button. A number saves when you press Enter or leave its box, and the site list when you leave it. A number that can't be used goes back to the value in use, with a note. Restore defaults asks first, then should bring back Let Chrome decide, Auto, 15 minutes, 2 seconds and the four built-in sites in A–Z order, and turn sync off.
 2. **Let Chrome decide.** Leave a window unfocused until it parks. Its previous tab stays in the window; Chrome decides when to unload it.
 3. **Discard immediately.** Park a window with several loaded tabs, including pinned, audio, excluded, protected and already-sleeping ones. Only eligible tabs should be unloaded. Coming back or changing settings mid-way should stop the rest.
 4. **Coming back.** A visit shorter than the restore delay leaves the window parked. Staying longer brings back only your previous tab and closes the parking page. Also try Restore tab, clicking a tab yourself, and closing the previous tab first.

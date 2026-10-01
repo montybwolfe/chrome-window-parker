@@ -18,7 +18,7 @@
 
 ## Debug logs
 
-Turn on debug logging in Settings, save, then open `chrome://extensions`, find Chrome Window Parker and click **service worker** to see its console. Close that console before testing sleep or restarts, because keeping it open changes how Chrome runs the extension.
+Turn on debug logging in Settings, then open `chrome://extensions`, find Chrome Window Parker and click **service worker** to see its console. Close that console before testing sleep or restarts, because keeping it open changes how Chrome runs the extension.
 
 ## Compatibility
 
