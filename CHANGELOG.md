@@ -2,36 +2,20 @@
 
 ## 1.5.6.1
 
-Settings now save automatically, sync is easier to set up, and parked windows are easier to recognise.
-
-**Settings and sync**
-
-- Settings save themselves: checkboxes and menus apply immediately, numbers save when you press Enter or leave the box, and excluded sites save when you leave the list. Closing Settings keeps valid edits. There's no Save settings button.
-- Invalid numbers return to the value in use with an explanation. Invalid site lists stay available to correct while the previous list remains in use. Storage failures are reported more clearly.
-- Optional Chrome sync lets you share all settings, the Parking or Tab protection group, or individual settings. It's off by default on each computer. A new computer adopts shared values for settings you haven't changed there; differences involving your own choices are shown together before anything is replaced. Conflict checks catch values that change while you're choosing.
-- Restore defaults asks first, resets this computer and turns off its sync choices. Your other computers keep their shared settings.
-
-**Parking and returning**
-
-- The parking page shows your previous tab's icon and title, making parked windows easier to recognise, including in Mission Control. The parking tab keeps the Window Parker icon.
-- Closing or moving away the last real tab now removes the parking page so the empty window can close. Clear parked tabs still keeps windows open and never starts discards.
-- A parking page dragged to another window is removed there. Its original window keeps its tabs and gets a full parking delay. Cleanup blocked while you're holding a dragged tab finishes after you let go.
-- Fixed windows occasionally parking too soon after use when Chrome had paused the extension. Fixed Discard immediately sometimes leaving eligible tabs loaded while the parking page was still opening. Let Chrome decide still makes no discard requests.
-
-**Exclusions and protection**
-
-- Paste a site's home address to exclude the whole site. Clean up sorts the list and removes duplicate rules without changing which pages are excluded. It saves the cleaned list; Undo brings the previous text back, saved when you leave the box.
-- Protection now follows a tab when Chrome unloads it and gives it a new ID. Protect individual tabs has a scrolling list, a cue when more tabs are below, and simple window numbering. Protection is offered only for web pages.
-
-**Interface and accessibility**
-
-- A compact Light/Dark/Auto switch applies immediately. Settings has clearer help, section icons and the installed version; the popup has compact Report a bug, Buy me a coffee and Settings buttons. Toolbar icons are sharper at standard and 150% scale.
-- Popup and parking-page text is easier to read. Text boxes have clearer edges, screen readers hear units, the chosen theme is visible in High Contrast, and keyboard focus stays on controls while they work. Parking-page instructions and site-validation messages are clearer.
-
-**Privacy and permissions**
-
-- Closing a parked window now deletes its recovery record even if the extension was idle when it closed.
-- The new favicon permission displays the site icon Chrome has already saved; it adds no install warning and makes no request to the site. There is no analytics or data collection. Optional settings sync uses your own Chrome sync; pausing, protected tabs and window details never sync.
+- Added optional settings sync through Chrome, with controls for all settings, groups or individual settings. Sync is off by default. New computers adopt shared values for untouched settings and ask before replacing settings changed locally.
+- Added autosave to Settings and removed the Save settings button. Numbers save on Enter or when leaving the box; excluded sites save when leaving the list. Closing Settings keeps valid edits.
+- Improved validation and error messages for invalid numbers, excluded sites, storage failures and sync conflicts. Invalid edits leave the previous settings in use.
+- Added the original tab's title and favicon to the parking page. The new favicon permission uses Chrome's saved icon without contacting the site or adding an install warning.
+- Added home-address paste handling, Clean up and Undo for excluded sites. Clean up sorts and removes duplicate rules without changing which pages are excluded; Undo restores the previous text.
+- Changed Restore defaults to ask for confirmation and reset settings and sync choices on this computer only. Shared settings on other computers are preserved.
+- Fixed tab protection being lost when Chrome unloads a tab and gives it a new ID.
+- Fixed empty parked windows remaining open after their last real tab was closed or moved away. Clear parked tabs still keeps windows open and never starts discards.
+- Fixed parking pages remaining behind after being dragged to another window. The original window gets a full parking delay, and tab changes blocked during a drag finish after it ends.
+- Fixed windows occasionally parking too soon after use when Chrome had stopped the extension's background worker.
+- Fixed Discard immediately sometimes leaving eligible tabs loaded while the parking page was still opening. Let Chrome decide continues to make no discard requests.
+- Fixed recovery records remaining in storage after parked windows closed while the extension was idle.
+- Improved Settings, popup and parking-page readability, keyboard focus, screen-reader labels, field contrast and High Contrast theme indicators. Added an immediate Light/Dark/Auto switch, clearer protection lists with window numbering, the installed version in Settings, and sharper toolbar icons.
+- Added Report a bug buttons and clearer Buy me a coffee links in the popup and Settings.
 
 ## 1.5.1.3
 
