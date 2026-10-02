@@ -127,6 +127,8 @@ Claude uses the equivalent command for `agent/claude` in its own worktree. A fai
 
 ## Promoting dev to main
 
+Public GitHub Releases and the public changelog correspond only to versions actually published through the Chrome Web Store. Keep internal milestones as commits or branches (and internal tags only when needed), without public GitHub Releases; the eventual Store release notes should cover all user-visible changes since the previous Store release.
+
 This is separate from development approval. Before a requested promotion, verify clean/current dev, passing automated tests, relevant installed-extension/manual checks, version/release readiness and a reviewed main-to-dev diff/commit list with no unexpected changes. Show the user what differs and perform only the exact authorized operation.
 
 Verify main has not independently diverged. When main is simply behind dev, prefer `git merge --ff-only dev` from the clean main worktree; avoid unnecessary merge commits. Push main only within the authorized promotion scope. Promotion does not authorize tagging, building a release, publishing or Store submission; those require separate explicit decisions.
