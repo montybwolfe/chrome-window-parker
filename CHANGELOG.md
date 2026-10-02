@@ -2,7 +2,7 @@
 
 ## 1.5.6.1
 
-The second Chrome Web Store release brings together all improvements since 1.5.1.3.
+Settings now save automatically, sync is easier to set up, and parked windows are easier to recognise.
 
 **Settings and sync**
 
