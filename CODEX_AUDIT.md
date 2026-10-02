@@ -2,6 +2,13 @@
 
 Owned by Codex. Follow the shared audit rules in [AGENTS.md](AGENTS.md).
 
+### 2026-10-02 — Direct release-note wording
+
+- Base: accepted main/dev `890905ec50a530b752dae90b97f7d4acf110bba0`. Changed only the 1.5.6.1 CHANGELOG entry and matching GitHub Release body to 14 direct Added/Fixed/Improved/Changed bullets, with no introductory or release-history explanation; kept installation instructions and feature/fix coverage.
+- Integrated: Codex documentation commits `fb0983b42fc962d1136957d098dac93a4212851f` and `af987e94afa3769e9ede423180091c4d640883f8` cherry-picked as `49f6e29` and `991bd04c7d4bc8b8cecaed56d45a35fc10db63d1`. Main fast-forwarded to dev; both pushed normally. Existing audit history was neither edited nor carried into shared branches.
+- Verified: final candidate and integrated dev each pass 406/406 tests and 9/9 artwork checks; whitespace clean. Anonymous public API body matches the final text exactly; public changelog matches the lane and has only the two retained headings. Public Releases HTML/API still show exactly v1.5.6.1 (Latest) and v1.5.1.3. Both retained ZIP/checksum pairs redownloaded byte-identically; original tag objects/targets, all historical release commits, and 24 existing local artifact hashes/mtimes preserved.
+- Boundaries: main-to-new-main changes only CHANGELOG.md; Codex differs from shared content only in this audit. No runtime, version, package, Store submission, README, Claude or Ultra changes. No history rewrite or force push. No manual action required.
+
 ### 2026-10-02 — Public release history follows Chrome Web Store releases
 
 - Base: accepted main/dev `4dd099220047ba603c206a09869d5d3150a5d6ef`; clean Codex `83f764f177d44baa0e4cab2807ef82265d5467fe`. Direct anonymous Web Store response confirms 1.5.6.1 (the search reader returned an older cached listing).
