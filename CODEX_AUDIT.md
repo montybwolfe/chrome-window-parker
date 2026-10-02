@@ -2,6 +2,14 @@
 
 Owned by Codex. Follow the shared audit rules in [AGENTS.md](AGENTS.md).
 
+### 2026-10-02 — Release-note heading hierarchy
+
+- Base: accepted main/dev `991bd04c7d4bc8b8cecaed56d45a35fc10db63d1`. Shared candidate `91714f78736121c73f90a532c99473245935a846` changes only CHANGELOG.md; cherry-picked into dev as `80b1749b5e13861eafd1f835e27300d2a4714a7c`, then main fast-forwarded to the same SHA. Both pushed normally.
+- Public text: reorganized the existing change sentences under Added, Fixed and Improved, with two descriptive subheadings each; split two long bullets without removing their content. One sparkle beside Added; no other editorial emoji. The unchanged install footer is separated by a rule. Changelog uses the same content with heading levels nested under 1.5.6.1; its only release headings remain 1.5.6.1 and 1.5.1.3.
+- Rendered verification: inspected the actual GitHub release in the in-app browser using its semantic DOM and a full-page screenshot. Confirmed h2/h3 hierarchy, spacing, scanability, emoji rendering and the separated footer. No further visual correction needed; screenshot retained at ignored work/release-layout-20261002/github-release.png.
+- Checks: 406/406 tests and 9/9 artwork checks on candidate and integrated dev; whitespace clean; every previous change sentence retained. Anonymous release API and public changelog match the final text. Exactly two releases remain, v1.5.6.1 Latest; both retained tag objects/targets unchanged. Current ZIP/checksum redownloaded byte-identically; asset IDs/digests/timestamps and 24 recorded local artifact hashes/mtimes unchanged.
+- Boundaries: no runtime, version, packaging, Store submission, README, Claude/Ultra lane or audit changes, history rewrite, or force push. This new record stays on Codex; historical audit sections are untouched. No manual action required.
+
 ### 2026-10-02 — Direct release-note wording
 
 - Base: accepted main/dev `890905ec50a530b752dae90b97f7d4acf110bba0`. Changed only the 1.5.6.1 CHANGELOG entry and matching GitHub Release body to 14 direct Added/Fixed/Improved/Changed bullets, with no introductory or release-history explanation; kept installation instructions and feature/fix coverage.
