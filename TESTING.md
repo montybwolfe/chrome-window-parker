@@ -32,6 +32,8 @@ python3 scripts/package.py   # runtime-only ZIP and checksum in dist/
 
 Add `?system=light` or `?system=dark` to preview pages to try Auto appearance. The preview is for layout work; real tab behavior needs the installed extension. To check a package, unzip it into a separate folder and load that folder in Chrome.
 
+For scripted checks of the installed extension, `tools/store-assets/cdp.mjs` starts headless Chrome with a throwaway profile over the DevTools pipe, and `Extensions.loadUnpacked` installs the extension there. Set `CHROME` to the browser binary. Headless Chrome reports every window that isn't minimized as focused, so model focus by minimizing and restoring windows. Focus timing, Spaces, tab drags, sleep and sync still need the manual checks below.
+
 The Store artwork has its own tools; see [tools/store-assets](tools/store-assets/README.md). Run `node tools/store-assets/verify.mjs` before a release to confirm the screenshots still match the current UI.
 
 ## Manual checks in Chrome

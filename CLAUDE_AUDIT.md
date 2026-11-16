@@ -1,5 +1,7 @@
 # Claude engineering handoff
 
+> Historical record from the multi-agent workflow of September and October 2026, no longer maintained. The current workflow is in [CLAUDE.md](CLAUDE.md).
+
 Owned by Claude after this initial bootstrap. Follow the shared audit rules in [AGENTS.md](AGENTS.md).
 
 ### 2026-09-30 — v1.5.1.4 final review, cold-start fix and Settings polish
