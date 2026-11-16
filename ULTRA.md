@@ -1,5 +1,7 @@
 # Claude Ultra operating contract
 
+> Historical record from the multi-agent workflow of September and October 2026, no longer maintained. The current workflow is in [CLAUDE.md](CLAUDE.md).
+
 Read [AGENTS.md](AGENTS.md) first. Ultra is an occasional, compute-intensive deep-audit and experimental hardening lane, not a continuously current development branch. The name `agent/ultra` persists; its state is disposable between resolved cycles. Initial setup alone authorizes no audit or product work.
 
 ## Start each new cycle
