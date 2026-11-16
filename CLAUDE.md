@@ -2,7 +2,7 @@
 
 Chrome Window Parker is a Manifest V3 Chrome extension. When a window has gone unused for a while, it selects a small local parking page in that window so the page that was selected there can sleep, and it brings that page back when you return. [README.md](README.md) and [docs/BEHAVIOR.md](docs/BEHAVIOR.md) describe the product, [TESTING.md](TESTING.md) the checks, and [CHANGELOG.md](CHANGELOG.md) the releases.
 
-Claude is the only engineering agent on this project. The multi-agent workflow of September and October 2026 is retired: `dev` and the `agent/*` branches are frozen, and `CLAUDE_AUDIT.md`, `CODEX_AUDIT.md`, `ULTRA.md` and `ULTRA_AUDIT.md` are kept only as historical records.
+Claude is the only engineering agent on this project. The multi-agent workflow of September and October 2026 is retired, and its branches and audit files were removed in November 2026. Don't recreate them; the old audit notes are still in Git history.
 
 ## Approvals
 
@@ -26,7 +26,7 @@ GitHub Releases and the public changelog follow the versions actually published 
 6. Before a change to runtime code is merged, a fresh Claude session reviews it from the diff and the surrounding code rather than the author's summary. A finding needs evidence: a failing test, a reproduction, a broken invariant or a concrete event sequence. The author fixes it or explains once; if they still disagree, the owner decides.
 7. The owner merges. The repository allows squash merges only.
 
-When sources disagree, trust current code first, then test and live-Chrome results, then Git history, then these documents, then the historical audit files.
+When sources disagree, trust current code first, then test and live-Chrome results, then Git history, then these documents.
 
 ## Invariants
 
