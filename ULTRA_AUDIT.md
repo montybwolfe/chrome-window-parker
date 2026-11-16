@@ -1,5 +1,7 @@
 # Ultra engineering handoff
 
+> Historical record from the multi-agent workflow of September and October 2026, no longer maintained. The current workflow is in [CLAUDE.md](CLAUDE.md).
+
 Owned by Ultra after this initial Codex bootstrap. Follow [ULTRA.md](ULTRA.md). Keep concise engineering evidence and resume instructions, never diaries, prompts, private reasoning or transcripts.
 
 ## Current state — dormant; no Ultra cycle authorized

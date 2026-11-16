@@ -1,5 +1,7 @@
 # Codex engineering handoff
 
+> Historical record from the multi-agent workflow of September and October 2026, no longer maintained. The current workflow is in [CLAUDE.md](CLAUDE.md).
+
 Owned by Codex. Follow the shared audit rules in [AGENTS.md](AGENTS.md).
 
 ### 2026-10-02 — Release-note heading hierarchy
